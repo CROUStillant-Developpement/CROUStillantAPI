@@ -1,0 +1,8 @@
+python-dotenv==1.0.1
+aiohttp==3.9.5
+sanic==23.12.1
+git+https://github.com/PaulBayfield/sanic-ext
+asyncpg==0.29.0
+async-timeout==4.0.3
+hypercorn==0.16.0
+pytz==2024.2
