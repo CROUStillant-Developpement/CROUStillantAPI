@@ -1,6 +1,6 @@
-from models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus
-from models.exceptions import RateLimited, BadRequest, NotFound
-from utils.opening import Opening
+from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus
+from ...models.exceptions import RateLimited, BadRequest, NotFound
+from ...utils.opening import Opening
 from sanic.response import JSONResponse, json
 from sanic import Blueprint, Request
 from sanic_ext import openapi

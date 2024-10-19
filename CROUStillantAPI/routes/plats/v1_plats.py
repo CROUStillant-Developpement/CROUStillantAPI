@@ -1,5 +1,5 @@
-from models.responses import Plats, Plat
-from models.exceptions import RateLimited, BadRequest, NotFound
+from ...models.responses import Plats, Plat
+from ...models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse, json
 from sanic import Blueprint, Request
 from sanic_ext import openapi

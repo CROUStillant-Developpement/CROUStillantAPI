@@ -1,8 +1,8 @@
 from sanic import Sanic, Request
-from config import AppConfig
-from entities.entities import Entities
-from routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats
-from utils.logger import Logger
+from .config import AppConfig
+from .entities.entities import Entities
+from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats
+from .utils.logger import Logger
 from dotenv import load_dotenv
 from os import environ
 from textwrap import dedent

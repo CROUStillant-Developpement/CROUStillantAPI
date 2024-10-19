@@ -1,5 +1,5 @@
-from models.responses import Status, Stats
-from models.exceptions import RateLimited
+from ...models.responses import Status, Stats
+from ...models.exceptions import RateLimited
 from sanic.response import JSONResponse, json
 from sanic import Blueprint, Request
 from sanic_ext import openapi
