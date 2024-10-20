@@ -91,6 +91,14 @@ async def getRegions(request: Request) -> JSONResponse:
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@openapi.parameter(
+    name="code",
+    description="ID de la région",
+    required=True,
+    schema=int,
+    location="path",
+    example=1
+)
 async def getRegion(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'une région.

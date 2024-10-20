@@ -92,6 +92,14 @@ async def getPlats(request: Request) -> JSONResponse:
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@openapi.parameter(
+    name="code",
+    description="ID du plat",
+    required=True,
+    schema=int,
+    location="path",
+    example=1
+)
 async def getPlat(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un plat.
