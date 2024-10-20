@@ -1,3 +1,4 @@
+from ...components.ratelimit import ratelimit
 from ...models.responses import Regions, Region
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse, json
@@ -34,6 +35,7 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@ratelimit()
 async def getRegions(request: Request) -> JSONResponse:
     """
     Récupère les régions
@@ -99,6 +101,7 @@ async def getRegions(request: Request) -> JSONResponse:
     location="path",
     example=1
 )
+@ratelimit()
 async def getRegion(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'une région.

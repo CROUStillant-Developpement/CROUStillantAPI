@@ -1,3 +1,4 @@
+from ...components.ratelimit import ratelimit
 from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
@@ -38,6 +39,7 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@ratelimit()
 async def getRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les restaurants
@@ -123,6 +125,7 @@ async def getRestaurants(request: Request) -> JSONResponse:
     location="path",
     example=1
 )
+@ratelimit()
 async def getRestaurant(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un restaurant.
@@ -227,6 +230,7 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1
 )
+@ratelimit()
 async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     """
     Retourne le menu d'un restaurant.
@@ -363,6 +367,7 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     location="path",
     example="21-10-2024"
 )
+@ratelimit()
 async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> JSONResponse:
     """
     Retourne le menu d'un restaurant.
@@ -492,6 +497,7 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     location="path",
     example=1
 )
+@ratelimit()
 async def getInformations(request: Request, code: int) -> JSONResponse:
     """
     Retourne les informations d'un restaurant.
@@ -555,6 +561,7 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@ratelimit()
 async def getTypesRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les types des restaurants

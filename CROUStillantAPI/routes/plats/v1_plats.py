@@ -1,3 +1,4 @@
+from ...components.ratelimit import ratelimit
 from ...models.responses import Plats, Plat
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse, json
@@ -34,6 +35,7 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@ratelimit()
 async def getPlats(request: Request) -> JSONResponse:
     """
     Récupère ls 100 derniers plats ajoutés à la base de données
@@ -100,6 +102,7 @@ async def getPlats(request: Request) -> JSONResponse:
     location="path",
     example=1
 )
+@ratelimit()
 async def getPlat(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un plat.

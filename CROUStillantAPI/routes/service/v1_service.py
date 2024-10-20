@@ -33,6 +33,7 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@ratelimit()
 async def getStatus(request: Request) -> JSONResponse:
     """
     Retourne le statut de l'API.
@@ -69,6 +70,7 @@ async def getStatus(request: Request) -> JSONResponse:
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@ratelimit()
 async def getStats(request: Request) -> JSONResponse:
     """
     Retourne les statistiques de l'API.
