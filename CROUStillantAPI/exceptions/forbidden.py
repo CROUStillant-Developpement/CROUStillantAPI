@@ -1,0 +1,13 @@
+from typing import Any, Dict
+from sanic.exceptions import SanicException
+
+
+class ForbiddenException(SanicException):
+    status_code = 403
+    
+    @property
+    def message(self):
+        if self.extra["ban"]:
+            return f"Vous avez été banni du service pour non-respect des règles d'utilisation. Si vous pensez qu'il s'agit d'une erreur, veuillez nous contacter à l'adresse suivante : croustillant@bayfield.dev."
+        else:
+            return f"Vous n'avez pas les permissions nécessaires pour accéder à cette ressource. Si vous pensez qu'il s'agit d'une erreur, veuillez nous contacter à l'adresse suivante : croustillant@bayfield.dev."

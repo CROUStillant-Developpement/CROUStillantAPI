@@ -8,4 +8,3 @@ class RatelimitException(SanicException):
     @property
     def message(self):
         return f"Vous avez envoyé trop de requêtes. Veuillez réessayer dans {self.extra['cooldown']} secondes."
-
