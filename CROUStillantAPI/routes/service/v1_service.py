@@ -1,3 +1,4 @@
+from ...components.ratelimit import ratelimit
 from ...models.responses import Status, Stats
 from ...models.exceptions import RateLimited
 from sanic.response import JSONResponse, json
