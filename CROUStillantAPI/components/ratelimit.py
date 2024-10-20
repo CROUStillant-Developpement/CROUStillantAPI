@@ -3,6 +3,7 @@ import functools
 import time
 
 from ..exceptions.ratelimit import RatelimitException
+from ..exceptions.forbidden import ForbiddenException
 from sanic.request import Request
 from sanic.response import HTTPResponse
 from asyncpg import Pool
@@ -114,23 +115,61 @@ class Ratelimiter:
         :return: Bucket
         """
         if key in self.cache_buckets and self.cache_buckets[key]["expires"] > int(time.time()):
-            return self.cache_buckets[key]["bucket"]
+            if self.cache_buckets[key]["bucket"].limit == 0:
+                raise ForbiddenException(
+                    headers={
+                        "X-RateLimit-Limit": 0,
+                        "X-RateLimit-Remaining": 0,
+                        "X-RateLimit-Reset": 0,
+                        "X-RateLimit-Bucket": "banned",
+                        "X-RateLimit-Used": 0,
+                        "X-RateLimit-Key": key
+                    }, 
+                    extra={"ban": True}
+                )
+            else:
+                return self.cache_buckets[key]["bucket"]
         else:
             async with pool.acquire() as connection:
-                data = await connection.fetchrow("SELECT * FROM buckets WHERE key = $1", key)
+                data = await connection.fetchrow("SELECT key, b_limit, b_secs FROM bucket WHERE key = $1", key)
 
             if data is None:
-                self.cache_buckets[key] = self.DEFAULT
+                self.cache_buckets[key] = {
+                    "expires": int(time.time()) + self.cache_refresh,
+                    "bucket": self.DEFAULT
+                }
 
                 return self.DEFAULT
+            else:
+                if data["b_limit"] == 0:
+                    self.cache_buckets[key] = {
+                        "expires": int(time.time()) + self.cache_refresh,
+                        "bucket": Bucket(
+                            ident="banned",
+                            limit=0,
+                            secs=0
+                        )
+                    }
 
-            bucket = Bucket(data["key"], data["limit"], data["secs"])
-            self.cache_buckets[key] = {
-                "expires": int(time.time()) + self.cache_refresh,
-                "bucket": bucket
-            }
+                    raise ForbiddenException(
+                        headers={
+                            "X-RateLimit-Limit": 0,
+                            "X-RateLimit-Remaining": 0,
+                            "X-RateLimit-Reset": 0,
+                            "X-RateLimit-Bucket": "banned",
+                            "X-RateLimit-Used": 0,
+                            "X-RateLimit-Key": key
+                        }, 
+                        extra={"ban": True}
+                    )
+                else:
+                    bucket = Bucket(data["key"], data["b_limit"], data["b_secs"])
+                    self.cache_buckets[key] = {
+                        "expires": int(time.time()) + self.cache_refresh,
+                        "bucket": bucket
+                    }
 
-            return bucket
+                    return bucket
 
 
 def ratelimit():
@@ -155,10 +194,17 @@ def ratelimit():
             :return: Réponse
             """
             key = request.client_ip
+            apikey = request.headers.get("X-API-Key", None)  # Pour les utilisateurs qui ont une adresse IP dynamique
+            if apikey:
+                key = apikey
 
             ratelimiter: Ratelimiter = request.app.ctx.ratelimiter
 
-            bucket: Bucket = await ratelimiter.getBucket(request.app.pool, key)
+            pool: Pool = request.app.ctx.pool
+            if pool:
+                bucket: Bucket = await ratelimiter.getBucket(pool, key)
+            else:
+                bucket = ratelimiter.DEFAULT
 
             headers = await ratelimiter.check_ratelimit(key, bucket)
 
