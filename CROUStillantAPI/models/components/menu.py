@@ -10,7 +10,7 @@ class Menu:
     )
     date = openapi.String(
         description="Date du menu",
-        example="20204-10-21",
+        example="21-10-2024",
     )
     repas = openapi.Array(
         description="Liste des repas du menu",

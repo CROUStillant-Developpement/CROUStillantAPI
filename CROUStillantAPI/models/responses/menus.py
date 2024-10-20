@@ -13,3 +13,11 @@ class Menus:
             "2024-10-19": openapi.Component(MenuComponent),
         }
     )
+
+
+class Menu:
+    success = openapi.Boolean(
+        description="Statut de la requête",
+        example=True,
+    )
+    data = MenuComponent
