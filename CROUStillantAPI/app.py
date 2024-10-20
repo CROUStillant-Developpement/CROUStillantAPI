@@ -1,5 +1,6 @@
 from sanic import Sanic, Request
 from .config import AppConfig
+from .components.ratelimit import Ratelimiter
 from .entities.entities import Entities
 from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats
 from .utils.logger import Logger
@@ -86,6 +87,10 @@ app.ext.openapi.describe(
 
 # Enregistrement des variables d'environnement
 app.ctx.schema = environ["PGRST_DB_SCHEMA"]
+
+
+# Enregistrement du rate limiter
+app.ctx.ratelimiter = Ratelimiter()
 
 
 # Enregistrement des routes
