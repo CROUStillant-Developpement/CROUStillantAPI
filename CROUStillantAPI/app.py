@@ -38,9 +38,47 @@ app.ext.openapi.describe(
     version=f"v{app.config.API_VERSION}",
     description=dedent(
         """
-            ![banner](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/images/banner.png)
+            ![banner](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/images/banner.png)  
+            # 📝 • Introduction
+            CROUStillant est un projet open-source et gratuit qui a pour but de fournir des informations sur les menus des restaurants universitaires en France et en Outre-Mer.  
+            ⁣  
+            L'API CROUStillant permet d'accéder à toutes les informations stockées dans la base de données du projet :  
+            - Les régions où se trouvent les restaurants universitaires.  
+            - Les restaurants universitaires.  
+            - Les menus et plats proposés par les restaurants universitaires.  
+              
+            ⁣  
+            💻 *Si vous souhaitez contribuer au projet, vous pouvez consulter nos dépôts sur GitHub : [github.com/CROUStillant-Developpement](https://github.com/CROUStillant-Developpement) !*  
+            ⁣  
+            # 🔒 • Authentification
+            L'API CROUStillant ne nécessite pas d'authentification pour accéder aux données.  
+            Cependant **les requêtes sont limitées à 200 par minute par adresse IP**.  
+            ⁣  
+            🏫 *Si vous êtes une organisation (université, entreprise, association, etc.), ou un particulier et que vous avez besoin de plus de requêtes, vous pouvez nous contacter à l'adresse suivante : [croustillant@bayfield.dev](mailto:croustillant@bayfield.dev) !*   
+            ⁣  
+            # ⚙️ • Données
+            - Les données sont mises à jour 4 fois par jour (1h, 9h, 11h et 15h).
+            - Toutes les dates sont stockées en UTC+0.  
+            ⁣  
+            # 📄 • Termes d'utilisation
+            Il y a quelques règles à respecter pour toute utilisation de l'API CROUStillant :
+            - Vous ne pouvez pas utiliser l'API à des fins commerciales.
+            - Vous ne pouvez pas utiliser l'API pour des activités illégales / malveillantes.
+            - Vous ne devez pas abuser de l'API (limite de 200 requêtes par minute), l'utilisation de plusieurs adresses IP pour contourner cette limite est interdite.  
+               
+            ⁣  
+            ⚠️ ***Tout abus de l'API entraînera un bannissement de l'adresse IP.***  
+            ⁣  
+            # 📩 • Contact
+            Pour toute question, suggestion, bug, ou problème n'hésitez pas à nous contacter !  
+            - E-mail : [croustillant@bayfield.dev](mailto:croustillant@bayfield.dev)  
+            - GitHub : [github.com/CROUStillant-Developpement](https://github.com/CROUStillant-Developpement)  
+              
+            ⁣  
+            ![empty](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/banner-small.png)  
 
-            CROUStillant est un projet qui a pour but de fournir les menus des restaurants universitaires en France et en Outre-Mer.
+            **CROUStillant Développement © 2022 - 2024 | Tous droits réservés.**  
+            *CROUStillant n'est pas affilié au 'CROUS' ou au 'CNOUS'.*  
         """
     ),
 )
@@ -107,17 +145,3 @@ async def after_request(request: Request, response):
     process = end - request.ctx.start
 
     app.ctx.requests.info(f"{request.client_ip} - [{request.method}] {request.url} - {response.status} ({process * 1000:.2f}ms)")
-
-
-if __name__ == "__main__":
-    """
-    Lancement de l'API en mode développement
-    
-    [!] Ne pas utiliser en production. Utiliser un serveur WSGI tel que Gunicorn.
-    """
-    app.run(
-        host="0.0.0.0",
-        port=5000,
-        debug=True,
-        auto_reload=True
-    )
