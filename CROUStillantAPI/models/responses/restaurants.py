@@ -26,8 +26,12 @@ class Data:
         description="Code de retour",
         example=1502,
     )
-    refresh = openapi.String(
-        description="Dernière mise à jour",
+    ajout = openapi.String(
+        description="Date d'ajout du restaurant dans la base de données",
+        example="2024-10-19 18:44:31",
+    )
+    modifie = openapi.String(
+        description="Dernière mise à jour du restaurant dans la base de données",
         example="2024-10-19 19:44:31",
     )
     nb = openapi.Integer(
