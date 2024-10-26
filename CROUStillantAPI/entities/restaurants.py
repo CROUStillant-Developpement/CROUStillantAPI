@@ -35,7 +35,8 @@ class Restaurants:
                         ISPMR,
                         ZONE,
                         PAIEMENT,
-                        ACCES
+                        ACCES,
+                        OEPNED
                     FROM
                         restaurant
                     JOIN region R ON restaurant.idreg = R.idreg
@@ -74,7 +75,8 @@ class Restaurants:
                         ISPMR,
                         ZONE,
                         PAIEMENT,
-                        ACCES
+                        ACCES,
+                        OPENED
                     FROM
                         restaurant
                     JOIN region R ON restaurant.idreg = R.idreg
@@ -99,15 +101,14 @@ class Restaurants:
             return await connection.fetchrow(
                 """
                     SELECT
-                        TL.RID,
-                        T.FIN,
+                        R.RID,
+                        R.AJOUT AS AJOUT,
+                        R.MIS_A_JOUR AS MODIFIE,
                         (SELECT COUNT(*) FROM tache_log WHERE rid = $1) AS TACHES
                     FROM
-                        tache_log TL
-                    JOIN tache T ON TL.idtache = T.id
+                        restaurant R
                     WHERE
-                        TL.idtache = (SELECT idtache FROM tache ORDER BY debut DESC LIMIT 1) AND
-                        TL.RID = $1
+                        R.RID = $1
                 """,
                 id
             )
