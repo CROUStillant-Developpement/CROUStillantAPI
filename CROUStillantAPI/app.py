@@ -10,6 +10,8 @@ from textwrap import dedent
 from asyncpg import create_pool
 from datetime import datetime
 from pytz import timezone
+from aiohttp import ClientSession
+from concurrent.futures import ThreadPoolExecutor
 
 
 load_dotenv(dotenv_path=f".env")
@@ -104,6 +106,7 @@ app.blueprint(RoutePlats)
 async def setup_app(app: Sanic, loop):
     app.ctx.logs = Logger("logs")
     app.ctx.requests = Logger("requests")
+    app.ctx.session = ClientSession()
 
     # Chargement de la base de données
     try:
@@ -122,6 +125,9 @@ async def setup_app(app: Sanic, loop):
         app.ctx.logs.error("Impossible de se connecter à la base de données !")
         app.ctx.logs.debug("Arrêt de l'API !")
         exit(1)
+        
+    
+    app.ctx.executor = ThreadPoolExecutor(max_workers=4)
 
 
     app.ctx.entities = Entities(app.ctx.pool)

@@ -19,4 +19,3 @@ class AppConfig(Config):
     CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 
     FALLBACK_ERROR_FORMAT = "json"
-    DEBUG = False
