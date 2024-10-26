@@ -5,3 +5,4 @@ git+https://github.com/PaulBayfield/sanic-ext
 asyncpg==0.29.0
 async-timeout==4.0.3
 pytz==2024.2
+pillow==10.0.0
