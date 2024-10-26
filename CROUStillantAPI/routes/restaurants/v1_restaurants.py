@@ -1,13 +1,16 @@
 from ...components.ratelimit import ratelimit
+from ...components.generate import generate
 from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
-from sanic.response import JSONResponse, json
+from ...utils.image import saveImageToBuffer
+from sanic.response import JSONResponse, json, raw
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 from json import loads
 from datetime import datetime
 from pytz import timezone
+from asyncio import get_event_loop
 
 
 bp = Blueprint(
@@ -75,6 +78,7 @@ async def getRestaurants(request: Request) -> JSONResponse:
                     "zone": restaurant.get("zone"),
                     "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
                     "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
+                    "ouvert": restaurant.get("opened")
                 } for restaurant in restaurants
             ]
         },
@@ -181,6 +185,7 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
                 "zone": restaurant.get("zone"),
                 "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
                 "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
+                "ouvert": restaurant.get("opened")
             }
         },
         status=200
@@ -454,6 +459,196 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     )
 
 
+# /restaurants/{code}/menu/{date}/image
+@bp.route("/<code>/menu/<date>/image", methods=["GET"])
+@openapi.definition(
+    summary="Menu d'un restaurant à une date donnée sous forme d'image",
+    description="Menu d'un restaurant en fonction de son code et d'une date donnée sous forme d'image.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={
+        "image/png": openapi.Binary
+    },
+    description="Menu d'un restaurant sous forme d'image."
+)
+@openapi.response(
+    status=400,
+    content={
+        "application/json": BadRequest
+    },
+    description="L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY."
+)
+@openapi.response(
+    status=404,
+    content={
+        "application/json": NotFound
+    },
+    description="Le restaurant n'existe pas."
+)
+@openapi.response(
+    status=429,
+    content={
+        "application/json": RateLimited
+    },
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1
+)
+@openapi.parameter(
+    name="date",
+    description="Date du menu (format: DD-MM-YYYY)",
+    required=True,
+    schema=str,
+    location="path",
+    example="21-10-2024"
+)
+@openapi.parameter(
+    name="repas",
+    description="Repas du menu",
+    required=False,
+    schema=str,
+    location="query",
+    example="midi"
+)
+@openapi.parameter(
+    name="theme",
+    description="Thème de l'image",
+    required=False,
+    schema=str,
+    location="query",
+    example="light"
+)
+@ratelimit()
+async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str) -> JSONResponse:
+    """
+    Retourne le menu d'un restaurant.
+
+    :param code: ID du restaurant
+    :param date: Date du menu:
+    :param repas: Repas du menu
+    :param theme: Thème de l'image
+    :return: Le menu du restaurant
+    """
+    try:
+        restaurantID = int(code)
+
+        date = datetime.strptime(date, "%d-%m-%Y")
+    except ValueError:
+        return json(
+            {
+                "success": False,
+                "message": "L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY (example: 21-10-2024)."
+            },
+            status=400
+        )
+
+    repas = request.args.get("repas", "midi").lower() if request.args.get("repas", "midi").lower() in ["matin", "midi", "soir"] else "midi"
+    theme = request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light"
+
+    restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
+
+    menu = await request.app.ctx.entities.menus.getFromDate(
+        id=restaurantID, 
+        date=date
+    )
+
+    if menu:
+        menu_per_day = {}
+        for row in menu:
+            d = row.get("date").strftime("%d-%m-%Y")
+
+            day_menu = menu_per_day.setdefault(
+                d, 
+                {
+                    "code": row.get("mid"),
+                    "date": d,
+                    "repas": []
+                }
+            )
+
+            repas_list = day_menu["repas"]
+
+            if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
+                repas_list.append(
+                    {
+                        "code": row.get("rpid"),
+                        "type": row.get("tpr"),
+                        "categories": []
+                    }
+                )
+
+            r = repas_list[-1]
+            categories_list = r["categories"]
+
+            if not categories_list or row.get("tpcat") not in categories_list[-1]["libelle"]:
+                categories_list.append(
+                    {
+                        "code": row.get("catid"),
+                        "libelle": row.get("tpcat"),
+                        "ordre": row.get("cat_ordre") + 1,
+                        "plats": []
+                    }
+                )
+
+            categories_list[-1]["plats"].append(
+                {
+                    "code": row.get("platid"),
+                    "ordre": row.get("plat_ordre") + 1,
+                    "libelle": row.get("plat")
+                }
+            )
+
+        data = None
+        for menu in menu_per_day:
+            if date.strftime("%d-%m-%Y") == menu:
+                for m in menu_per_day[menu]["repas"]:
+                    if m["type"] == repas:
+                        data = m
+                        break
+                break
+    else:
+        data = None
+
+
+    def generate_image_in_background(restaurant, menu, date, theme):
+        image = generate(
+            session=request.app.ctx.session, 
+            restaurant=restaurant, 
+            menu=menu,
+            date=date, 
+            theme=theme
+        )
+        buffer = saveImageToBuffer(image, compression_level=1)
+        return buffer.getvalue()
+
+
+    loop = get_event_loop()
+    content = await loop.run_in_executor(
+        request.app.ctx.executor, 
+        generate_image_in_background, 
+        restaurant, data, date, theme
+    )
+
+    return raw(
+        body=content,
+        status=200,
+        headers={
+            "Content-Disposition": f"attachment; filename={restaurant.get('nom')} - {date.strftime('%d-%m-%Y')}.png",
+            "Content-Length": str(len(content)),
+            "Content-Type": "image/png"
+        },
+        content_type="image/png"
+    )
+
+
 # /restaurants/{code}/info
 @bp.route("/<code>/info", methods=["GET"])
 @openapi.definition(
@@ -532,7 +727,8 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
             "success": True,
             "data": {
                 "code": info.get("rid"),
-                "refresh": info.get("fin").strftime("%Y-%m-%d %H:%M:%S"),
+                "ajout": info.get("ajout").strftime("%Y-%m-%d %H:%M:%S"),
+                "modifie": info.get("modifie").strftime("%Y-%m-%d %H:%M:%S") if info.get("modifie") else None,
                 "nb": info.get("taches"),
             }
         },
