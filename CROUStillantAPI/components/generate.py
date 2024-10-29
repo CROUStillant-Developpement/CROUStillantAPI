@@ -263,7 +263,7 @@ def generate(session: ClientSession, restaurant, menu, date: datetime, theme: st
         if paiement:
             text.draw(drawer=drawer, text=f"• {paiement[0]}", colour=colours[theme]['infos'], x=x, y=y+y_space*2)
 
-        if paiement and len(paiement) > 0:
+        if paiement and len(paiement) > 1:
             text.draw(drawer=drawer, text=f"• {paiement[1]}", colour=colours[theme]['infos'], x=x, y=y+y_space*2+space)
     else:
         text.draw(drawer=drawer, text=f"• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*2)
