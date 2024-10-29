@@ -70,3 +70,36 @@ class Plats:
                 """,
                 id
             )
+
+
+    async def getTop(self, limit: int = 100) -> dict:
+        """
+        Récupère les plat les plus populaires.
+
+        :param limit: Nombre de plats à récupérer
+        :return: Les plats
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT
+                        P.platid,
+                        P.libelle,
+                        COUNT(C.platid) AS nb
+                    FROM
+                        plat P
+                    JOIN composition C ON P.platid = C.platid
+                    JOIN categorie c2 on c2.catid = C.catid
+                    JOIN repas R ON c2.rpid = R.rpid
+                    JOIN menu M ON R.mid = M.mid
+                    JOIN restaurant R2 ON M.rid = R2.rid AND R2.idtpr = 1
+                    GROUP BY
+                        P.platid
+                    ORDER BY
+                        nb DESC
+                    LIMIT $1;
+                """,
+                limit
+            )

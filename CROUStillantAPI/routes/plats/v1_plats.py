@@ -1,5 +1,5 @@
 from ...components.ratelimit import ratelimit
-from ...models.responses import Plats, Plat
+from ...models.responses import Plats, Plat, PlatsWithTotal
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse, json
 from sanic import Blueprint, Request
@@ -139,6 +139,51 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
                 "code": plat.get("platid"),
                 "libelle": plat.get("libelle"),
             }
+        },
+        status=200
+    )
+
+
+# /plats/top
+@bp.route("/top", methods=["GET"])
+@openapi.definition(
+    summary="Top 100 des plats",
+    description="Top 100 des plats les plus populaires.",
+    tag="Plats",
+)
+@openapi.response(
+    status=200,
+    content={
+        "application/json": PlatsWithTotal
+    },
+    description="Top 100 des plats les plus populaires."
+)
+@openapi.response(
+    status=429,
+    content={
+        "application/json": RateLimited
+    },
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+)
+@ratelimit()
+async def getPlatTop(request: Request) -> JSONResponse:
+    """
+    Retourne le top 100 des plats.
+
+    :return: Le top 100 des plats
+    """
+    plats = await request.app.ctx.entities.plats.getTop(100)
+
+    return json(
+        {
+            "success": True,
+            "data": [
+                {
+                    "code": plat.get("platid"),
+                    "libelle": plat.get("libelle"),
+                    "total": plat.get("nb")
+                } for plat in plats
+            ]
         },
         status=200
     )
