@@ -265,7 +265,7 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
         return json(
             {
                 "success": False,
-                "message": "Le restaurant n'existe pas."
+                "message": "Aucun menu n'est disponible pour ce restaurant."
             },
             status=404
         )
@@ -403,7 +403,7 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
         return json(
             {
                 "success": False,
-                "message": "Le restaurant n'existe pas."
+                "message": "Aucun menu n'a été trouvé pour cette date."
             },
             status=404
         )
