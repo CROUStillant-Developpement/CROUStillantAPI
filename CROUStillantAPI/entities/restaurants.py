@@ -36,7 +36,7 @@ class Restaurants:
                         ZONE,
                         PAIEMENT,
                         ACCES,
-                        OEPNED
+                        OPENED
                     FROM
                         restaurant
                     JOIN region R ON restaurant.idreg = R.idreg
