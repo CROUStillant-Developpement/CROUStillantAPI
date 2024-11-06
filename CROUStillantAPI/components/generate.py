@@ -229,7 +229,7 @@ def generate(session: ClientSession, restaurant, menu, date: datetime, theme: st
         if horaires:
             t = splitText(horaires[0], 36)
 
-            if len(t) > 1 and not horaires[1]:
+            if len(t) > 1 and not len(horaires) > 0:
                 text.draw(drawer=drawer, text=f"• {t[0]}", colour=colours[theme]['infos'], x=x, y=y)
 
                 if len(t) > 2:
