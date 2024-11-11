@@ -155,4 +155,4 @@ async def after_request(request: Request, response):
     end = datetime.now(timezone("Europe/Paris")).timestamp()
     process = end - request.ctx.start
 
-    app.ctx.requests.info(f"{request.client_ip} - [{request.method}] {request.url} - {response.status} ({process * 1000:.2f}ms)")
+    app.ctx.requests.info(f"{request.headers.get('CF-Connecting-IP')} - [{request.method}] {request.url} - {response.status} ({process * 1000:.2f}ms)")

@@ -225,7 +225,11 @@ def generate(session: ClientSession, restaurant, menu, date: datetime, theme: st
 
     text = Text(size=20, weight=Weights.SEMI_BOLD)
     if restaurant.get("opened"):
-        horaires = loads(restaurant.get("horaires"))
+        if restaurant.get("horaires"):
+            horaires = loads(restaurant.get("horaires"))
+        else:
+            horaires = None
+
         if horaires:
             t = splitText(horaires[0], 36)
 
