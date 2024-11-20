@@ -2,7 +2,8 @@ name: Production Deployment
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
   build:
@@ -18,9 +19,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push to dockerhub
-        uses: docker/build-push-action@v5
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
         with:
-          context:
+          context: .
           push: true
           tags: paulbayfield/croustillant-api:latest
