@@ -193,7 +193,7 @@ def ratelimit():
             :param kwargs: Arguments nommés
             :return: Réponse
             """
-            key = request.client_ip
+            key = request.headers.get('CF-Connecting-IP', request.client_ip)
             apikey = request.headers.get("X-API-Key", None)  # Pour les utilisateurs qui ont une adresse IP dynamique
             if apikey:
                 key = apikey
