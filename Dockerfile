@@ -6,6 +6,10 @@ COPY . ./CROUStillantAPI
 
 WORKDIR /CROUStillantAPI
 
+RUN git submodule update --init --recursive
+
+RUN git submodule foreach git pull origin main
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 7000
