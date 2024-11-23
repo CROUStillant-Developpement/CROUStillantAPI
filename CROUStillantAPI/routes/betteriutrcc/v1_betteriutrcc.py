@@ -1,7 +1,9 @@
 from ...components.ratelimit import ratelimit
 from sanic.response import HTTPResponse, file
 from sanic import Blueprint, Request
-from sanic_ext import openapi, TemplateResponse, render
+from sanic_ext import openapi, render
+from datetime import datetime
+from pytz import timezone
 
 
 bp = Blueprint(
@@ -33,7 +35,7 @@ async def getPageStyle(request: Request) -> HTTPResponse:
 @openapi.no_autodoc
 @openapi.exclude()
 @ratelimit()
-async def getMenu(request: Request) -> TemplateResponse:
+async def getMenu(request: Request) -> HTTPResponse:
     """
     Retourne le menu de la page.
 
@@ -42,6 +44,7 @@ async def getMenu(request: Request) -> TemplateResponse:
     return await render(
         "betteriutrcc/crous.html",
         context={
-            "theme": request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light"
+            "theme": request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light",
+            "date": datetime.now(timezone("Europe/Paris")).strftime("%d-%m-%Y")
         }
     )
