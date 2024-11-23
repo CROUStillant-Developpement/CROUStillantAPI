@@ -16,3 +16,15 @@ class Menu:
         description="Liste des repas du menu",
         items=Repas,
     )
+
+
+@openapi.component
+class Date:
+    code = openapi.String(
+        description="Identifiant du menu",
+        example=1,
+    )
+    date = openapi.String(
+        description="Date du menu",
+        example="21-10-2024",
+    )

@@ -1,5 +1,5 @@
 from sanic_ext import openapi
-from ..components import MenuComponent
+from ..components import MenuComponent, DateComponent
 
 
 class Menus:
@@ -21,3 +21,11 @@ class Menu:
         example=True,
     )
     data = MenuComponent
+
+
+class Dates:
+    success = openapi.Boolean(
+        description="Statut de la requête",
+        example=True,
+    )
+    data = DateComponent
