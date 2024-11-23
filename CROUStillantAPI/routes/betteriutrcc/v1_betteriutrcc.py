@@ -1,7 +1,7 @@
 from ...components.ratelimit import ratelimit
-from sanic.response import JSONResponse, file
+from sanic.response import HTTPResponse, file
 from sanic import Blueprint, Request
-from sanic_ext import openapi, render
+from sanic_ext import openapi, TemplateResponse, render
 
 
 bp = Blueprint(
@@ -17,7 +17,7 @@ bp = Blueprint(
 @openapi.no_autodoc
 @openapi.exclude()
 @ratelimit()
-async def getPageStyle(request: Request) -> JSONResponse:
+async def getPageStyle(request: Request) -> HTTPResponse:
     """
     Retourne le style de la page.
 
@@ -33,7 +33,7 @@ async def getPageStyle(request: Request) -> JSONResponse:
 @openapi.no_autodoc
 @openapi.exclude()
 @ratelimit()
-async def getMenu(request: Request) -> JSONResponse:
+async def getMenu(request: Request) -> TemplateResponse:
     """
     Retourne le menu de la page.
 
