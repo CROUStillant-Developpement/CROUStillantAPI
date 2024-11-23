@@ -374,8 +374,6 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     """
     try:
         restaurantID = int(code)
-
-        date = datetime.strptime(date, "%d-%m-%Y")
     except ValueError:
         return json(
             {
