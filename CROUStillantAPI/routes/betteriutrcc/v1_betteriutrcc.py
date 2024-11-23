@@ -24,7 +24,7 @@ async def getPageStyle(request: Request) -> JSONResponse:
     :return: Le style de la page
     """
     return await file(
-        location="./assets/app.css"
+        location="./static/betteriutrcc/app.css"
     )
 
 
@@ -40,6 +40,8 @@ async def getMenu(request: Request) -> JSONResponse:
     :return: Le menu de la page
     """
     return await render(
-        template="./assets/crous.html",
-        theme=request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light"
+        "./static/betteriutrcc/crous.html",
+        context={
+            "theme": request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light"
+        }
     )
