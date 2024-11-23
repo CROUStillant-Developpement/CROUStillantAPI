@@ -28,4 +28,7 @@ class Dates:
         description="Statut de la requête",
         example=True,
     )
-    data = DateComponent
+    data = openapi.Array(
+        description="Liste des dates",
+        items=openapi.Component(DateComponent),
+    )
