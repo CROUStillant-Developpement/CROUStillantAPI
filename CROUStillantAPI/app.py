@@ -2,7 +2,7 @@ from sanic import Sanic, Request
 from .config import AppConfig
 from .components.ratelimit import Ratelimiter
 from .entities.entities import Entities
-from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC
+from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC, RouteMisc
 from .utils.logger import Logger
 from dotenv import load_dotenv
 from os import environ
@@ -101,6 +101,7 @@ app.blueprint(RouteRegions)
 app.blueprint(RouteRestaurants)
 app.blueprint(RoutePlats)
 app.blueprint(RouteBetterIUTRCC)
+app.blueprint(RouteMisc)
 
 
 @app.listener("before_server_start")
