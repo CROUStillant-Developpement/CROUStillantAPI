@@ -5,7 +5,7 @@ from sanic_ext import openapi, render
 
 
 bp = Blueprint(
-    name="Better IUT RCC",
+    name="BetterIUTRCC",
     url_prefix="/betteriutrcc",
     version=1,
     version_prefix="v"
