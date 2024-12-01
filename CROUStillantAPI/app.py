@@ -1,6 +1,7 @@
 from sanic import Sanic, Request
 from .config import AppConfig
 from .components.ratelimit import Ratelimiter
+from .components.statistics import PrometheusStatistics
 from .entities.entities import Entities
 from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC, RouteMisc
 from .utils.logger import Logger
@@ -22,6 +23,10 @@ app = Sanic(
     name="CROUStillantAPI",
     config=AppConfig(),
 )
+
+
+# Ajoute les statistiques Prometheus
+PrometheusStatistics(app)
 
 
 # Ajoute des informations à la documentation OpenAPI
