@@ -38,9 +38,6 @@ class PrometheusStatistics:
             registry=self.registry
         )
 
-        # Ajoute la route pour les métriques Prometheus
-        self.app.add_route(self.metrics, "/metrics")
-
         # Middlewares pour suivre les requêtes
         @app.middleware("request")
         async def track_requests_request(request) -> None:
