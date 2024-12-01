@@ -83,7 +83,7 @@ class PrometheusStatistics:
             },
             description="La ressource demandée nécessite une authentification valide."
         )
-        async def metrics(self, request: Request) -> HTTPResponse:
+        async def metrics(request: Request) -> HTTPResponse:
             """
             Route pour les métriques Prometheus
             
