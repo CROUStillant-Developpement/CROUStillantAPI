@@ -1,7 +1,6 @@
 import prometheus_client as prometheus
 
 from prometheus_client import CollectorRegistry
-from ..models.exceptions import Unauthorized
 from sanic import Sanic, Request, response, HTTPResponse
 from sanic_ext import openapi
 from datetime import datetime
@@ -66,23 +65,8 @@ class PrometheusStatistics:
 
 
         @app.route("/metrics", methods=["GET"])
-        @openapi.definition(
-            summary="Métriques Prometheus",
-            description="Route pour les métriques Prometheus.\n\n**⚠️ Attention** : Cette route nécessite une authentification valide. Son usage est réservé aux administrateurs de l'API.",
-            tag="Administration",
-        )
-        @openapi.response(
-            status=200,
-            content=openapi.String,
-            description="Métriques Prometheus"
-        )
-        @openapi.response(
-            status=401,
-            content={
-                "application/json": Unauthorized
-            },
-            description="La ressource demandée nécessite une authentification valide."
-        )
+        @openapi.no_autodoc
+        @openapi.exclude()
         async def metrics(request: Request) -> HTTPResponse:
             """
             Route pour les métriques Prometheus
