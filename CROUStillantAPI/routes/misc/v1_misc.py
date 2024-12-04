@@ -24,3 +24,17 @@ async def redirectEmail(request: Request) -> HTTPResponse:
     :return: Redirige vers l'adresse e-mail de contact
     """
     return redirect("mailto:croustillant@bayfield.dev")
+
+
+# /favicon.ico
+@bp.route("/favicon.ico", methods=["GET"])
+@openapi.no_autodoc
+@openapi.exclude()
+@ratelimit()
+async def favicon(request: Request) -> HTTPResponse:
+    """
+    Redirige vers l'icône du site.
+
+    :return: Redirige vers l'icône du site
+    """
+    return redirect("/static/favicon.ico")
