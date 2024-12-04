@@ -1,14 +1,12 @@
 from ...components.ratelimit import ratelimit
-from sanic.response import HTTPResponse, redirect
+from sanic.response import HTTPResponse, redirect, file
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 
 
 bp = Blueprint(
     name="Misc",
-    url_prefix="/",
-    version=1,
-    version_prefix="v"
+    url_prefix="/"
 )
 
 
@@ -37,4 +35,6 @@ async def favicon(request: Request) -> HTTPResponse:
 
     :return: Redirige vers l'icône du site
     """
-    return redirect("/static/favicon.ico")
+    return await file(
+        location="./static/favicon.ico"
+    )
