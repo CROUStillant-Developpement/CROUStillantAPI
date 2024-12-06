@@ -3,7 +3,7 @@ from .config import AppConfig
 from .components.ratelimit import Ratelimiter
 from .components.statistics import PrometheusStatistics
 from .entities.entities import Entities
-from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC, RouteMisc
+from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC, RouteMisc, RouteTaches
 from .utils.logger import Logger
 from dotenv import load_dotenv
 from os import environ
@@ -107,6 +107,7 @@ app.blueprint(RouteRestaurants)
 app.blueprint(RoutePlats)
 app.blueprint(RouteBetterIUTRCC)
 app.blueprint(RouteMisc)
+app.blueprint(RouteTaches)
 
 
 @app.listener("before_server_start")
