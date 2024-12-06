@@ -89,7 +89,7 @@ class Taches:
                     FROM
                         tache_log
                     WHERE
-                        id = $1
+                        idtache = $1
                 """,
                 id
             )
