@@ -38,7 +38,7 @@ bp = Blueprint(
 @ratelimit()
 async def getPlats(request: Request) -> JSONResponse:
     """
-    Récupère ls 100 derniers plats ajoutés à la base de données
+    Récupère les 100 derniers plats ajoutés à la base de données
 
     :return: Les plats
     """
