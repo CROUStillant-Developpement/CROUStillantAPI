@@ -173,7 +173,9 @@ async def getTache(request: Request, code: int) -> JSONResponse:
                 "fin_plats": tache.get("fin_plats"),
                 "fin_compositions": tache.get("fin_compositions"),
                 "requetes": tache.get("requetes"),
-                "restaurants": await request.app.ctx.entities.taches.getRestaurants(tacheID)
+                "restaurants": [
+                    restaurant.get("rid") for restaurant in await request.app.ctx.entities.taches.getRestaurants(tacheID)
+                ]
             }
         },
         status=200
