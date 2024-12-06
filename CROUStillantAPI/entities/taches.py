@@ -66,7 +66,7 @@ class Taches:
                     FROM
                         tache
                     WHERE
-                        tache = $1
+                        id = $1
                 """,
                 id
             )
@@ -89,7 +89,7 @@ class Taches:
                     FROM
                         tache_log
                     WHERE
-                        idtache = $1
+                        id = $1
                 """,
                 id
             )
