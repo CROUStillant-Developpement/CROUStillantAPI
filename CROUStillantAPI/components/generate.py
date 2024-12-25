@@ -172,7 +172,7 @@ def generate(session: ClientSession, restaurant, menu, date: datetime, theme: st
     ## Image
 
     try:
-        img = run(download(restaurant.get("IMAGE_URL"), session=session))
+        img = run(download(restaurant.get("image_url"), session=session))
     except:
         img = Image.open(f'./assets/images/default_ru.png')
 
