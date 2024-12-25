@@ -3,6 +3,7 @@ from .config import AppConfig
 from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
 from .components.statistics import PrometheusStatistics
+from .components.analytics import Analytics
 from .entities.entities import Entities
 from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC, RouteMisc, RouteTaches
 from .utils.logger import Logger
@@ -22,11 +23,6 @@ app = Sanic(
     name="CROUStillantAPI",
     config=AppConfig(),
 )
-
-
-# Ajoute les statistiques Prometheus
-PrometheusStatistics(app)
-
 
 # Ajoute des informations à la documentation OpenAPI
 app.ext.openapi.raw(
@@ -94,13 +90,17 @@ app.ext.openapi.describe(
 # Enregistrement des variables d'environnement
 app.ctx.schema = environ["PGRST_DB_SCHEMA"]
 
+# Enregistrement du rate limiter
+app.ctx.ratelimiter = Ratelimiter()
 
 # Enregistrement des middlewares
 Middleware(app)
 
+# Enregistrement des statistiques d'analyse
+Analytics(app)
 
-# Enregistrement du rate limiter
-app.ctx.ratelimiter = Ratelimiter()
+# Ajoute les statistiques Prometheus
+PrometheusStatistics(app)
 
 
 # Enregistrement des routes
@@ -132,6 +132,18 @@ async def setup_app(app: Sanic, loop):
             max_queries=50000,  # 50,000 queries
             loop=loop
         )
+
+        app.ctx.analytics = await create_pool(
+            database=environ["POSTGRES_DATABASE"], 
+            user=environ["POSTGRES_USER"], 
+            password=environ["POSTGRES_PASSWORD"], 
+            host=environ["POSTGRES_HOST"],
+            port=environ["POSTGRES_PORT"],
+            min_size=10,        # 10 connections
+            max_size=10,        # 10 connections
+            max_queries=50000,  # 50,000 queries
+            loop=loop
+        )
     except OSError:
         app.ctx.logs.error("Impossible de se connecter à la base de données !")
         app.ctx.logs.debug("Arrêt de l'API !")
@@ -139,7 +151,6 @@ async def setup_app(app: Sanic, loop):
 
 
     app.ctx.executor = ThreadPoolExecutor(max_workers=4)
-
 
     app.ctx.entities = Entities(app.ctx.pool)
 
@@ -149,6 +160,7 @@ async def setup_app(app: Sanic, loop):
 @app.listener("after_server_stop")
 async def close_app(app: Sanic, loop):
     await app.ctx.pool.close()
+    await app.ctx.analytics.close()
     await app.ctx.session.close()
 
     app.ctx.logs.info("API arrêtée")

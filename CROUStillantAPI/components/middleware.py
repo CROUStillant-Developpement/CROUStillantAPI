@@ -24,7 +24,7 @@ class Middleware:
             request.ctx.process_time_start = datetime.now(timezone("Europe/Paris")).timestamp()
 
 
-        @app.on_response(priority=999)
+        @app.on_response
         async def after_request(request: Request, response):
             """
             Middleware pour suivre les réponses

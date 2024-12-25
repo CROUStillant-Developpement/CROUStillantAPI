@@ -37,7 +37,7 @@ class PrometheusStatistics:
         )
 
 
-        @app.middleware("response")
+        @app.middleware("response", priority=999)
         async def track_requests_response(request, response) -> None:
             """
             Middleware pour suivre les réponses
