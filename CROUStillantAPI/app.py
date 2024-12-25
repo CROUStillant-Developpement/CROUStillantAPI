@@ -133,8 +133,8 @@ async def setup_app(app: Sanic, loop):
         app.ctx.logs.error("Impossible de se connecter à la base de données !")
         app.ctx.logs.debug("Arrêt de l'API !")
         exit(1)
-        
-    
+
+
     app.ctx.executor = ThreadPoolExecutor(max_workers=4)
 
 
@@ -163,4 +163,9 @@ async def after_request(request: Request, response):
     end = datetime.now(timezone("Europe/Paris")).timestamp()
     process = end - request.ctx.start
 
-    app.ctx.requests.info(f"{request.headers.get('CF-Connecting-IP', request.client_ip)} - [{request.method}] {request.url} - {response.status} ({process * 1000:.2f}ms)")
+    response.headers["X-Processing-Time"] = f"{int(process * 1000)}ms"
+    response.headers["X-API"] = "CROUStillantAPI"
+    response.headers["X-API-Version"] = f"v{app.config.API_VERSION}"
+    response.headers["Content-Language"] = "fr-FR"
+
+    app.ctx.requests.info(f"{request.headers.get('CF-Connecting-IP', request.client_ip)} - [{request.method}] {request.url} - {response.status} ({int(process * 1000)}ms)")
