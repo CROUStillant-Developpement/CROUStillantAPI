@@ -10,11 +10,10 @@ from json import loads
 from asyncio import run
 
 
-def generate(session: ClientSession, restaurant, menu, date: datetime, theme: str = "light") -> Image:
+def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
     """
     Génère une image du menu d'un restaurant universitaire.
 
-    :param session: Session.
     :param restaurant: Restaurant universitaire.
     :param menu: Menu du restaurant universitaire.
     :param date: Date du menu.
@@ -172,7 +171,11 @@ def generate(session: ClientSession, restaurant, menu, date: datetime, theme: st
     ## Image
 
     try:
-        img = run(download(restaurant.get("image_url"), session=session))
+        async def getImage():
+            async with ClientSession() as session:
+                return await download(restaurant.get("image_url"), session=session)
+
+        img = run(getImage())
     except:
         img = Image.open(f'./assets/images/default_ru.png')
 

@@ -709,7 +709,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
     def generate_image_in_background(restaurant, menu, date, theme):
         image = generate(
-            session=request.app.ctx.session, 
             restaurant=restaurant, 
             menu=menu,
             date=date, 
