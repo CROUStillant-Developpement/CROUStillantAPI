@@ -1,5 +1,6 @@
-from sanic import Sanic, Request
+from sanic import Sanic
 from .config import AppConfig
+from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
 from .components.statistics import PrometheusStatistics
 from .entities.entities import Entities
@@ -9,8 +10,6 @@ from dotenv import load_dotenv
 from os import environ
 from textwrap import dedent
 from asyncpg import create_pool
-from datetime import datetime
-from pytz import timezone
 from aiohttp import ClientSession
 from concurrent.futures import ThreadPoolExecutor
 
@@ -96,6 +95,10 @@ app.ext.openapi.describe(
 app.ctx.schema = environ["PGRST_DB_SCHEMA"]
 
 
+# Enregistrement des middlewares
+Middleware(app)
+
+
 # Enregistrement du rate limiter
 app.ctx.ratelimiter = Ratelimiter()
 
@@ -149,23 +152,3 @@ async def close_app(app: Sanic, loop):
     await app.ctx.session.close()
 
     app.ctx.logs.info("API arrêtée")
-
-
-@app.on_request
-async def before_request(request: Request):
-    # app.ctx.requests.info(f"{request.headers.get('CF-Connecting-IP', request.client_ip)} - [{request.method}] {request.url}")
-
-    request.ctx.start = datetime.now(timezone("Europe/Paris")).timestamp()
-
-
-@app.on_response
-async def after_request(request: Request, response):
-    end = datetime.now(timezone("Europe/Paris")).timestamp()
-    process = end - request.ctx.start
-
-    response.headers["X-Processing-Time"] = f"{int(process * 1000)}ms"
-    response.headers["X-API"] = "CROUStillantAPI"
-    response.headers["X-API-Version"] = f"v{app.config.API_VERSION}"
-    response.headers["Content-Language"] = "fr-FR"
-
-    app.ctx.requests.info(f"{request.headers.get('CF-Connecting-IP', request.client_ip)} - [{request.method}] {request.url} - {response.status} ({int(process * 1000)}ms)")
