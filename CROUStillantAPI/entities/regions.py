@@ -58,7 +58,7 @@ class Regions:
         async with self.pool.acquire() as connection:
             connection: Connection
 
-            return await connection.fetchrow(
+            return await connection.fetch(
                 """
                     SELECT
                         RID,
