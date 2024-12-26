@@ -101,7 +101,32 @@ class Menus:
                     FROM PUBLIC.MENU M
                     JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
                     WHERE R.RID = $1
-                    ORDER BY M.DATE
+                    ORDER BY M.DATE DESC
+                    WHERE M.DATE >= CURRENT_DATE
+                """,
+                id
+            )
+
+
+    async def getAllDates(self, id: int) -> dict:
+        """
+        Récupère les dates des menus d'un restaurant.
+
+        :param id: ID du restaurant
+        :return: Les dates des menus
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT
+                        M.MID,
+                        M.DATE
+                    FROM PUBLIC.MENU M
+                    JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
+                    WHERE R.RID = $1
+                    ORDER BY M.DATE DESC
                 """,
                 id
             )
