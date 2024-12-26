@@ -85,7 +85,7 @@ class Regions:
                     JOIN region R ON restaurant.idreg = R.idreg
                     JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
                     WHERE
-                        idreg = $1
+                        restaurant.idreg = $1
                 """,
                 id
             )
