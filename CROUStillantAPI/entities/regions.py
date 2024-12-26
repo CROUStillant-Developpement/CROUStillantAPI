@@ -46,3 +46,46 @@ class Regions:
                 """,
                 id
             )
+
+
+    async def getRestaurants(self, id: int) -> list[dict]:
+        """
+        Récupère les restaurants d'une région.
+
+        :param id: ID de la région
+        :return: Les restaurants
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT
+                        RID,
+                        R.IDREG AS IDREG,
+                        R.LIBELLE AS REGION,
+                        TPR.IDTPR AS IDTPR,
+                        TPR.LIBELLE AS TYPE,
+                        NOM,
+                        ADRESSE,
+                        LATITUDE,
+                        LONGITUDE,
+                        HORAIRES,
+                        JOURS_OUVERT,
+                        IMAGE_URL,
+                        EMAIL,
+                        TELEPHONE,
+                        ISPMR,
+                        ZONE,
+                        PAIEMENT,
+                        ACCES,
+                        OPENED
+                    FROM
+                        restaurant
+                    JOIN region R ON restaurant.idreg = R.idreg
+                    JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
+                    WHERE
+                        idreg = $1
+                """,
+                id
+            )
