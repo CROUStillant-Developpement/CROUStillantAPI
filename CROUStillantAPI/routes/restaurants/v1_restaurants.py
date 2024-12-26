@@ -1,6 +1,6 @@
 from ...components.ratelimit import ratelimit
 from ...components.generate import generate
-from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates
+from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
@@ -558,7 +558,7 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
 @openapi.response(
     status=200,
     content={
-        "image/png": openapi.Binary
+        "image/png": Image
     },
     description="Menu d'un restaurant sous forme d'image."
 )
