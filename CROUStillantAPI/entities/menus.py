@@ -100,9 +100,8 @@ class Menus:
                         M.DATE
                     FROM PUBLIC.MENU M
                     JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
-                    WHERE R.RID = $1
-                    ORDER BY M.DATE DESC
-                    WHERE M.DATE >= CURRENT_DATE
+                    WHERE R.RID = $1 AND M.DATE >= CURRENT_DATE
+                    ORDER BY M.DATE ASC
                 """,
                 id
             )
@@ -126,7 +125,7 @@ class Menus:
                     FROM PUBLIC.MENU M
                     JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
                     WHERE R.RID = $1
-                    ORDER BY M.DATE DESC
+                    ORDER BY M.DATE ASC
                 """,
                 id
             )
