@@ -18,6 +18,7 @@ bp = Blueprint(
 @bp.route("/assets/style.css", methods=["GET"])
 @openapi.no_autodoc
 @openapi.exclude()
+@openapi.deprecated()
 @ratelimit()
 async def getPageStyle(request: Request) -> HTTPResponse:
     """
@@ -34,6 +35,7 @@ async def getPageStyle(request: Request) -> HTTPResponse:
 @bp.route("/menu", methods=["GET"])
 @openapi.no_autodoc
 @openapi.exclude()
+@openapi.deprecated()
 @ratelimit()
 async def getMenu(request: Request) -> HTTPResponse:
     """
