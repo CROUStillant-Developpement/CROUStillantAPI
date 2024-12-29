@@ -312,10 +312,15 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
             }
         )
 
+    keys = list(menu_per_day.keys())
+    menus = []
+    for key in keys:
+        menus.append(menu_per_day[key])
+
     return json(
         {
             "success": True,
-            "data": menu_per_day
+            "data": menus
         },
         status=200
     )

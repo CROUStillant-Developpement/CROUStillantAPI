@@ -7,11 +7,9 @@ class Menus:
         description="Statut de la requête",
         example=True,
     )
-    data = openapi.Object(
-        description="Données de la réponse",
-        properties= {
-            "2024-10-19": openapi.Component(MenuComponent),
-        }
+    data = openapi.Array(
+        description="Liste des menus",
+        items=MenuComponent,
     )
 
 
