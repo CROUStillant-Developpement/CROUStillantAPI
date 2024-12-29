@@ -42,14 +42,22 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@openapi.parameter(
+    name="actif",
+    description="Renvoie uniquement les restaurants actifs",
+    required=False,
+    schema=bool,
+    location="path",
+    example=True
+)
 @ratelimit()
-async def getRestaurants(request: Request) -> JSONResponse:
+async def getRestaurants(request: Request, actif: bool = True) -> JSONResponse:
     """
     Récupère les restaurants
 
     :return: Les restaurants
     """
-    restaurants = await request.app.ctx.entities.restaurants.getAll()
+    restaurants = await request.app.ctx.entities.restaurants.getAll(actif=bool(actif))
 
     return json(
         {
@@ -78,7 +86,8 @@ async def getRestaurants(request: Request) -> JSONResponse:
                     "zone": restaurant.get("zone"),
                     "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
                     "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                    "ouvert": restaurant.get("opened")
+                    "ouvert": restaurant.get("opened"),
+                    "actif": restaurant.get("actif")
                 } for restaurant in restaurants
             ]
         },
@@ -185,7 +194,8 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
                 "zone": restaurant.get("zone"),
                 "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
                 "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                "ouvert": restaurant.get("opened")
+                "ouvert": restaurant.get("opened"),
+                "actif": restaurant.get("actif")
             }
         },
         status=200
