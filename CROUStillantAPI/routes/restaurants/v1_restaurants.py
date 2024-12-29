@@ -48,17 +48,17 @@ bp = Blueprint(
     description="Renvoie uniquement les restaurants actifs",
     required=False,
     schema=bool,
-    location="path",
+    location="query",
     example=True
 )
 @ratelimit()
-async def getRestaurants(request: Request, actif: bool = True) -> JSONResponse:
+async def getRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les restaurants
 
     :return: Les restaurants
     """
-    restaurants = await request.app.ctx.entities.restaurants.getAll(actif=getBoolFromString(actif))
+    restaurants = await request.app.ctx.entities.restaurants.getAll(actif=getBoolFromString(request.args.get("actif", True)))
 
     return json(
         {
