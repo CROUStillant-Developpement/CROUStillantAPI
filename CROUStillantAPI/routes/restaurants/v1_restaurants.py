@@ -4,6 +4,7 @@ from ...models.responses import Restaurants, Restaurant, TypesRestaurants, Resta
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
+from ...utils.format import getBoolFromString
 from sanic.response import JSONResponse, json, raw
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -57,7 +58,7 @@ async def getRestaurants(request: Request, actif: bool = True) -> JSONResponse:
 
     :return: Les restaurants
     """
-    restaurants = await request.app.ctx.entities.restaurants.getAll(actif=bool(actif))
+    restaurants = await request.app.ctx.entities.restaurants.getAll(actif=getBoolFromString(actif))
 
     return json(
         {
