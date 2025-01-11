@@ -5,7 +5,7 @@ from .components.ratelimit import Ratelimiter
 from .components.statistics import PrometheusStatistics
 from .components.analytics import Analytics
 from .entities.entities import Entities
-from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteBetterIUTRCC, RouteMisc, RouteTaches
+from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteMisc, RouteTaches
 from .utils.logger import Logger
 from dotenv import load_dotenv
 from os import environ
