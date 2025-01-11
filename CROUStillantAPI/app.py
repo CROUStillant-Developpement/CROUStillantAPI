@@ -108,7 +108,6 @@ app.blueprint(RouteService)
 app.blueprint(RouteRegions)
 app.blueprint(RouteRestaurants)
 app.blueprint(RoutePlats)
-app.blueprint(RouteBetterIUTRCC)
 app.blueprint(RouteMisc)
 app.blueprint(RouteTaches)
 
