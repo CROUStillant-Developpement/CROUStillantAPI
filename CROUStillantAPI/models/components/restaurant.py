@@ -66,3 +66,7 @@ class Restaurant:
         description="Informations sur l'accès au restaurant",
         example=["Bus 2,4, 6, 13"]
     )
+    actif = openapi.Boolean(
+        description="Le restaurant est-il actif ?",
+        example=True
+    )

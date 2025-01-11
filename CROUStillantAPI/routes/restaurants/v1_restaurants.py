@@ -1,9 +1,10 @@
 from ...components.ratelimit import ratelimit
 from ...components.generate import generate
-from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates
+from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
+from ...utils.format import getBoolFromString
 from sanic.response import JSONResponse, json, raw
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -42,6 +43,14 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@openapi.parameter(
+    name="actif",
+    description="Renvoie uniquement les restaurants actifs",
+    required=False,
+    schema=bool,
+    location="query",
+    example=True
+)
 @ratelimit()
 async def getRestaurants(request: Request) -> JSONResponse:
     """
@@ -49,7 +58,7 @@ async def getRestaurants(request: Request) -> JSONResponse:
 
     :return: Les restaurants
     """
-    restaurants = await request.app.ctx.entities.restaurants.getAll()
+    restaurants = await request.app.ctx.entities.restaurants.getAll(actif=getBoolFromString(request.args.get("actif", True)))
 
     return json(
         {
@@ -78,7 +87,8 @@ async def getRestaurants(request: Request) -> JSONResponse:
                     "zone": restaurant.get("zone"),
                     "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
                     "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                    "ouvert": restaurant.get("opened")
+                    "ouvert": restaurant.get("opened"),
+                    "actif": restaurant.get("actif")
                 } for restaurant in restaurants
             ]
         },
@@ -185,7 +195,8 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
                 "zone": restaurant.get("zone"),
                 "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
                 "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                "ouvert": restaurant.get("opened")
+                "ouvert": restaurant.get("opened"),
+                "actif": restaurant.get("actif")
             }
         },
         status=200
@@ -312,10 +323,15 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
             }
         )
 
+    keys = list(menu_per_day.keys())
+    menus = []
+    for key in keys:
+        menus.append(menu_per_day[key])
+
     return json(
         {
             "success": True,
-            "data": menu_per_day
+            "data": menus
         },
         status=200
     )
@@ -340,7 +356,7 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     content={
         "application/json": BadRequest
     },
-    description="L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY."
+    description="L'ID du restaurant doit être un nombre."
 )
 @openapi.response(
     status=404,
@@ -378,12 +394,101 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
         return json(
             {
                 "success": False,
-                "message": "L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY (example: 21-10-2024)."
+                "message": "L'ID du restaurant doit être un nombre."
             },
             status=400
         )
 
     dates = await request.app.ctx.entities.menus.getDates(
+        id=restaurantID
+    )
+
+    if dates is None or len(dates) == 0:
+        return json(
+            {
+                "success": False,
+                "message": "Aucun menu n'a été trouvé."
+            },
+            status=404
+        )
+
+    return json(
+        {
+            "success": True,
+            "data": [
+                {
+                    "code": row.get("mid"),
+                    "date": row.get("date").strftime("%d-%m-%Y")
+                } for row in dates
+            ]
+        },
+        status=200
+    )
+
+
+# /restaurants/{code}/menu/dates/all
+@bp.route("/<code>/menu/dates/all", methods=["GET"])
+@openapi.definition(
+    summary="Dates des menus disponibles d'un restaurant",
+    description="Dates des menus disponibles d'un restaurant en fonction de son code.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={
+        "application/json": Dates
+    },
+    description="Dates des menus disponibles"
+)
+@openapi.response(
+    status=400,
+    content={
+        "application/json": BadRequest
+    },
+    description="L'ID du restaurant doit être un nombre."
+)
+@openapi.response(
+    status=404,
+    content={
+        "application/json": NotFound
+    },
+    description="Le restaurant n'existe pas."
+)
+@openapi.response(
+    status=429,
+    content={
+        "application/json": RateLimited
+    },
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1
+)
+@ratelimit()
+async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse:
+    """
+    Retourne les dates des menus disponibles
+
+    :param code: ID du restaurant
+    :return: Le menu du restaurant
+    """
+    try:
+        restaurantID = int(code)
+    except ValueError:
+        return json(
+            {
+                "success": False,
+                "message": "L'ID du restaurant doit être un nombre."
+            },
+            status=400
+        )
+
+    dates = await request.app.ctx.entities.menus.getAllDates(
         id=restaurantID
     )
 
@@ -558,7 +663,7 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
 @openapi.response(
     status=200,
     content={
-        "image/png": openapi.Binary
+        "image/png": Image
     },
     description="Menu d'un restaurant sous forme d'image."
 )
@@ -709,7 +814,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
     def generate_image_in_background(restaurant, menu, date, theme):
         image = generate(
-            session=request.app.ctx.session, 
             restaurant=restaurant, 
             menu=menu,
             date=date, 

@@ -47,8 +47,7 @@ async def download(url: str, session: ClientSession):
         response.raise_for_status()
         image_data = await response.read()
 
-    image = Image.open(BytesIO(image_data)).convert("RGB")
-    return image
+    return Image.open(BytesIO(image_data)).convert("RGB")
 
 
 def saveImageToBuffer(image: Image, compression_level: int = 1) -> BytesIO:

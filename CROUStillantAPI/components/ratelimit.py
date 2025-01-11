@@ -74,8 +74,7 @@ class Ratelimiter:
             'X-RateLimit-Remaining': max(bucket_data['remaining'], 0),
             'X-RateLimit-Reset': bucket_data['reset'] - current_time,  # Time remaining to reset
             'X-RateLimit-Bucket': bucket.ident,
-            'X-RateLimit-Used': bucket.limit - bucket_data['remaining'],
-            'X-RateLimit-Key': key,
+            'X-RateLimit-Used': bucket.limit - bucket_data['remaining']
         }
 
         if bucket_data['remaining'] < 0:
@@ -111,7 +110,7 @@ class Ratelimiter:
         Permet de limiter les requêtes à la base de données et avoir des buckets dynamiques.
 
         :param pool: Pool de connexions à la base de données
-        :param key: Clé de la requête (IP)
+        :param key: Clé de la requête (IP ou API Key)
         :return: Bucket
         """
         if key in self.cache_buckets and self.cache_buckets[key]["expires"] > int(time.time()):
@@ -122,8 +121,7 @@ class Ratelimiter:
                         "X-RateLimit-Remaining": 0,
                         "X-RateLimit-Reset": 0,
                         "X-RateLimit-Bucket": "banned",
-                        "X-RateLimit-Used": 0,
-                        "X-RateLimit-Key": key
+                        "X-RateLimit-Used": 0
                     }, 
                     extra={"ban": True}
                 )
@@ -157,8 +155,7 @@ class Ratelimiter:
                             "X-RateLimit-Remaining": 0,
                             "X-RateLimit-Reset": 0,
                             "X-RateLimit-Bucket": "banned",
-                            "X-RateLimit-Used": 0,
-                            "X-RateLimit-Key": key
+                            "X-RateLimit-Used": 0
                         }, 
                         extra={"ban": True}
                     )

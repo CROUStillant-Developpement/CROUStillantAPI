@@ -7,3 +7,4 @@ from .plats import Plats, Plat, PlatsWithTotal
 from .menus import Menus, Menu, Dates
 from .taches import Taches, Tache
 from .changelog import ChangeLog
+from .image import Image

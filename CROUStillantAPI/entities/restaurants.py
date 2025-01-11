@@ -6,7 +6,7 @@ class Restaurants:
         self.pool = pool
 
 
-    async def getAll(self) -> list:
+    async def getAll(self, actif: bool = True) -> list:
         """
         Récupère tous les restaurants.
 
@@ -15,34 +15,67 @@ class Restaurants:
         async with self.pool.acquire() as connection:
             connection: Connection
 
-            return await connection.fetch(
-                """
-                    SELECT
-                        RID,
-                        R.IDREG AS IDREG,
-                        R.LIBELLE AS REGION,
-                        TPR.IDTPR AS IDTPR,
-                        TPR.LIBELLE AS TYPE,
-                        NOM,
-                        ADRESSE,
-                        LATITUDE,
-                        LONGITUDE,
-                        HORAIRES,
-                        JOURS_OUVERT,
-                        IMAGE_URL,
-                        EMAIL,
-                        TELEPHONE,
-                        ISPMR,
-                        ZONE,
-                        PAIEMENT,
-                        ACCES,
-                        OPENED
-                    FROM
-                        restaurant
-                    JOIN region R ON restaurant.idreg = R.idreg
-                    JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
-                """
-            )
+            if actif:
+                return await connection.fetch(
+                    """
+                        SELECT
+                            RID,
+                            R.IDREG AS IDREG,
+                            R.LIBELLE AS REGION,
+                            TPR.IDTPR AS IDTPR,
+                            TPR.LIBELLE AS TYPE,
+                            NOM,
+                            ADRESSE,
+                            LATITUDE,
+                            LONGITUDE,
+                            HORAIRES,
+                            JOURS_OUVERT,
+                            IMAGE_URL,
+                            EMAIL,
+                            TELEPHONE,
+                            ISPMR,
+                            ZONE,
+                            PAIEMENT,
+                            ACCES,
+                            OPENED
+                        FROM
+                            restaurant
+                        JOIN region R ON restaurant.idreg = R.idreg
+                        JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
+                        WHERE
+                            ACTIF = TRUE
+                    """
+                )
+            else:
+                return await connection.fetch(
+                    """
+                        SELECT
+                            RID,
+                            R.IDREG AS IDREG,
+                            R.LIBELLE AS REGION,
+                            TPR.IDTPR AS IDTPR,
+                            TPR.LIBELLE AS TYPE,
+                            NOM,
+                            ADRESSE,
+                            LATITUDE,
+                            LONGITUDE,
+                            HORAIRES,
+                            JOURS_OUVERT,
+                            IMAGE_URL,
+                            EMAIL,
+                            TELEPHONE,
+                            ISPMR,
+                            ZONE,
+                            PAIEMENT,
+                            ACCES,
+                            OPENED,
+                            ACTIF
+                        FROM
+                            restaurant
+                        JOIN region R ON restaurant.idreg = R.idreg
+                        JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
+                    """
+                )
 
 
     async def getOne(self, id: int) -> dict:
@@ -76,7 +109,8 @@ class Restaurants:
                         ZONE,
                         PAIEMENT,
                         ACCES,
-                        OPENED
+                        OPENED,
+                        ACTIF
                     FROM
                         restaurant
                     JOIN region R ON restaurant.idreg = R.idreg
