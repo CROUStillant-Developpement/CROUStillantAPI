@@ -1,0 +1,164 @@
+{
+    "CROUStillantWeb": [
+        {
+            "date": "2024-12-30T11:57:00Z",
+            "version": "v1.0.0",
+            "fr": {
+                "title": "CROUStillant Web",
+                "shortDescription": "CROUStillant Web est une version web de CROUStillant, accessible depuis n'importe quel navigateur.",
+                "fullDescription": "CROUStillant Web est une version web de CROUStillant, accessible depuis n'importe quel navigateur. Cette version permet de consulter les menus de la semaine, de la journée, et de la soirée des Restaurants Universitaires de France et d'outre-mer."
+            },
+            "en": {
+                "title": "CROUStillant Web",
+                "shortDescription": "CROUStillant Web is a web version of CROUStillant, accessible from any browser.",
+                "fullDescription": "CROUStillant Web is a web version of CROUStillant, accessible from any browser. This version allows you to view the menus for the week, the day, and the evening of University Restaurants in France and overseas."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                },
+                {
+                    "name": "Alden Cherif",
+                    "role": {
+                        "fr": "Concepteur de l'interface utilisateur et développeur web",
+                        "en": "UI designer and web developer"
+                    }
+                }
+            ]
+        }
+    ],
+    "CROUStillant": [
+        {
+            "date": "2024-11-27T23:00:00Z",
+            "version": "v2.0.0",
+            "fr": {
+                "title": "CROUStillant 2.0",
+                "shortDescription": "CROUStillant 2.0 est une refonte complète de CROUStillant, avec une nouvelle interface et de nouvelles fonctionnalités.",
+                "fullDescription": "CROUStillant 2.0 est une refonte complète de CROUStillant, avec une nouvelle interface et de nouvelles fonctionnalités. Cette version surveille désormais tous les Restaurants Universitaires de France et d'outre-mer, et permet de consulter les menus de la semaine, de la journée, et de la soirée."
+            },
+            "en": {
+                "title": "CROUStillant 2.0",
+                "shortDescription": "CROUStillant 2.0 is a complete overhaul of CROUStillant, with a new interface and new features.",
+                "fullDescription": "CROUStillant 2.0 is a complete overhaul of CROUStillant, with a new interface and new features. This version now monitors all University Restaurants in France and overseas, and allows you to view the menus for the week, the day, and the evening."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                },
+                {
+                    "name": "Lucas Debeve",
+                    "role": {
+                        "fr": "Concepteur de la base de données",
+                        "en": "Database designer"
+                    }
+                }
+            ]
+        }
+    ],
+    "CROUStillantBot": [
+        {
+            "date": "2025-01-05T11:22:00Z",
+            "version": "v2.1.0",
+            "fr": {
+                "title": "v2.1.0",
+                "shortDescription": "Correction de bugs et améliorations diverses.",
+                "fullDescription": "Cette version corrige plusieurs bugs et apporte diverses améliorations, notamment au niveau de la stabilité et de la performance."
+            },
+            "en": {
+                "title": "v2.1.0",
+                "shortDescription": "Bug fixes and various improvements.",
+                "fullDescription": "This version fixes several bugs and brings various improvements, notably in terms of stability and performance."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                }
+            ]
+        },
+        {
+            "date": "2024-11-27T23:00:00Z",
+            "version": "v2.0.0",
+            "fr": {
+                "title": "CROUStillant 2.0",
+                "shortDescription": "CROUStillant 2.0 est une refonte complète de CROUStillant, avec une nouvelle interface et de nouvelles fonctionnalités.",
+                "fullDescription": "CROUStillant 2.0 est une refonte complète de CROUStillant, avec une nouvelle interface et de nouvelles fonctionnalités. Cette version surveille désormais tous les Restaurants Universitaires de France et d'outre-mer, et permet de consulter les menus de la semaine, de la journée, et de la soirée."
+            },
+            "en": {
+                "title": "CROUStillant 2.0",
+                "shortDescription": "CROUStillant 2.0 is a complete overhaul of CROUStillant, with a new interface and new features.",
+                "fullDescription": "CROUStillant 2.0 is a complete overhaul of CROUStillant, with a new interface and new features. This version now monitors all University Restaurants in France and overseas, and allows you to view the menus for the week, the day, and the evening."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                }
+            ]
+        }
+    ],
+    "CROUStillantAPI": [
+        {
+            "date": "2024-11-27T23:00:00Z",
+            "version": "v1.0.0",
+            "fr": {
+                "title": "CROUStillant API",
+                "shortDescription": "CROUStillant API est une API RESTful permettant d'accéder aux données des Restaurants Universitaires de France et d'outre-mer.",
+                "fullDescription": "CROUStillant API est une API RESTful permettant d'accéder aux données des Restaurants Universitaires de France et d'outre-mer. Cette API permet de consulter les menus de la semaine, de la journée, et de la soirée, ainsi que les informations détaillées sur chaque plat et chaque restaurant."
+            },
+            "en": {
+                "title": "CROUStillant API",
+                "shortDescription": "CROUStillant API is a RESTful API allowing access to data from University Restaurants in France and overseas.",
+                "fullDescription": "CROUStillant 2.0 is a complete overhaul of CROUStillant, with a new interface and new features. This version now monitors all University Restaurants in France and overseas, and allows you to view the menus for the week, the day, and the evening."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                }
+            ]
+        }
+    ],
+    "CROUStillantListener": [
+        {
+            "date": "2024-11-27T23:00:00Z",
+            "version": "v1.0.0",
+            "fr": {
+                "title": "CROUStillant Listener",
+                "shortDescription": "Détecte les nouveaux restaurants",
+                "fullDescription": "CROUStillant Listener est un service qui détecte les nouveaux restaurants ajoutés à la base de données et envoie des notifications sur le serveur Discord."
+            },
+            "en": {
+                "title": "CROUStillant Listener",
+                "shortDescription": "Detects new restaurants",
+                "fullDescription": "CROUStillant Listener is a service that detects new restaurants added to the database and sends notifications to the Discord server."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                }
+            ]
+        }
+    ]
+}

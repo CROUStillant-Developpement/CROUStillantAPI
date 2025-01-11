@@ -4,3 +4,4 @@ from .type_restaurant import TypeRestaurant as TypeRestaurantComponent
 from .plat import Plat as PlatComponent, PlatWithTotal as PlatComponentWithTotal
 from .menu import Menu as MenuComponent, Date as DateComponent
 from .tache import Tache as TacheComponent, TacheWithRestaurants as TacheWithRestaurantsComponent
+from .changelog import ChangeLog as ChangeLogComponent
