@@ -13,6 +13,8 @@ from textwrap import dedent
 from asyncpg import create_pool
 from aiohttp import ClientSession
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from pytz import timezone
 
 
 load_dotenv(dotenv_path=f".env")
@@ -36,11 +38,15 @@ app.ext.openapi.raw(
     }
 )
 
+year = datetime.now(
+    tz=timezone("Europe/Paris")
+).year
+
 app.ext.openapi.describe(
     title=app.name,
     version=f"v{app.config.API_VERSION}",
     description=dedent(
-        """
+        f"""
             ![banner](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/images/banner.png)  
             # 📝 • Introduction
             CROUStillant est un projet open-source et gratuit qui a pour but de fournir des informations sur les menus des restaurants universitaires en France et en Outre-Mer.  
@@ -78,9 +84,9 @@ app.ext.openapi.describe(
             - GitHub : [github.com/CROUStillant-Developpement](https://github.com/CROUStillant-Developpement)  
               
             ⁣  
-            ![empty](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/banner-small.png)  
+            ![empty](https://croustillant.bayfield.dev/banner-small.png)  
 
-            **CROUStillant Développement © 2022 - 2024 | Tous droits réservés.**  
+            **CROUStillant Développement © 2022 - {year} | Tous droits réservés.**  
             *CROUStillant n'est pas affilié au 'CROUS' ou au 'CNOUS'.*  
         """
     ),
