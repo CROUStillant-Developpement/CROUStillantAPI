@@ -39,5 +39,3 @@ class Middleware:
             response.headers["X-API"] = "CROUStillantAPI"
             response.headers["X-API-Version"] = f"v{app.config.API_VERSION}"
             response.headers["Content-Language"] = "fr-FR"
-
-            app.ctx.requests.info(f"{request.headers.get('CF-Connecting-IP', request.client_ip)} - [{request.method}] {request.url} - {response.status} ({request.ctx.process_time}ms)")

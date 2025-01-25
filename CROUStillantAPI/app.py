@@ -122,7 +122,6 @@ app.blueprint(RouteInterne)
 @app.listener("before_server_start")
 async def setup_app(app: Sanic, loop):
     app.ctx.logs = Logger("logs")
-    app.ctx.requests = Logger("requests")
     app.ctx.session = ClientSession()
 
     # Chargement de la base de données
