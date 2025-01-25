@@ -146,3 +146,28 @@ class Restaurants:
                 """,
                 id
             )
+
+
+    async def getPreview(self, id: int) -> dict:
+        """
+        Récupère un aperçu d'un restaurant.
+
+        :param id: ID du restaurant
+        :return: L'aperçu du restaurant
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT
+                        IMAGE_URL,
+                        RAW_IMAGE,
+                    FROM
+                        RESTAURANT_IMAGE
+                    JOIN RESTAURANT R ON RESTAURANT_IMAGE.IMAGE_URL = R.IMAGE_URL
+                    WHERE
+                        R.RID = $1
+                """,
+                id
+            )
