@@ -182,7 +182,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
                 return await download(restaurant.get("image_url"), session=session)
 
         img = run(getImage())
-    except:
+    except Exception:
         img = Image.open("./assets/images/default_ru.png")
 
     img = img.resize((462, 295))

@@ -6,7 +6,7 @@ from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
 from ...utils.format import getBoolFromString
-from sanic.response import JSONResponse, raw
+from sanic.response import HTTPResponse, JSONResponse, raw
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 from json import loads
@@ -717,14 +717,12 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     example="light"
 )
 @ratelimit()
-async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str) -> JSONResponse:
+async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str) -> HTTPResponse:
     """
     Retourne le menu d'un restaurant.
 
     :param code: ID du restaurant
-    :param date: Date du menu:
-    :param repas: Repas du menu
-    :param theme: Thème de l'image
+    :param date: Date du menu
     :return: Le menu du restaurant
     """
     try:
@@ -922,6 +920,83 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
         },
         status=200
     ).generate()
+
+
+# /restaurants/{code}/preview
+@bp.route("/<code>/preview", methods=["GET"])
+@openapi.definition(
+    summary="Image d'un restaurant",
+    description="Image d'un restaurant en fonction de son code.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={
+        "image/png": Image
+    },
+    description="Image d'un restaurant."
+)
+@openapi.response(
+    status=400,
+    content={
+        "application/json": BadRequest
+    },
+    description="L'ID du restaurant doit être un nombre."
+)
+@openapi.response(
+    status=404,
+    content={
+        "application/json": NotFound
+    },
+    description="Le restaurant n'existe pas."
+)
+@openapi.response(
+    status=429,
+    content={
+        "application/json": RateLimited
+    },
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1
+)
+@ratelimit()
+async def getRestaurantPreview(request: Request, code: int) -> HTTPResponse:
+    """
+    Retourne le menu d'un restaurant.
+
+    :param code: ID du restaurant
+    :return: Le menu du restaurant
+    """
+    try:
+        restaurantID = int(code)
+    except ValueError:
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre.",
+            status=400
+        ).generate()
+
+    restaurant = await request.app.ctx.entities.restaurants.getPreview(restaurantID)
+
+    content = restaurant.get("raw_image")
+
+    return raw(
+        body=content,
+        status=200,
+        headers={
+            "Content-Disposition": f"attachment; filename={restaurant.get('nom')}.jpeg",
+            "Content-Length": str(len(content)),
+            "Content-Type": "image/jpeg"
+        },
+        content_type="image/jpeg"
+    )
 
 
 # /restaurants/types
