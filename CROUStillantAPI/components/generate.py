@@ -77,7 +77,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
     small = Text(size=30, weight=Weights.BOLD_ITALIC)
 
     if menu:
-        img = Image.open(f'./assets/images/{theme}/square.png')
+        img = Image.open(f'./assets/images/themes/{theme}/square.png')
         image.paste(img, (35, 168), img)
         image.paste(img, (658, 168), img)
 
@@ -151,7 +151,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
                 content_x = content_x2
                 content_y = content_y_save
     else:
-        img = Image.open(f'./assets/images/{theme}/none.png')
+        img = Image.open(f'./assets/images/themes/{theme}/none.png')
         image.paste(img, (35, 168), img)
 
         m = "Menu non disponible."
