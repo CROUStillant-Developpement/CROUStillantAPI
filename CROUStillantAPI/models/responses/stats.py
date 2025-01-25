@@ -8,7 +8,11 @@ class Data:
     )
     restaurants = openapi.Integer(
         description="Nombre de restaurants",
-        example=942,
+        example=982,
+    )
+    restaurants_actifs = openapi.Integer(
+        description="Nombre de restaurants actifs",
+        example=962,
     )
     types_restaurants = openapi.Integer(
         description="Nombre de types de restaurants",
