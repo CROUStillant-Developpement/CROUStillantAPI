@@ -177,7 +177,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
 
         img = run(getImage())
     except:
-        img = Image.open(f'./assets/images/default_ru.png')
+        img = Image.open("./assets/images/default_ru.png")
 
     img = img.resize((462, 295))
     img = addCorners(img, 20)
@@ -249,7 +249,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
             if horaires and len(horaires) > 1:
                 text.draw(drawer=drawer, text=f"• {shorten(horaires[1], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+space)
         else:
-            text.draw(drawer=drawer, text=f"• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y)
+            text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y)
     
 
     if restaurant.get("email"):
@@ -262,7 +262,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
             text.draw(drawer=drawer, text=f"• Téléphone : {restaurant.get('telephone')}", colour=colours[theme]['infos'], x=x, y=y+y_space)
 
     if not restaurant.get("email") and not restaurant.get("telephone"):
-        text.draw(drawer=drawer, text=f"• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space)
+        text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space)
 
 
     if restaurant.get("paiement"):
@@ -273,7 +273,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
         if paiement and len(paiement) > 1:
             text.draw(drawer=drawer, text=f"• {paiement[1]}", colour=colours[theme]['infos'], x=x, y=y+y_space*2+space)
     else:
-        text.draw(drawer=drawer, text=f"• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*2)
+        text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*2)
 
 
     text.draw(drawer=drawer, text=f"• {shorten(restaurant.get('zone'), width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*3)
@@ -288,7 +288,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
         acces = None
 
     if restaurant.get("pmr"):
-        text.draw(drawer=drawer, text=f"• Accessible aux PMR", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
+        text.draw(drawer=drawer, text="• Accessible aux PMR", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
 
         if acces:
             text.draw(drawer=drawer, text=f"• {shorten(acces[0], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*4+space)
@@ -302,7 +302,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
             else:
                 text.draw(drawer=drawer, text=f"• {shorten(acces[0], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
         else:
-            text.draw(drawer=drawer, text=f"• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
+            text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
 
 
     # Conversion en RGBA pour la transparence des coins
