@@ -1,8 +1,9 @@
 from ...components.ratelimit import ratelimit
+from ...components.response import JSON
 from ...models.responses import Regions, Region, Restaurants
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
-from sanic.response import JSONResponse, json
+from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 from json import loads
@@ -46,18 +47,17 @@ async def getRegions(request: Request) -> JSONResponse:
     """
     regions = await request.app.ctx.entities.regions.getAll()
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": region.get("idreg"),
-                    "libelle": region.get("libelle"),
-                } for region in regions
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": region.get("idreg"),
+                "libelle": region.get("libelle"),
+            } for region in regions
+        ],
         status=200
-    )
+    ).generate()
     
 
 # /regions/{code}
@@ -114,35 +114,35 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     try:
         regionID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID de la région doit être un nombre."
-            },
-            status=400
-        )
+        return JSON(
+            request=request,
+            success=False,
+            status=400,
+            message="L'ID de la région doit être un nombre."
+        ).generate()
+
 
     region = await request.app.ctx.entities.regions.getOne(regionID)
 
     if region is None:
-        return json(
-            {
-                "success": False,
-                "message": "La région n'existe pas."
-            },
-            status=404
-        )
+        return JSON(
+            request=request,
+            success=False,
+            status=404,
+            message="La région n'existe pas."
+        ).generate()
 
-    return json(
-        {
-            "success": True,
-            "data": {
-                "code": region.get("idreg"),
-                "libelle": region.get("libelle"),
-            }
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "code": region.get("idreg"),
+            "libelle": region.get("libelle"),
         },
         status=200
-    )
+    ).generate()
+
 
 # /regions/{code}/restaurants
 @bp.route("/<code>/restaurants", methods=["GET"])
@@ -197,57 +197,55 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
     try:
         regionID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID de la région doit être un nombre."
-            },
-            status=400
-        )
+        return JSON(
+            request=request,
+            success=False,
+            status=400,
+            message="L'ID de la région doit être un nombre."
+        ).generate()
 
     region = await request.app.ctx.entities.regions.getOne(regionID)
 
     if region is None:
-        return json(
-            {
-                "success": False,
-                "message": "La région n'existe pas."
-            },
-            status=404
-        )
+        return JSON(
+            request=request,
+            success=False,
+            status=404,
+            message="La région n'existe pas."
+        ).generate()
+
 
     restaurants = await request.app.ctx.entities.regions.getRestaurants(regionID)
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": restaurant.get("rid"),
-                    "region": {
-                        "code": restaurant.get("idreg"),
-                        "libelle": restaurant.get("region")
-                    },
-                    "type": {
-                        "code": restaurant.get("idtpr"),
-                        "libelle": restaurant.get("type")
-                    },
-                    "nom": restaurant.get("nom"),
-                    "adresse": restaurant.get("adresse"),
-                    "latitude": restaurant.get("latitude"),
-                    "longitude": restaurant.get("longitude"),
-                    "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
-                    "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
-                    "image_url": restaurant.get("image_url"),
-                    "email": restaurant.get("email"),
-                    "telephone": restaurant.get("telephone"),
-                    "ispmr": restaurant.get("ispmr"),
-                    "zone": restaurant.get("zone"),
-                    "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
-                    "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                    "ouvert": restaurant.get("opened")
-                } for restaurant in restaurants
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": restaurant.get("rid"),
+                "region": {
+                    "code": restaurant.get("idreg"),
+                    "libelle": restaurant.get("region")
+                },
+                "type": {
+                    "code": restaurant.get("idtpr"),
+                    "libelle": restaurant.get("type")
+                },
+                "nom": restaurant.get("nom"),
+                "adresse": restaurant.get("adresse"),
+                "latitude": restaurant.get("latitude"),
+                "longitude": restaurant.get("longitude"),
+                "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
+                "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
+                "image_url": restaurant.get("image_url"),
+                "email": restaurant.get("email"),
+                "telephone": restaurant.get("telephone"),
+                "ispmr": restaurant.get("ispmr"),
+                "zone": restaurant.get("zone"),
+                "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
+                "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
+                "ouvert": restaurant.get("opened")
+            } for restaurant in restaurants
+        ],
         status=200
-    )
+    ).generate()

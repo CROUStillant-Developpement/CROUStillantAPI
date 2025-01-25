@@ -35,6 +35,7 @@ class Stats:
                     SELECT
                         FIN_REGIONS AS regions,
                         FIN_RESTAURANTS AS restaurants,
+                        FIN_ACTIFS AS restaurants_actifs,
                         FIN_TYPES_RESTAURANTS AS types_restaurants,
                         FIN_MENUS AS menus,
                         FIN_REPAS AS repas,

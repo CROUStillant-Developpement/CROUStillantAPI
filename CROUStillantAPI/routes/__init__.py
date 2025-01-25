@@ -5,3 +5,14 @@ from .plats.v1_plats import bp as RoutePlats
 from .misc.v1_misc import bp as RouteMisc
 from .taches.v1_taches import bp as RouteTaches
 from .interne.v1_interne import bp as RouteInterne
+
+
+__all__ = [
+    "RouteRegions",
+    "RouteRestaurants",
+    "RouteService",
+    "RoutePlats",
+    "RouteMisc",
+    "RouteTaches",
+    "RouteInterne",
+]

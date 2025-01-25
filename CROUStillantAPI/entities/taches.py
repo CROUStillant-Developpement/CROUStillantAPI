@@ -25,11 +25,12 @@ class Taches:
             )
 
 
-    async def getLast(self, limit: int) -> list:
+    async def getLast(self, limit: int, offset: int) -> list:
         """
         Récupère les dernières tâches.
 
         :param limit: Nombre de tâches à récupérer
+        :param offset: Offset
         :return: Les tâches
         """
         async with self.pool.acquire() as connection:
@@ -44,8 +45,9 @@ class Taches:
                     ORDER BY
                         id DESC
                     LIMIT $1
+                    OFFSET $2
                 """,
-                limit
+                limit, offset
             )
 
 

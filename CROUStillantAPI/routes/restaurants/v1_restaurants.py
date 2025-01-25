@@ -1,11 +1,12 @@
 from ...components.ratelimit import ratelimit
 from ...components.generate import generate
+from ...components.response import JSON
 from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
 from ...utils.format import getBoolFromString
-from sanic.response import JSONResponse, json, raw
+from sanic.response import JSONResponse, raw
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 from json import loads
@@ -60,41 +61,40 @@ async def getRestaurants(request: Request) -> JSONResponse:
     """
     restaurants = await request.app.ctx.entities.restaurants.getAll(actif=getBoolFromString(request.args.get("actif", True)))
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": restaurant.get("rid"),
-                    "region": {
-                        "code": restaurant.get("idreg"),
-                        "libelle": restaurant.get("region")
-                    },
-                    "type": {
-                        "code": restaurant.get("idtpr"),
-                        "libelle": restaurant.get("type")
-                    },
-                    "nom": restaurant.get("nom"),
-                    "adresse": restaurant.get("adresse"),
-                    "latitude": restaurant.get("latitude"),
-                    "longitude": restaurant.get("longitude"),
-                    "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
-                    "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
-                    "image_url": restaurant.get("image_url"),
-                    "email": restaurant.get("email"),
-                    "telephone": restaurant.get("telephone"),
-                    "ispmr": restaurant.get("ispmr"),
-                    "zone": restaurant.get("zone"),
-                    "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
-                    "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                    "ouvert": restaurant.get("opened"),
-                    "actif": restaurant.get("actif")
-                } for restaurant in restaurants
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": restaurant.get("rid"),
+                "region": {
+                    "code": restaurant.get("idreg"),
+                    "libelle": restaurant.get("region")
+                },
+                "type": {
+                    "code": restaurant.get("idtpr"),
+                    "libelle": restaurant.get("type")
+                },
+                "nom": restaurant.get("nom"),
+                "adresse": restaurant.get("adresse"),
+                "latitude": restaurant.get("latitude"),
+                "longitude": restaurant.get("longitude"),
+                "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
+                "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
+                "image_url": restaurant.get("image_url"),
+                "email": restaurant.get("email"),
+                "telephone": restaurant.get("telephone"),
+                "ispmr": restaurant.get("ispmr"),
+                "zone": restaurant.get("zone"),
+                "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
+                "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
+                "ouvert": restaurant.get("opened"),
+                "actif": restaurant.get("actif")
+            } for restaurant in restaurants
+        ],
         status=200
-    )
-    
+    ).generate()
+
 
 # /restaurants/{code}
 @bp.route("/<code>", methods=["GET"])
@@ -150,57 +150,56 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     try:
         restaurantID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre.",
             status=400
-        )
+        ).generate()
+
 
     restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
 
     if restaurant is None:
-        return json(
-            {
-                "success": False,
-                "message": "Le restaurant n'existe pas."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
             status=404
-        )
+        ).generate()
 
-    return json(
-        {
-            "success": True,
-            "data": {
-                "code": restaurant.get("rid"),
-                "region": {
-                    "code": restaurant.get("idreg"),
-                    "libelle": restaurant.get("region")
-                },
-                "type": {
-                    "code": restaurant.get("idtpr"),
-                    "libelle": restaurant.get("type")
-                },
-                "nom": restaurant.get("nom"),
-                "adresse": restaurant.get("adresse"),
-                "latitude": restaurant.get("latitude"),
-                "longitude": restaurant.get("longitude"),
-                "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
-                "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
-                "image_url": restaurant.get("image_url"),
-                "email": restaurant.get("email"),
-                "telephone": restaurant.get("telephone"),
-                "ispmr": restaurant.get("ispmr"),
-                "zone": restaurant.get("zone"),
-                "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
-                "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                "ouvert": restaurant.get("opened"),
-                "actif": restaurant.get("actif")
-            }
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "code": restaurant.get("rid"),
+            "region": {
+                "code": restaurant.get("idreg"),
+                "libelle": restaurant.get("region")
+            },
+            "type": {
+                "code": restaurant.get("idtpr"),
+                "libelle": restaurant.get("type")
+            },
+            "nom": restaurant.get("nom"),
+            "adresse": restaurant.get("adresse"),
+            "latitude": restaurant.get("latitude"),
+            "longitude": restaurant.get("longitude"),
+            "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
+            "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
+            "image_url": restaurant.get("image_url"),
+            "email": restaurant.get("email"),
+            "telephone": restaurant.get("telephone"),
+            "ispmr": restaurant.get("ispmr"),
+            "zone": restaurant.get("zone"),
+            "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
+            "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
+            "ouvert": restaurant.get("opened"),
+            "actif": restaurant.get("actif")
         },
         status=200
-    )
+    ).generate()
 
 
 # /restaurants/{code}/menu
@@ -257,13 +256,13 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     try:
         restaurantID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre.",
             status=400
-        )
+        ).generate()
+
 
     menu = await request.app.ctx.entities.menus.getCurrent(
         id=restaurantID, 
@@ -273,13 +272,13 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     )
 
     if menu is None or len(menu) == 0:
-        return json(
-            {
-                "success": False,
-                "message": "Aucun menu n'est disponible pour ce restaurant."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="Aucun menu n'est disponible pour ce restaurant.",
             status=404
-        )
+        ).generate()
+
 
     menu_per_day = {}
     for row in menu:
@@ -328,13 +327,12 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     for key in keys:
         menus.append(menu_per_day[key])
 
-    return json(
-        {
-            "success": True,
-            "data": menus
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=menus,
         status=200
-    )
+    ).generate()
 
 
 # /restaurants/{code}/menu/dates
@@ -391,39 +389,38 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     try:
         restaurantID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre.",
             status=400
-        )
+        ).generate()
+
 
     dates = await request.app.ctx.entities.menus.getDates(
         id=restaurantID
     )
 
     if dates is None or len(dates) == 0:
-        return json(
-            {
-                "success": False,
-                "message": "Aucun menu n'a été trouvé."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="Aucun menu n'a été trouvé.",
             status=404
-        )
+        ).generate()
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": row.get("mid"),
-                    "date": row.get("date").strftime("%d-%m-%Y")
-                } for row in dates
-            ]
-        },
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": row.get("mid"),
+                "date": row.get("date").strftime("%d-%m-%Y")
+            } for row in dates
+        ],
         status=200
-    )
+    ).generate()
 
 
 # /restaurants/{code}/menu/dates/all
@@ -480,39 +477,38 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
     try:
         restaurantID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre.",
             status=400
-        )
+        ).generate()
+
 
     dates = await request.app.ctx.entities.menus.getAllDates(
         id=restaurantID
     )
 
     if dates is None or len(dates) == 0:
-        return json(
-            {
-                "success": False,
-                "message": "Aucun menu n'a été trouvé."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="Aucun menu n'a été trouvé.",
             status=404
-        )
+        ).generate()
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": row.get("mid"),
-                    "date": row.get("date").strftime("%d-%m-%Y")
-                } for row in dates
-            ]
-        },
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": row.get("mid"),
+                "date": row.get("date").strftime("%d-%m-%Y")
+            } for row in dates
+        ],
         status=200
-    )
+    ).generate()
 
 
 # /restaurants/{code}/menu/{date}
@@ -580,13 +576,13 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
 
         date = datetime.strptime(date, "%d-%m-%Y")
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY (example: 21-10-2024)."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY.",
             status=400
-        )
+        ).generate()
+
 
     menu = await request.app.ctx.entities.menus.getFromDate(
         id=restaurantID, 
@@ -594,13 +590,13 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     )
 
     if menu is None or len(menu) == 0:
-        return json(
-            {
-                "success": False,
-                "message": "Aucun menu n'a été trouvé pour cette date."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="Aucun menu n'a été trouvé pour cette date.",
             status=404
-        )
+        ).generate()
+
 
     menu_per_day = {}
     for row in menu:
@@ -644,13 +640,13 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
             }
         )
 
-    return json(
-        {
-            "success": True,
-            "data": menu_per_day[date]
-        },
+
+    return JSON(
+        request=request,
+        success=True,
+        data=menu_per_day[date],
         status=200
-    )
+    ).generate()
 
 
 # /restaurants/{code}/menu/{date}/image
@@ -736,13 +732,13 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
         date = datetime.strptime(date, "%d-%m-%Y")
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY (example: 21-10-2024)."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY.",
             status=400
-        )
+        ).generate()
+
 
     repas = request.args.get("repas", "midi").lower() if request.args.get("repas", "midi").lower() in ["matin", "midi", "soir"] else "midi"
     theme = request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light"
@@ -896,34 +892,33 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     try:
         restaurantID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du restaurant doit être un nombre."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID du restaurant doit être un nombre.",
             status=400
-        )
+        ).generate()
+
 
     info = await request.app.ctx.entities.restaurants.getInfo(restaurantID)
 
     if info is None:
-        return json(
-            {
-                "success": False,
-                "message": "Le restaurant n'existe pas."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
             status=404
-        )
+        ).generate()
 
-    return json(
-        {
-            "success": True,
-            "data": {
-                "code": info.get("rid"),
-                "ajout": info.get("ajout").strftime("%Y-%m-%d %H:%M:%S"),
-                "modifie": info.get("modifie").strftime("%Y-%m-%d %H:%M:%S") if info.get("modifie") else None,
-                "nb": info.get("taches"),
-            }
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "code": info.get("rid"),
+            "ajout": info.get("ajout").strftime("%Y-%m-%d %H:%M:%S"),
+            "modifie": info.get("modifie").strftime("%Y-%m-%d %H:%M:%S") if info.get("modifie") else None,
+            "nb": info.get("taches"),
         },
         status=200
     )
@@ -959,15 +954,14 @@ async def getTypesRestaurants(request: Request) -> JSONResponse:
     """
     types_restaurants = await request.app.ctx.entities.types_restaurants.getAll()
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": type_restaurant.get("idtpr"),
-                    "libelle": type_restaurant.get("libelle")
-                } for type_restaurant in types_restaurants
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": type_restaurant.get("idtpr"),
+                "libelle": type_restaurant.get("libelle")
+            } for type_restaurant in types_restaurants
+        ],
         status=200
     )

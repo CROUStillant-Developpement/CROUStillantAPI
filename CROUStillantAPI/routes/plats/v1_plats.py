@@ -1,7 +1,8 @@
 from ...components.ratelimit import ratelimit
+from ...components.response import JSON
 from ...models.responses import Plats, Plat, PlatsWithTotal
 from ...models.exceptions import RateLimited, BadRequest, NotFound
-from sanic.response import JSONResponse, json
+from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 
@@ -45,18 +46,17 @@ async def getPlats(request: Request) -> JSONResponse:
     # plats = await request.app.ctx.entities.plats.getAll()
     plats = await request.app.ctx.entities.plats.getLast(100)
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": plat.get("platid"),
-                    "libelle": plat.get("libelle"),
-                } for plat in plats
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": plat.get("platid"),
+                "libelle": plat.get("libelle"),
+            } for plat in plats
+        ],
         status=200
-    )
+    ).generate()
 
 
 # /plats/{code}
@@ -113,35 +113,34 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
     try:
         platID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID du plat doit être un nombre."
-            },
-            status=400
-        )
+        return JSON(
+            request=request,
+            success=False,
+            status=400,
+            message="L'ID du plat doit être un nombre."
+        ).generate()
+
 
     plat = await request.app.ctx.entities.plats.getOne(platID)
 
     if plat is None:
-        return json(
-            {
-                "success": False,
-                "message": "Le plat n'existe pas."
-            },
-            status=404
-        )
+        return JSON(
+            request=request,
+            success=False,
+            status=404,
+            message="Le plat n'existe pas."
+        ).generate()
 
-    return json(
-        {
-            "success": True,
-            "data": {
-                "code": plat.get("platid"),
-                "libelle": plat.get("libelle"),
-            }
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "code": plat.get("platid"),
+            "libelle": plat.get("libelle"),
         },
         status=200
-    )
+    ).generate()
 
 
 # /plats/top
@@ -174,16 +173,15 @@ async def getPlatTop(request: Request) -> JSONResponse:
     """
     plats = await request.app.ctx.entities.plats.getTop(100)
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "code": plat.get("platid"),
-                    "libelle": plat.get("libelle"),
-                    "total": plat.get("nb")
-                } for plat in plats
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": plat.get("platid"),
+                "libelle": plat.get("libelle"),
+                "total": plat.get("nb")
+            } for plat in plats
+        ],
         status=200
-    )
+    ).generate()

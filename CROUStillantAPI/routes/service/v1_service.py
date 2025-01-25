@@ -1,7 +1,8 @@
 from ...components.ratelimit import ratelimit
+from ...components.response import JSON
 from ...models.responses import Status, Stats
 from ...models.exceptions import RateLimited
-from sanic.response import JSONResponse, json
+from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 
@@ -41,12 +42,11 @@ async def getStatus(request: Request) -> JSONResponse:
 
     :return: JSONResponse
     """
-    return json(
-        {
-            "success": True,
-            "message": "L'API est en ligne."
-        },
-        status=200
+    return JSON(
+        request=request,
+        success=True,
+        message="L'API est en ligne.",
+        status=200,
     )
 
 
@@ -80,19 +80,19 @@ async def getStats(request: Request) -> JSONResponse:
     """
     stats = await request.app.ctx.entities.stats.get()
 
-    return json(
-        {
-            "success": True,
-            "data": {
-                "regions": stats.get("regions"),
-                "restaurants": stats.get("restaurants"),
-                "types_restaurants": stats.get("types_restaurants"),
-                "menus": stats.get("menus"),
-                "repas": stats.get("repas"),
-                "categories": stats.get("categories"),
-                "plats": stats.get("plats"),
-                "compositions": stats.get("compositions"),
-            }
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "regions": stats.get("regions", -1),
+            "restaurants": stats.get("restaurants", -1),
+            "restaurants_actifs": stats.get("restaurants_actifs", -1),
+            "types_restaurants": stats.get("types_restaurants", -1),
+            "menus": stats.get("menus", -1),
+            "repas": stats.get("repas", -1),
+            "categories": stats.get("categories", -1),
+            "plats": stats.get("plats", -1),
+            "compositions": stats.get("compositions", -1),
         },
-        status=200
+        status=200,
     )

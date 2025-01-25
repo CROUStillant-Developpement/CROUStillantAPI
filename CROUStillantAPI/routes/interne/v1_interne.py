@@ -1,7 +1,8 @@
 from ...components.ratelimit import ratelimit
+from ...components.response import JSON
 from ...models.responses import ChangeLog
 from ...models.exceptions import RateLimited
-from sanic.response import JSONResponse, json
+from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 from json import loads
@@ -46,10 +47,9 @@ async def getChangelog(request: Request) -> JSONResponse:
     with open("changelog.json", "r") as f:
         changelog = loads(f.read())
 
-    return json(
-        {
-            "success": True,
-            "data": changelog
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=changelog,
         status=200
-    )
+    ).generate()

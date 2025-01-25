@@ -7,7 +7,7 @@ from os import environ
 from dotenv import load_dotenv
 
 
-load_dotenv(dotenv_path=f".env")
+load_dotenv(dotenv_path=".env")
 
 
 class PrometheusStatistics:
