@@ -1,6 +1,7 @@
 from ...components.ratelimit import ratelimit
 from ...models.responses import Taches, Tache
 from ...models.exceptions import RateLimited, BadRequest, NotFound
+from ...utils.format import getIntFromString
 from sanic.response import JSONResponse, json
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -35,6 +36,14 @@ bp = Blueprint(
     },
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
+@openapi.parameter(
+    name="offset",
+    description="Décalage pour la pagination",
+    required=False,
+    schema=bool,
+    location="query",
+    example=0
+)
 @ratelimit()
 async def getTaches(request: Request) -> JSONResponse:
     """
@@ -42,7 +51,10 @@ async def getTaches(request: Request) -> JSONResponse:
 
     :return: Les 100 dernières tâches
     """
-    taches = await request.app.ctx.entities.taches.getLast(100)
+    taches = await request.app.ctx.entities.taches.getLast(
+        limit=100, 
+        offset=getIntFromString(request.args.get("offset", 0))
+    )
 
     return json(
         {
