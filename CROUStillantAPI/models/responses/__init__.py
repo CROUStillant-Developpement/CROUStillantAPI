@@ -8,3 +8,25 @@ from .menus import Menus, Menu, Dates
 from .taches import Taches, Tache
 from .changelog import ChangeLog
 from .image import Image
+
+
+__all__ = [
+    "Stats",
+    "Status",
+    "Regions",
+    "Region",
+    "Restaurants",
+    "Restaurant",
+    "RestaurantInfo",
+    "TypesRestaurants",
+    "Plats",
+    "Plat",
+    "PlatsWithTotal",
+    "Menus",
+    "Menu",
+    "Dates",
+    "Taches",
+    "Tache",
+    "ChangeLog",
+    "Image",
+]

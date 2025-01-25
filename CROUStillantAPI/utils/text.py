@@ -24,7 +24,7 @@ class Text:
         self.size = size
         self.weight = weight.value
 
-        self.font = ImageFont.truetype(f"./assets/fonts/Inter-VariableFont.ttf", self.size)
+        self.font = ImageFont.truetype("./assets/fonts/Inter-VariableFont.ttf", self.size)
         self.font.set_variation_by_name(self.weight)
 
 

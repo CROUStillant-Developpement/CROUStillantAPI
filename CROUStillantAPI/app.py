@@ -17,7 +17,7 @@ from datetime import datetime
 from pytz import timezone
 
 
-load_dotenv(dotenv_path=f".env")
+load_dotenv(dotenv_path=".env")
 
 
 # Initialisation de l'application
