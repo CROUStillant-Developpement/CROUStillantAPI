@@ -85,7 +85,7 @@ async def getTaches(request: Request) -> JSONResponse:
             } for tache in taches
         ],
         status=200
-    )
+    ).generate()
 
 
 # /taches/{code}
@@ -147,7 +147,7 @@ async def getTache(request: Request, code: int) -> JSONResponse:
             success=False,
             message="L'ID de la tâche doit être un nombre.",
             status=400
-        )
+        ).generate()
 
     tache = await request.app.ctx.entities.taches.getOne(tacheID)
 
@@ -157,7 +157,7 @@ async def getTache(request: Request, code: int) -> JSONResponse:
             success=False,
             message="La tâche n'existe pas.",
             status=404
-        )
+        ).generate()
 
     return JSON(
         request=request,
@@ -188,4 +188,4 @@ async def getTache(request: Request, code: int) -> JSONResponse:
             ]
         },
         status=200
-    )
+    ).generate()

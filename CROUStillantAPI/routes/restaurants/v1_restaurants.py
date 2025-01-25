@@ -921,7 +921,7 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
             "nb": info.get("taches"),
         },
         status=200
-    )
+    ).generate()
 
 
 # /restaurants/types
@@ -964,4 +964,4 @@ async def getTypesRestaurants(request: Request) -> JSONResponse:
             } for type_restaurant in types_restaurants
         ],
         status=200
-    )
+    ).generate()

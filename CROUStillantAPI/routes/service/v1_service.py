@@ -47,7 +47,7 @@ async def getStatus(request: Request) -> JSONResponse:
         success=True,
         message="L'API est en ligne.",
         status=200,
-    )
+    ).generate()
 
 
 # /stats
@@ -95,4 +95,4 @@ async def getStats(request: Request) -> JSONResponse:
             "compositions": stats.get("compositions", -1),
         },
         status=200,
-    )
+    ).generate()
