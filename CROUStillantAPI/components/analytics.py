@@ -1,5 +1,4 @@
 from sanic import Sanic, Request
-from uuid import uuid1
 from json import dumps
 
 
@@ -13,16 +12,6 @@ class Analytics:
 
         :param app: Sanic
         """
-
-        @app.on_request
-        async def before_request(request: Request):
-            """
-            Middleware pour suivre les requêtes entrantes
-
-            :param request: Request
-            """
-            request.ctx.request_id = str(uuid1())
-
 
         @app.on_response(priority=999)
         async def after_request(request: Request, response):
