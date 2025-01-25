@@ -1,8 +1,9 @@
 from ...components.ratelimit import ratelimit
+from ...components.response import JSON
 from ...models.responses import Taches, Tache
 from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.format import getIntFromString
-from sanic.response import JSONResponse, json
+from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 
@@ -56,34 +57,33 @@ async def getTaches(request: Request) -> JSONResponse:
         offset=getIntFromString(request.args.get("offset", 0))
     )
 
-    return json(
-        {
-            "success": True,
-            "data": [
-                {
-                    "id": tache.get("id"),
-                    "debut": tache.get("debut").strftime("%d-%m-%Y %H:%M:%S"),
-                    "debut_regions": tache.get("debut_regions"),
-                    "debut_restaurants": tache.get("debut_restaurants"),
-                    "debut_types_restaurants": tache.get("debut_types_restaurants"),
-                    "debut_menus": tache.get("debut_menus"),
-                    "debut_repas": tache.get("debut_repas"),
-                    "debut_categories": tache.get("debut_categories"),
-                    "debut_plats": tache.get("debut_plats"),
-                    "debut_compositions": tache.get("debut_compositions"),
-                    "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S") if tache.get("fin") is not None else None,
-                    "fin_regions": tache.get("fin_regions"),
-                    "fin_restaurants": tache.get("fin_restaurants"),
-                    "fin_types_restaurants": tache.get("fin_types_restaurants"),
-                    "fin_menus": tache.get("fin_menus"),
-                    "fin_repas": tache.get("fin_repas"),
-                    "fin_categories": tache.get("fin_categories"),
-                    "fin_plats": tache.get("fin_plats"),
-                    "fin_compositions": tache.get("fin_compositions"),
-                    "requetes": tache.get("requetes"),
-                } for tache in taches
-            ]
-        },
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "id": tache.get("id"),
+                "debut": tache.get("debut").strftime("%d-%m-%Y %H:%M:%S"),
+                "debut_regions": tache.get("debut_regions"),
+                "debut_restaurants": tache.get("debut_restaurants"),
+                "debut_types_restaurants": tache.get("debut_types_restaurants"),
+                "debut_menus": tache.get("debut_menus"),
+                "debut_repas": tache.get("debut_repas"),
+                "debut_categories": tache.get("debut_categories"),
+                "debut_plats": tache.get("debut_plats"),
+                "debut_compositions": tache.get("debut_compositions"),
+                "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S") if tache.get("fin") is not None else None,
+                "fin_regions": tache.get("fin_regions"),
+                "fin_restaurants": tache.get("fin_restaurants"),
+                "fin_types_restaurants": tache.get("fin_types_restaurants"),
+                "fin_menus": tache.get("fin_menus"),
+                "fin_repas": tache.get("fin_repas"),
+                "fin_categories": tache.get("fin_categories"),
+                "fin_plats": tache.get("fin_plats"),
+                "fin_compositions": tache.get("fin_compositions"),
+                "requetes": tache.get("requetes"),
+            } for tache in taches
+        ],
         status=200
     )
 
@@ -142,53 +142,50 @@ async def getTache(request: Request, code: int) -> JSONResponse:
     try:
         tacheID = int(code)
     except ValueError:
-        return json(
-            {
-                "success": False,
-                "message": "L'ID de la tâche doit être un nombre."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="L'ID de la tâche doit être un nombre.",
             status=400
         )
 
     tache = await request.app.ctx.entities.taches.getOne(tacheID)
 
     if tache is None:
-        return json(
-            {
-                "success": False,
-                "message": "La tâche n'existe pas."
-            },
+        return JSON(
+            request=request,
+            success=False,
+            message="La tâche n'existe pas.",
             status=404
         )
 
-    return json(
-        {
-            "success": True,
-            "data": {
-                "id": tache.get("id"),
-                "debut": tache.get("debut").strftime("%d-%m-%Y %H:%M:%S"),
-                "debut_regions": tache.get("debut_regions"),
-                "debut_restaurants": tache.get("debut_restaurants"),
-                "debut_types_restaurants": tache.get("debut_types_restaurants"),
-                "debut_menus": tache.get("debut_menus"),
-                "debut_repas": tache.get("debut_repas"),
-                "debut_categories": tache.get("debut_categories"),
-                "debut_plats": tache.get("debut_plats"),
-                "debut_compositions": tache.get("debut_compositions"),
-                "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S") if tache.get("fin") is not None else None,
-                "fin_regions": tache.get("fin_regions"),
-                "fin_restaurants": tache.get("fin_restaurants"),
-                "fin_types_restaurants": tache.get("fin_types_restaurants"),
-                "fin_menus": tache.get("fin_menus"),
-                "fin_repas": tache.get("fin_repas"),
-                "fin_categories": tache.get("fin_categories"),
-                "fin_plats": tache.get("fin_plats"),
-                "fin_compositions": tache.get("fin_compositions"),
-                "requetes": tache.get("requetes"),
-                "restaurants": [
-                    restaurant.get("rid") for restaurant in await request.app.ctx.entities.taches.getRestaurants(tacheID)
-                ]
-            }
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "id": tache.get("id"),
+            "debut": tache.get("debut").strftime("%d-%m-%Y %H:%M:%S"),
+            "debut_regions": tache.get("debut_regions"),
+            "debut_restaurants": tache.get("debut_restaurants"),
+            "debut_types_restaurants": tache.get("debut_types_restaurants"),
+            "debut_menus": tache.get("debut_menus"),
+            "debut_repas": tache.get("debut_repas"),
+            "debut_categories": tache.get("debut_categories"),
+            "debut_plats": tache.get("debut_plats"),
+            "debut_compositions": tache.get("debut_compositions"),
+            "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S") if tache.get("fin") is not None else None,
+            "fin_regions": tache.get("fin_regions"),
+            "fin_restaurants": tache.get("fin_restaurants"),
+            "fin_types_restaurants": tache.get("fin_types_restaurants"),
+            "fin_menus": tache.get("fin_menus"),
+            "fin_repas": tache.get("fin_repas"),
+            "fin_categories": tache.get("fin_categories"),
+            "fin_plats": tache.get("fin_plats"),
+            "fin_compositions": tache.get("fin_compositions"),
+            "requetes": tache.get("requetes"),
+            "restaurants": [
+                restaurant.get("rid") for restaurant in await request.app.ctx.entities.taches.getRestaurants(tacheID)
+            ]
         },
         status=200
     )
