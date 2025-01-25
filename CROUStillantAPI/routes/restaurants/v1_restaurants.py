@@ -710,7 +710,7 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
 )
 @openapi.parameter(
     name="theme",
-    description="Thème de l'image",
+    description="Thème de l'image (light, purple, dark)",
     required=False,
     schema=str,
     location="query",
@@ -741,7 +741,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
 
     repas = request.args.get("repas", "midi").lower() if request.args.get("repas", "midi").lower() in ["matin", "midi", "soir"] else "midi"
-    theme = request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "dark"] else "light"
+    theme = request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "purple", "dark"] else "light"
 
     restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
 

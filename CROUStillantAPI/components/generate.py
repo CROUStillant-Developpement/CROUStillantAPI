@@ -28,6 +28,12 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
             "title": "#333333",
             "infos": "#4F4F4F"
         },
+        "purple": {
+            "header": "#FFFFFF",
+            "content": "#F4EEE0",
+            "title": "#F4EEE0",
+            "infos": "#F4EEE0"
+        },
         "dark": {
             "header": "#FFFFFF",
             "content": "#F4EEE0",
@@ -37,7 +43,7 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
     }
 
 
-    image = Image.open(f'./assets/images/{theme}/background.png')
+    image = Image.open(f'./assets/images/themes/{theme}/background.png')
     drawer = ImageDraw.Draw(image)
 
 
