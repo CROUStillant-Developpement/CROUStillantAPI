@@ -948,7 +948,7 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     content={
         "application/json": NotFound
     },
-    description="Le restaurant n'existe pas."
+    description="Le restaurant ou l'image n'existe pas."
 )
 @openapi.response(
     status=429,
@@ -985,7 +985,25 @@ async def getRestaurantPreview(request: Request, code: int) -> HTTPResponse:
 
     restaurant = await request.app.ctx.entities.restaurants.getPreview(restaurantID)
 
+    if restaurant is None:
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
+            status=404
+        ).generate()
+
+
     content = restaurant.get("raw_image")
+
+    if content is None:
+        return JSON(
+            request=request,
+            success=False,
+            message="L'image n'a pas pu être récupérée.",
+            status=404
+        ).generate()
+
 
     return raw(
         body=content,

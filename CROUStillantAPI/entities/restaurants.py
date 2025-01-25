@@ -162,7 +162,7 @@ class Restaurants:
                 """
                     SELECT
                         IMAGE_URL,
-                        RAW_IMAGE,
+                        RAW_IMAGE
                     FROM
                         RESTAURANT_IMAGE
                     JOIN RESTAURANT R ON RESTAURANT_IMAGE.IMAGE_URL = R.IMAGE_URL
