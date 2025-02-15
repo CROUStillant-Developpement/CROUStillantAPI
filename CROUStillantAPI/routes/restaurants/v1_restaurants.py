@@ -858,12 +858,17 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             buffer = saveImageToBuffer(image, compression_level=1)
             return buffer.getvalue()
 
+        if preview:
+            preview = preview.get("raw_image", None)
+        else:
+            preview = None
+
 
         loop = get_event_loop()
         content = await loop.run_in_executor(
             request.app.ctx.executor, 
             generate_image_in_background, 
-            restaurant, data, date, preview.get("raw_image", None), theme
+            restaurant, data, date, preview, theme
         )
 
         await request.app.ctx.cache.add(
