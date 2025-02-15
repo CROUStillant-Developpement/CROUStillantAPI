@@ -30,26 +30,6 @@ def addCorners(image: Image, radius: int):
     return image
 
 
-async def download(url: str, session: ClientSession):
-    """
-    Télécharge une image.
-
-    :param url: URL de l'image.
-    :type url: str
-
-    :param session: Session.
-    :type session: ClientSession
-
-    :return: Image.
-    :rtype: Image
-    """
-    async with session.get(url) as response:
-        response.raise_for_status()
-        image_data = await response.read()
-
-    return Image.open(BytesIO(image_data)).convert("RGB")
-
-
 def saveImageToBuffer(image: Image, compression_level: int = 1) -> BytesIO:
     """
     Sauvegarde une image dans un buffer avec un niveau de compression spécifié.

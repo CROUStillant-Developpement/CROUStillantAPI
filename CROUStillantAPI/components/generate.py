@@ -1,22 +1,22 @@
 from ..utils.date import getCleanDate
-from ..utils.image import addCorners, download
+from ..utils.image import addCorners
 from ..utils.text import Text, splitText
 from ..utils.weights import Weights
 from PIL import Image, ImageDraw
 from textwrap import shorten
-from aiohttp import ClientSession
 from datetime import datetime
 from json import loads
-from asyncio import run
+from io import BytesIO
 
 
-def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
+def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light") -> Image:
     """
     Génère une image du menu d'un restaurant universitaire.
 
     :param restaurant: Restaurant universitaire.
     :param menu: Menu du restaurant universitaire.
     :param date: Date du menu.
+    :param preview: Prévisualisation de l'image.
     :param theme: Thème de l'image.
     :return: L'image du menu.
     """
@@ -176,13 +176,9 @@ def generate(restaurant, menu, date: datetime, theme: str = "light") -> Image:
 
     ## Image
 
-    try:
-        async def getImage():
-            async with ClientSession() as session:
-                return await download(restaurant.get("image_url"), session=session)
-
-        img = run(getImage())
-    except Exception:
+    if preview:
+        img = Image.open(BytesIO(preview))
+    else:
         img = Image.open("./assets/images/default_ru.png")
 
     img = img.resize((462, 295))

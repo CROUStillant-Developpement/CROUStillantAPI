@@ -67,12 +67,12 @@ class Cache:
         """
         Vérifie si certaines valeurs en cache sont expirées, et les supprime le cas échéant
         """
-        if (datetime.now() - self.last_check).seconds < 30:
-            return
+        if (datetime.now() - self.last_check).seconds >= 30:
+            self.last_check = datetime.now()
 
-        for key in await self.get_all_keys():
-            if await self.is_expired(key):
-                await self.delete(key)
+            for key in await self.get_all_keys():
+                if await self.is_expired(key):
+                    await self.delete(key)
 
 
     async def get_all_keys(self) -> list[str]:
