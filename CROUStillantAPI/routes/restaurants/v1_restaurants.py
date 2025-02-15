@@ -758,6 +758,8 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             status=404
         ).generate()
 
+    preview = await request.app.ctx.entities.restaurants.getPreview(restaurantID)
+
     cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}")
 
     if cached:
@@ -845,11 +847,12 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             data = None
 
 
-        def generate_image_in_background(restaurant, menu, date, theme):
+        def generate_image_in_background(restaurant, menu, date, preview, theme):
             image = generate(
                 restaurant=restaurant, 
                 menu=menu,
                 date=date, 
+                preview=preview,
                 theme=theme
             )
             buffer = saveImageToBuffer(image, compression_level=1)
@@ -860,7 +863,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
         content = await loop.run_in_executor(
             request.app.ctx.executor, 
             generate_image_in_background, 
-            restaurant, data, date, theme
+            restaurant, data, date, preview.get("raw_image", None), theme
         )
 
         await request.app.ctx.cache.add(
