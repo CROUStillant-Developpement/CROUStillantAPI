@@ -750,7 +750,8 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
 
 
-    cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}")
+    cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}")
+
     if cached:
         content = cached.get("value")
         timestamp = cached.get("timestamp")
@@ -855,7 +856,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
         )
 
         await request.app.ctx.cache.add(
-            key=f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}",
+            key=f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}",
             value=content
         )
 
@@ -872,7 +873,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             content_type="image/png"
         )
     except Exception as e:
-        logger.error(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}", e)
+        logger.error(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}", e)
 
         raise exceptions.ServerError(f"Une erreur est survenue lors de la génération de l'image (/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme})")
 
