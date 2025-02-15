@@ -4,6 +4,7 @@ from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
 from .components.statistics import PrometheusStatistics
 from .components.analytics import Analytics
+from .components.cache import Cache
 from .entities.entities import Entities
 from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteMisc, RouteTaches, RouteInterne
 from .utils.logger import Logger
@@ -108,6 +109,8 @@ Analytics(app)
 # Ajoute les statistiques Prometheus
 PrometheusStatistics(app)
 
+# Enregistrement du cache
+app.ctx.cache = Cache()
 
 # Enregistrement des routes
 app.blueprint(RouteService)

@@ -7,7 +7,8 @@ from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
 from ...utils.format import getBoolFromString
 from sanic.response import HTTPResponse, JSONResponse, raw
-from sanic import Blueprint, Request
+from sanic import Blueprint, Request, exceptions
+from sanic.log import logger
 from sanic_ext import openapi
 from json import loads
 from datetime import datetime
@@ -725,6 +726,11 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     :param date: Date du menu
     :return: Le menu du restaurant
     """
+    # Nettoie le cache si nécessaire
+    await request.app.add_task(
+        request.app.ctx.cache.clear()
+    )
+
     try:
         restaurantID = int(code)
 
@@ -743,97 +749,132 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
     restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
 
-    menu = await request.app.ctx.entities.menus.getFromDate(
-        id=restaurantID, 
-        date=date
-    )
 
-    if menu:
-        menu_per_day = {}
-        for row in menu:
-            d = row.get("date").strftime("%d-%m-%Y")
+    if await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}"):
+        cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}")
+        content = cached.get("value")
+        timestamp = cached.get("timestamp")
 
-            day_menu = menu_per_day.setdefault(
-                d, 
-                {
-                    "code": row.get("mid"),
-                    "date": d,
-                    "repas": []
-                }
-            )
+        # Récupère le temps restant avant expiration du cache
+        max_age = request.app.ctx.cache.expiration_time - (datetime.now() - timestamp).seconds
 
-            repas_list = day_menu["repas"]
-
-            if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
-                repas_list.append(
-                    {
-                        "code": row.get("rpid"),
-                        "type": row.get("tpr"),
-                        "categories": []
-                    }
-                )
-
-            r = repas_list[-1]
-            categories_list = r["categories"]
-
-            if not categories_list or row.get("tpcat") not in categories_list[-1]["libelle"]:
-                categories_list.append(
-                    {
-                        "code": row.get("catid"),
-                        "libelle": row.get("tpcat"),
-                        "ordre": row.get("cat_ordre") + 1,
-                        "plats": []
-                    }
-                )
-
-            categories_list[-1]["plats"].append(
-                {
-                    "code": row.get("platid"),
-                    "ordre": row.get("plat_ordre") + 1,
-                    "libelle": row.get("plat")
-                }
-            )
-
-        data = None
-        for menu in menu_per_day:
-            if date.strftime("%d-%m-%Y") == menu:
-                for m in menu_per_day[menu]["repas"]:
-                    if m["type"] == repas:
-                        data = m
-                        break
-                break
-    else:
-        data = None
-
-
-    def generate_image_in_background(restaurant, menu, date, theme):
-        image = generate(
-            restaurant=restaurant, 
-            menu=menu,
-            date=date, 
-            theme=theme
+        return raw(
+            body=content,
+            status=200,
+            headers={
+                "Content-Disposition": f"attachment; filename={restaurant.get('nom')} - {date.strftime('%d-%m-%Y')}.png",
+                "Content-Length": str(len(content)),
+                "Content-Type": "image/png",
+                "Cache-Control": f"public, max-age={max_age}",
+                "X-Cache": "HIT"
+            },
+            content_type="image/png"
         )
-        buffer = saveImageToBuffer(image, compression_level=1)
-        return buffer.getvalue()
 
 
-    loop = get_event_loop()
-    content = await loop.run_in_executor(
-        request.app.ctx.executor, 
-        generate_image_in_background, 
-        restaurant, data, date, theme
-    )
+    try:
+        menu = await request.app.ctx.entities.menus.getFromDate(
+            id=restaurantID, 
+            date=date
+        )
 
-    return raw(
-        body=content,
-        status=200,
-        headers={
-            "Content-Disposition": f"attachment; filename={restaurant.get('nom')} - {date.strftime('%d-%m-%Y')}.png",
-            "Content-Length": str(len(content)),
-            "Content-Type": "image/png"
-        },
-        content_type="image/png"
-    )
+        if menu:
+            menu_per_day = {}
+            for row in menu:
+                d = row.get("date").strftime("%d-%m-%Y")
+
+                day_menu = menu_per_day.setdefault(
+                    d, 
+                    {
+                        "code": row.get("mid"),
+                        "date": d,
+                        "repas": []
+                    }
+                )
+
+                repas_list = day_menu["repas"]
+
+                if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
+                    repas_list.append(
+                        {
+                            "code": row.get("rpid"),
+                            "type": row.get("tpr"),
+                            "categories": []
+                        }
+                    )
+
+                r = repas_list[-1]
+                categories_list = r["categories"]
+
+                if not categories_list or row.get("tpcat") not in categories_list[-1]["libelle"]:
+                    categories_list.append(
+                        {
+                            "code": row.get("catid"),
+                            "libelle": row.get("tpcat"),
+                            "ordre": row.get("cat_ordre") + 1,
+                            "plats": []
+                        }
+                    )
+
+                categories_list[-1]["plats"].append(
+                    {
+                        "code": row.get("platid"),
+                        "ordre": row.get("plat_ordre") + 1,
+                        "libelle": row.get("plat")
+                    }
+                )
+
+            data = None
+            for menu in menu_per_day:
+                if date.strftime("%d-%m-%Y") == menu:
+                    for m in menu_per_day[menu]["repas"]:
+                        if m["type"] == repas:
+                            data = m
+                            break
+                    break
+        else:
+            data = None
+
+
+        def generate_image_in_background(restaurant, menu, date, theme):
+            image = generate(
+                restaurant=restaurant, 
+                menu=menu,
+                date=date, 
+                theme=theme
+            )
+            buffer = saveImageToBuffer(image, compression_level=1)
+            return buffer.getvalue()
+
+
+        loop = get_event_loop()
+        content = await loop.run_in_executor(
+            request.app.ctx.executor, 
+            generate_image_in_background, 
+            restaurant, data, date, theme
+        )
+
+        await request.app.ctx.add(
+            key=f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}",
+            value=content
+        )
+
+        return raw(
+            body=content,
+            status=200,
+            headers={
+                "Content-Disposition": f"attachment; filename={restaurant.get('nom')} - {date.strftime('%d-%m-%Y')}.png",
+                "Content-Length": str(len(content)),
+                "Content-Type": "image/png",
+                "Cache-Control": f"public, max-age={request.app.ctx.cache.expiration_time}",
+                "X-Cache": "MISS",
+            },
+            content_type="image/png"
+        )
+    except Exception as e:
+        logger.error(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}", e)
+
+        raise exceptions.ServerError(f"Une erreur est survenue lors de la génération de l'image (/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme})")
 
 
 # /restaurants/{code}/info
