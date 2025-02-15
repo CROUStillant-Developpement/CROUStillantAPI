@@ -50,13 +50,6 @@ class Cache:
         self.cache.pop(key, None)
 
 
-    async def clear(self) -> None:
-        """
-        Vide le cache
-        """
-        self.cache.clear()
-
-
     async def is_expired(self, key: str) -> bool:
         """
         Vérifie si une valeur en cache est expirée
@@ -66,12 +59,11 @@ class Cache:
         """
         if key not in self.cache:
             return True
+        else:
+            return (datetime.now() - self.cache[key]['timestamp']).seconds >= self.expiration_time
 
-        timestamp = self.cache[key]['timestamp']
-        return (datetime.now() - timestamp).seconds >= self.expiration_time
 
-
-    async def check(self) -> None:
+    async def clear(self) -> None:
         """
         Vérifie si certaines valeurs en cache sont expirées, et les supprime le cas échéant
         """
@@ -80,7 +72,7 @@ class Cache:
 
         for key in await self.get_all_keys():
             if await self.is_expired(key):
-                self.delete(key)
+                await self.delete(key)
 
 
     async def get_all_keys(self) -> list[str]:
@@ -89,4 +81,4 @@ class Cache:
 
         :return: list[str]
         """
-        return self.cache.keys()
+        return list(self.cache.keys())

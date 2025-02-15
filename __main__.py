@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from os import environ
 
 
-load_dotenv(dotenv_path=f".env")
+load_dotenv(dotenv_path=".env")
 
 
 if __name__ == '__main__':
