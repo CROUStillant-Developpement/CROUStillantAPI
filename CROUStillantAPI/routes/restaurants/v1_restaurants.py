@@ -854,7 +854,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             restaurant, data, date, theme
         )
 
-        await request.app.ctx.add(
+        await request.app.ctx.cache.add(
             key=f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}",
             value=content
         )
