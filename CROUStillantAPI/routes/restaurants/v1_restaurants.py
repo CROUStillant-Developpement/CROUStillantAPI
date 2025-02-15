@@ -6,8 +6,9 @@ from ...models.exceptions import RateLimited, BadRequest, NotFound
 from ...utils.opening import Opening
 from ...utils.image import saveImageToBuffer
 from ...utils.format import getBoolFromString
+from ...exceptions.error import ServerErrorException
 from sanic.response import HTTPResponse, JSONResponse, raw
-from sanic import Blueprint, Request, exceptions
+from sanic import Blueprint, Request
 from sanic.log import logger
 from sanic_ext import openapi
 from json import loads
@@ -749,6 +750,13 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
     restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
 
+    if not restaurant:
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
+            status=404
+        ).generate()
 
     cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}")
 
@@ -875,7 +883,14 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     except Exception as e:
         logger.error(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}", e)
 
-        raise exceptions.ServerError(f"Une erreur est survenue lors de la génération de l'image (/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme})")
+        raise ServerErrorException(
+            headers={
+                "Retry-After": 60
+            },
+            extra={
+                "message": f"Une erreur est survenue lors de la génération de l'image (/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}?theme={theme})"
+            }
+        )
 
 
 # /restaurants/{code}/info
