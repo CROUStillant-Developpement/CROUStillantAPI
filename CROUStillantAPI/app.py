@@ -6,7 +6,7 @@ from .components.statistics import PrometheusStatistics
 from .components.analytics import Analytics
 from .components.cache import Cache
 from .entities.entities import Entities
-from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteMisc, RouteTaches, RouteInterne
+from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteMisc, RouteTaches, RouteInterne, RouteMonitoring
 from .utils.logger import Logger
 from dotenv import load_dotenv
 from os import environ
@@ -120,6 +120,7 @@ app.blueprint(RoutePlats)
 app.blueprint(RouteMisc)
 app.blueprint(RouteTaches)
 app.blueprint(RouteInterne)
+app.blueprint(RouteMonitoring)
 
 
 @app.listener("before_server_start")

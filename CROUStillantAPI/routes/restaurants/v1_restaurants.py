@@ -750,8 +750,8 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
 
 
-    if await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}"):
-        cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}")
+    cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date}/image?repas={repas}?theme={theme}")
+    if cached:
         content = cached.get("value")
         timestamp = cached.get("timestamp")
 

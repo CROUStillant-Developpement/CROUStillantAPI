@@ -21,8 +21,8 @@ class Cache:
         :param key: str
         :return: any
         """
-        if self.is_expired(key):
-            self.delete(key)
+        if await self.is_expired(key):
+            await self.delete(key)
             return None
 
         return self.cache.get(key, None)
@@ -78,8 +78,8 @@ class Cache:
         if (datetime.now() - self.last_check).seconds < 30:
             return
 
-        for key in self.cache.keys():
-            if self.is_expired(key):
+        for key in await self.get_all_keys():
+            if await self.is_expired(key):
                 self.delete(key)
 
 
