@@ -5,6 +5,7 @@ from sanic import Sanic, Request, response, HTTPResponse
 from sanic_ext import openapi
 from os import environ
 from dotenv import load_dotenv
+from datetime import datetime
 
 
 load_dotenv(dotenv_path=".env")
@@ -35,6 +36,9 @@ class PrometheusStatistics:
             labelnames=["method", "endpoint", "status"],
             registry=self.registry
         )
+        
+        self.cache = None
+        self.cache_timestamp = None
 
 
         @app.middleware("response", priority=999)
@@ -75,9 +79,28 @@ class PrometheusStatistics:
                     status=401
                 )
 
-            output = prometheus.exposition.generate_latest(self.registry).decode("utf-8")
-            content_type = prometheus.exposition.CONTENT_TYPE_LATEST
+            output = prometheus.exposition.generate_latest(self.registry).decode("utf-8") 
             return response.text(
                 body=output,        
-                content_type=content_type
+                content_type=prometheus.exposition.CONTENT_TYPE_LATEST
+            )
+
+
+        @app.route("/metrics/public", methods=["GET"])
+        @openapi.no_autodoc
+        @openapi.exclude()
+        async def metrics_public(request: Request) -> HTTPResponse:
+            """
+            Route pour les métriques Prometheus
+            
+            :param request: Request
+            :return: HTTPResponse
+            """
+            if self.cache_timestamp is None or (datetime.now() - self.cache_timestamp).seconds > 30:
+                self.cache = prometheus.exposition.generate_latest(self.registry).decode("utf-8")
+                self.cache_timestamp = datetime.now()
+
+            return response.text(
+                body=self.cache,        
+                content_type=prometheus.exposition.CONTENT_TYPE_LATEST
             )
