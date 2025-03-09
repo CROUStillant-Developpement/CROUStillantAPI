@@ -5,8 +5,9 @@ from .components.ratelimit import Ratelimiter
 from .components.statistics import PrometheusStatistics
 from .components.analytics import Analytics
 from .components.cache import Cache
+from .components.blueprint import BlueprintLoader
+from .components.errors import ErrorHandler
 from .entities.entities import Entities
-from .routes import RouteService, RouteRegions, RouteRestaurants, RoutePlats, RouteMisc, RouteTaches, RouteInterne, RouteMonitoring
 from .utils.logger import Logger
 from dotenv import load_dotenv
 from os import environ
@@ -93,6 +94,8 @@ app.ext.openapi.describe(
     ),
 )
 
+# Enregistrement du logger
+app.ctx.logs = Logger("logs")
 
 # Enregistrement des variables d'environnement
 app.ctx.schema = environ["PGRST_DB_SCHEMA"]
@@ -113,19 +116,14 @@ PrometheusStatistics(app)
 app.ctx.cache = Cache()
 
 # Enregistrement des routes
-app.blueprint(RouteService)
-app.blueprint(RouteRegions)
-app.blueprint(RouteRestaurants)
-app.blueprint(RoutePlats)
-app.blueprint(RouteMisc)
-app.blueprint(RouteTaches)
-app.blueprint(RouteInterne)
-app.blueprint(RouteMonitoring)
+BlueprintLoader(app).register()
+
+# Enregistrement des erreurs
+ErrorHandler(app)
 
 
 @app.listener("before_server_start")
 async def setup_app(app: Sanic, loop):
-    app.ctx.logs = Logger("logs")
     app.ctx.session = ClientSession()
 
     # Chargement de la base de données

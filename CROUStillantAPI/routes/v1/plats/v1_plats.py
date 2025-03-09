@@ -1,7 +1,7 @@
-from ...components.ratelimit import ratelimit
-from ...components.response import JSON
-from ...models.responses import Plats, Plat, PlatsWithTotal
-from ...models.exceptions import RateLimited, BadRequest, NotFound
+from ....components.ratelimit import ratelimit
+from ....components.response import JSON
+from ....models.responses import Plats, Plat, PlatsWithTotal
+from ....models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi

@@ -1,8 +1,8 @@
-from ...components.ratelimit import ratelimit
-from ...components.response import JSON
-from ...models.responses import Regions, Region, Restaurants
-from ...models.exceptions import RateLimited, BadRequest, NotFound
-from ...utils.opening import Opening
+from ....components.ratelimit import ratelimit
+from ....components.response import JSON
+from ....models.responses import Regions, Region, Restaurants
+from ....models.exceptions import RateLimited, BadRequest, NotFound
+from ....utils.opening import Opening
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi

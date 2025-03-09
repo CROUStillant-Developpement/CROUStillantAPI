@@ -72,7 +72,10 @@ class Regions:
                         LONGITUDE,
                         HORAIRES,
                         JOURS_OUVERT,
-                        IMAGE_URL,
+                        CASE 
+                            WHEN IMAGE_URL IS NULL THEN NULL
+                            ELSE CONCAT('https://api-croustillant.bayfield.dev/v1/restaurants/', RID, '/preview')
+                        END AS IMAGE_URL,
                         EMAIL,
                         TELEPHONE,
                         ISPMR,
