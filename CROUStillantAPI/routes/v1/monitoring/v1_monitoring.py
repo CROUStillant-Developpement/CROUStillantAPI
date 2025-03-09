@@ -1,5 +1,5 @@
-from ...components.ratelimit import ratelimit
-from ...components.response import JSON
+from ....components.ratelimit import ratelimit
+from ....components.response import JSON
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi

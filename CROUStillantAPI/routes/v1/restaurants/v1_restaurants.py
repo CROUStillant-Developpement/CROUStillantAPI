@@ -1,12 +1,12 @@
-from ...components.ratelimit import ratelimit
-from ...components.generate import generate
-from ...components.response import JSON
-from ...models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
-from ...models.exceptions import RateLimited, BadRequest, NotFound
-from ...utils.opening import Opening
-from ...utils.image import saveImageToBuffer
-from ...utils.format import getBoolFromString
-from ...exceptions.error import ServerErrorException
+from ....components.ratelimit import ratelimit
+from ....components.generate import generate
+from ....components.response import JSON
+from ....models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
+from ....models.exceptions import RateLimited, BadRequest, NotFound
+from ....utils.opening import Opening
+from ....utils.image import saveImageToBuffer
+from ....utils.format import getBoolFromString
+from ....exceptions.error import ServerErrorException
 from sanic.response import HTTPResponse, JSONResponse, raw
 from sanic import Blueprint, Request
 from sanic.log import logger

@@ -1,4 +1,4 @@
-from ...components.ratelimit import ratelimit
+from ....components.ratelimit import ratelimit
 from sanic.response import HTTPResponse, redirect, file
 from sanic import Blueprint, Request
 from sanic_ext import openapi

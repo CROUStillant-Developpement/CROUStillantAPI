@@ -7,14 +7,25 @@ from .taches.v1_taches import bp as RouteTaches
 from .interne.v1_interne import bp as RouteInterne
 from .monitoring.v1_monitoring import bp as RouteMonitoring
 
+# Meta données de la version
+__version__ = "1.0.0"
+__author__ = "CROUStillant Développement (github.com/CROUStillant-Developpement)"
+__description__ = "/v1 pour l'API de CROUStillant"
+__routes__ = [
+    RouteRegions,
+    RouteRestaurants,
+    RouteService,
+    RoutePlats,
+    RouteMisc,
+    RouteTaches,
+    RouteInterne,
+    RouteMonitoring
+]
+
 
 __all__ = [
-    "RouteRegions",
-    "RouteRestaurants",
-    "RouteService",
-    "RoutePlats",
-    "RouteMisc",
-    "RouteTaches",
-    "RouteInterne",
-    "RouteMonitoring"
+    "__version__",
+    "__author__",
+    "__description__",
+    "__routes__"
 ]

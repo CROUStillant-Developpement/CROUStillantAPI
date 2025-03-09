@@ -1,7 +1,7 @@
-from ...components.ratelimit import ratelimit
-from ...components.response import JSON
-from ...models.responses import Status, Stats
-from ...models.exceptions import RateLimited
+from ....components.ratelimit import ratelimit
+from ....components.response import JSON
+from ....models.responses import Status, Stats
+from ....models.exceptions import RateLimited
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -9,6 +9,7 @@ from sanic_ext import openapi
 
 bp = Blueprint(
     name="Service",
+    url_prefix="/",
     version=1,
     version_prefix="v"
 )
