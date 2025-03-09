@@ -2,27 +2,57 @@
 
 <html lang="fr">
     <head>
-        <title>API Reference</title>
+        <title>CROUStillant API</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
             body {
                 margin: 0;
             }
+
+            :root {
+                --scalar-custom-header-height: 50px;
+            }
+
+            .custom-header {
+                height: var(--scalar-custom-header-height);
+                background-color: var(--scalar-background-1);
+                box-shadow: inset 0 -1px 0 var(--scalar-border-color);
+                color: var(--scalar-color-1);
+                font-size: var(--scalar-font-size-2);
+                padding: 0 18px;
+                position: sticky;
+                justify-content: space-between;
+                top: 0;
+                z-index: 100;
+            }
+
+            .custom-header,
+            .custom-header nav {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+            }
+
+            .custom-header a:hover {
+                color: var(--scalar-color-2);
+            }
         </style>
         <script defer src="https://analytics.bayfield.dev/script.js" data-website-id="dc588d4b-1f6a-42b0-a181-002d21319ae9"></script>
     </head>
     <body>
-        <!-- Add your own OpenAPI/Swagger spec file URL here: -->
-        <!-- Note: this includes our proxy, you can remove the following line if you do not need it -->
-        <!-- data-proxy-url="https://api.scalar.com/request-proxy" -->
+        <header class="custom-header scalar-app">
+            <b>CROUStillant</b>
+            <nav>
+              <a href="https://croustillant.bayfield.dev">Site</a>
+              <a href="https://github.com/CROUStillant-Developpement">Github</a>
+              <a href="https://discord.gg/yG6FjqbWtk">Discord</a>
+            </nav>
+        </header>
         <script 
             id="api-reference" 
             data-url="/openapi.json" 
-            data-proxy-url="https://proxy.scalar.com"
         ></script>
-        <!-- You can also set a full configuration object like this -->
-        <!-- easier for nested objects -->
         <script>
             var configuration = {
                 theme: "purple",
