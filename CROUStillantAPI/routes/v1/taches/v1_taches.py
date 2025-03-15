@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from ....components.response import JSON
 from ....models.responses import Taches, Tache
 from ....models.exceptions import RateLimited, BadRequest, NotFound
@@ -46,6 +47,7 @@ bp = Blueprint(
     example=0
 )
 @ratelimit()
+@cache()
 async def getTaches(request: Request) -> JSONResponse:
     """
     Récupère les 100 dernières tâches.
@@ -132,6 +134,7 @@ async def getTaches(request: Request) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getTache(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'une tâche.

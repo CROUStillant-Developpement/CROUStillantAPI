@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from ....components.response import JSON
 from ....models.responses import Plats, Plat, PlatsWithTotal
 from ....models.exceptions import RateLimited, BadRequest, NotFound
@@ -37,6 +38,7 @@ bp = Blueprint(
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
 @ratelimit()
+@cache()
 async def getPlats(request: Request) -> JSONResponse:
     """
     Récupère les 100 derniers plats ajoutés à la base de données
@@ -103,6 +105,7 @@ async def getPlats(request: Request) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getPlat(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un plat.
@@ -165,6 +168,7 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
 @ratelimit()
+@cache()
 async def getPlatTop(request: Request) -> JSONResponse:
     """
     Retourne le top 100 des plats.

@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from ....components.response import JSON
 from ....models.responses import ChangeLog
 from ....models.exceptions import RateLimited
@@ -38,6 +39,7 @@ bp = Blueprint(
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
 @ratelimit()
+@cache()
 async def getChangelog(request: Request) -> JSONResponse:
     """
     Retourne le changelog des services de CROUStillant.

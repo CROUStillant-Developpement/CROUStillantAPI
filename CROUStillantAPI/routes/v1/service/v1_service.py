@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from ....components.response import JSON
 from ....models.responses import Status, Stats
 from ....models.exceptions import RateLimited
@@ -73,6 +74,7 @@ async def getStatus(request: Request) -> JSONResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
 @ratelimit()
+@cache()
 async def getStats(request: Request) -> JSONResponse:
     """
     Retourne les statistiques de l'API.

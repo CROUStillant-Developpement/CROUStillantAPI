@@ -106,14 +106,14 @@ app.ctx.ratelimiter = Ratelimiter()
 # Enregistrement des middlewares
 Middleware(app)
 
+# Enregistrement du cache
+app.ctx.cache = Cache(app)
+
 # Enregistrement des statistiques d'analyse
 Analytics(app)
 
 # Ajoute les statistiques Prometheus
 PrometheusStatistics(app)
-
-# Enregistrement du cache
-app.ctx.cache = Cache()
 
 # Enregistrement des routes
 BlueprintLoader(app).register()
