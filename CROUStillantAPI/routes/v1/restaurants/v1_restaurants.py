@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from ....components.generate import generate
 from ....components.response import JSON
 from ....models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
@@ -55,6 +56,7 @@ bp = Blueprint(
     example=True
 )
 @ratelimit()
+@cache()
 async def getRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les restaurants
@@ -142,6 +144,7 @@ async def getRestaurants(request: Request) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getRestaurant(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un restaurant.
@@ -248,6 +251,7 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     """
     Retourne le menu d'un restaurant.
@@ -381,6 +385,7 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     """
     Retourne les dates des prochains menus disponibles
@@ -469,6 +474,7 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse:
     """
     Retourne les dates des menus disponibles
@@ -565,6 +571,7 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
     example="21-10-2024"
 )
 @ratelimit()
+@cache()
 async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> JSONResponse:
     """
     Retourne le menu d'un restaurant.
@@ -719,6 +726,9 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     example="light"
 )
 @ratelimit()
+@cache(
+    ttl=60 * 5 # 5 minutes 
+)
 async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str) -> HTTPResponse:
     """
     Retourne le menu d'un restaurant.
@@ -727,11 +737,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     :param date: Date du menu
     :return: Le menu du restaurant
     """
-    # Nettoie le cache si nécessaire
-    await request.app.add_task(
-        request.app.ctx.cache.clear()
-    )
-
     try:
         restaurantID = int(code)
 
@@ -759,29 +764,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
         ).generate()
 
     preview = await request.app.ctx.entities.restaurants.getPreview(restaurantID)
-
-    cached = await request.app.ctx.cache.get(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}")
-
-    if cached:
-        content = cached.get("value")
-        timestamp = cached.get("timestamp")
-
-        # Récupère le temps restant avant expiration du cache
-        max_age = request.app.ctx.cache.expiration_time - (datetime.now() - timestamp).seconds
-
-        return raw(
-            body=content,
-            status=200,
-            headers={
-                "Content-Disposition": f"attachment; filename={restaurant.get('nom')} - {date.strftime('%d-%m-%Y')}.png",
-                "Content-Length": str(len(content)),
-                "Content-Type": "image/png",
-                "Cache-Control": f"public, max-age={max_age}",
-                "X-Cache": "HIT"
-            },
-            content_type="image/png"
-        )
-
 
     try:
         menu = await request.app.ctx.entities.menus.getFromDate(
@@ -871,11 +853,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             restaurant, data, date, preview, theme
         )
 
-        await request.app.ctx.cache.add(
-            key=f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}",
-            value=content
-        )
-
         return raw(
             body=content,
             status=200,
@@ -883,8 +860,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
                 "Content-Disposition": f"attachment; filename={restaurant.get('nom')} - {date.strftime('%d-%m-%Y')}.png",
                 "Content-Length": str(len(content)),
                 "Content-Type": "image/png",
-                "Cache-Control": f"public, max-age={request.app.ctx.cache.expiration_time}",
-                "X-Cache": "MISS",
             },
             content_type="image/png"
         )
@@ -945,6 +920,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     example=1
 )
 @ratelimit()
+@cache()
 async def getInformations(request: Request, code: int) -> JSONResponse:
     """
     Retourne les informations d'un restaurant.
@@ -1031,6 +1007,9 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache(
+    ttl=60 * 60 # 1 heure
+)
 async def getRestaurantPreview(request: Request, code: int) -> HTTPResponse:
     """
     Retourne le menu d'un restaurant.
@@ -1104,6 +1083,7 @@ async def getRestaurantPreview(request: Request, code: int) -> HTTPResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
 @ratelimit()
+@cache()
 async def getTypesRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les types des restaurants

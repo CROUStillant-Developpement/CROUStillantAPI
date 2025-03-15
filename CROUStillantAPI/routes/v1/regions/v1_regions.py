@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from ....components.response import JSON
 from ....models.responses import Regions, Region, Restaurants
 from ....models.exceptions import RateLimited, BadRequest, NotFound
@@ -39,6 +40,7 @@ bp = Blueprint(
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
 )
 @ratelimit()
+@cache()
 async def getRegions(request: Request) -> JSONResponse:
     """
     Récupère les régions
@@ -104,6 +106,7 @@ async def getRegions(request: Request) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getRegion(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'une région.
@@ -188,6 +191,7 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     example=1
 )
 @ratelimit()
+@cache()
 async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
     """
     Récupère les restaurants
