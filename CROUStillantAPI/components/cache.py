@@ -6,6 +6,11 @@ import functools
 from sanic import Sanic, Request
 from sanic.response import HTTPResponse, JSONResponse
 from redis import Redis
+from dotenv import load_dotenv
+from os import environ
+
+
+load_dotenv(dotenv_path=".env")
 
 
 class Cache:
@@ -14,7 +19,7 @@ class Cache:
     """
     redis: Redis
 
-    def __init__(self, app: Sanic, redis_url: str = "redis://localhost:6379") -> None:
+    def __init__(self, app: Sanic, redis_url: str = f"redis://{environ.get('REDIS_HOST', 'localhost')}:{environ.get('REDIS_PORT', 6379)}"):
         """
         Initialise la classe avec une connexion Redis
 
