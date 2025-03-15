@@ -5,12 +5,15 @@ import functools
 
 from sanic import Sanic, Request
 from sanic.response import HTTPResponse, JSONResponse
+from redis import Redis
 
 
 class Cache:
     """
     Classe pour gérer un cache avec Redis (Utilisation de redis-py au lieu de aioredis)
     """
+    redis: Redis
+
     def __init__(self, app: Sanic, redis_url: str = "redis://localhost:6379") -> None:
         """
         Initialise la classe avec une connexion Redis
