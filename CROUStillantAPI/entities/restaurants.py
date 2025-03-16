@@ -170,6 +170,7 @@ class Restaurants:
             return await connection.fetchrow(
                 """
                     SELECT
+                        NOM,
                         R.IMAGE_URL,
                         RAW_IMAGE
                     FROM
