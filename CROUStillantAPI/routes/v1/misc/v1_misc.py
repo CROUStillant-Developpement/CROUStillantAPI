@@ -1,4 +1,5 @@
 from ....components.ratelimit import ratelimit
+from ....components.cache import cache
 from sanic.response import HTTPResponse, redirect, file
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -29,6 +30,10 @@ async def redirectEmail(request: Request) -> HTTPResponse:
 @openapi.no_autodoc
 @openapi.exclude()
 @ratelimit()
+@cache(
+    ttl=60 * 60 * 24,  # 1 jour
+    key="favicon"
+)
 async def favicon(request: Request) -> HTTPResponse:
     """
     Redirige vers l'icône du site.
