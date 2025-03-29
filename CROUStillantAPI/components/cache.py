@@ -62,17 +62,22 @@ class Cache:
         return hashlib.blake2b(raw_key.encode(), digest_size=16).hexdigest()
 
 
-    async def get(self, request: Request):
+    async def get(self, request: Request, key: str = None) -> JSONResponse | HTTPResponse | None:
         """
         Récupère la réponse mise en cache si elle existe
 
         :param request: Request
+        :param key: Clé de cache (facultatif)
         :return: JSONResponse ou None
         """
         if not self.redis:
             return None
 
-        cache_key = await self.get_cache_key(request)
+        if key:
+            cache_key = key
+        else:
+            cache_key = await self.get_cache_key(request)
+
         cached_data = await self.redis.get(cache_key)
 
         if cached_data:
@@ -81,34 +86,40 @@ class Cache:
         return None
 
 
-    async def set(self, request: Request, response: JSONResponse | HTTPResponse, ttl: int):
+    async def set(self, request: Request, response: JSONResponse | HTTPResponse, ttl: int, key: str = None):
         """
         Stocke une réponse dans le cache si elle a un statut 200
 
         :param request: Request
         :param response: JSONResponse
+        :param key: Clé de cache (facultatif)
         :param ttl: Durée de vie du cache en secondes
         """
         if not self.redis or response.status in self.cache_ignored_statuses:
             return
         else:
-            cache_key = await self.get_cache_key(request)
+            if key:
+                cache_key = key
+            else:
+                cache_key = await self.get_cache_key(request)
+
             cached_data = pickle.dumps(response)
             await self.redis.setex(cache_key, ttl, cached_data)
 
 
-def cache(ttl: int = 60):
+def cache(ttl: int = 60, key: str = None):
     """
     Décorateur pour cacher automatiquement toutes les réponses d'une route
 
     :param ttl: Durée de vie du cache en secondes
+    :param key: Clé de cache (facultatif)
     :return: Decorator
     """
 
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
-            cached_response = await request.app.ctx.cache.get(request)
+            cached_response = await request.app.ctx.cache.get(request, key)
             if cached_response:
                 cached_response.headers["X-Cache"] = "HIT"
                 cached_response.headers["Cache-Control"] = f"public, max-age={ttl}"
@@ -117,7 +128,7 @@ def cache(ttl: int = 60):
                 return cached_response
 
             response = await func(request, *args, **kwargs)
-            await request.app.ctx.cache.set(request, response, ttl)
+            await request.app.ctx.cache.set(request, response, ttl, key)
 
             response.headers["X-Cache"] = "MISS"
             response.headers["Cache-Control"] = f"public, max-age={ttl}"
