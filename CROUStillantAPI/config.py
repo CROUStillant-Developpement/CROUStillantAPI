@@ -2,7 +2,7 @@ from sanic.config import Config
 
 
 class AppConfig(Config):
-    API_VERSION = "1.0.1"
+    API_VERSION = "1.1.0"
     API_TERMS_OF_SERVICE = "https://api.croustillant.bayfield.dev/terms"
     API_CONTACT_EMAIL = "croustillant@bayfield.dev"
 

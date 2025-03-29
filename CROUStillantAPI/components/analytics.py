@@ -1,3 +1,5 @@
+import hashlib
+
 from sanic import Sanic, Request
 from json import dumps
 
@@ -42,7 +44,8 @@ class Analytics:
                     ratelimit_reset, 
                     ratelimit_bucket, 
                     process_time, 
-                    api_version
+                    api_version,
+                    hashed_ip
                 ) VALUES (
                     $1, 
                     $2, 
@@ -57,7 +60,8 @@ class Analytics:
                     $11, 
                     $12, 
                     $13, 
-                    $14
+                    $14,
+                    $15
                 );
                 """,
                 request.ctx.request_id,
@@ -73,5 +77,6 @@ class Analytics:
                 response.headers.get("x-ratelimit-reset", -1),
                 response.headers.get("x-ratelimit-bucket", -1),
                 request.ctx.process_time,
-                app.config.API_VERSION
+                app.config.API_VERSION,
+                hashlib.blake2b(request.ip.encode()).hexdigest()
             )
