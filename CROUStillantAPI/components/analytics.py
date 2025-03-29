@@ -78,5 +78,5 @@ class Analytics:
                 response.headers.get("x-ratelimit-bucket", -1),
                 request.ctx.process_time,
                 app.config.API_VERSION,
-                hashlib.blake2b(request.ip.encode(), digest_size=20).hexdigest()
+                hashlib.blake2b(request.headers.get('CF-Connecting-IP', request.client_ip).encode(), digest_size=20).hexdigest()
             )
