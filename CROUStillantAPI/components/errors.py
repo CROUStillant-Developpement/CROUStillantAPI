@@ -1,6 +1,7 @@
 from .ratelimit import ratelimit
 from .response import JSON
 from ..exceptions.ratelimit import RatelimitException
+from sanic import Sanic
 from sanic.exceptions import NotFound, SanicException
 
 
@@ -8,11 +9,19 @@ class ErrorHandler:
     """
     Classe pour gérer les erreurs
     """
-    def __init__(self, app):
+    def __init__(self, app: Sanic) -> None:
         """
         Constructeur de la classe
         """
         self.app = app
+
+
+        @app.report_exception
+        async def catch_any_exception(app: Sanic, exception: Exception):
+            if isinstance(exception, RatelimitException):
+                pass
+            else:
+                print("Caught exception:", exception)
 
 
         @app.exception(NotFound)
@@ -23,17 +32,6 @@ class ErrorHandler:
                 success=False,
                 message="La ressource demandée n'existe pas.",
                 status=404
-            ).generate()
-
-
-        @app.exception(RatelimitException)
-        @ratelimit()
-        async def ratelimit_exception(request, exception):
-            return JSON(
-                request=request,
-                success=False,
-                message=exception.message if hasattr(exception, "message") else "Trop de requêtes envoyées. Veuillez réessayer plus tard.",
-                status=429
             ).generate()
 
 
