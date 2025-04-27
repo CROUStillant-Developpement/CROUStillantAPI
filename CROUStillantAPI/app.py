@@ -97,9 +97,6 @@ app.ext.openapi.describe(
 # Enregistrement du logger
 app.ctx.logs = Logger("logs")
 
-# Enregistrement des variables d'environnement
-app.ctx.schema = environ["PGRST_DB_SCHEMA"]
-
 # Enregistrement du rate limiter
 app.ctx.ratelimiter = Ratelimiter()
 
