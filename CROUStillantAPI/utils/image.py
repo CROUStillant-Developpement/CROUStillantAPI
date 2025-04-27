@@ -1,6 +1,5 @@
 from io import BytesIO
 from PIL import Image, ImageDraw
-from aiohttp import ClientSession
 
 
 def addCorners(image: Image, radius: int):

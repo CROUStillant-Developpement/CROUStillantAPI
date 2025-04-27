@@ -2,6 +2,73 @@
     "CROUStillantWeb": [
         {
             "date": "2024-12-30T11:57:00Z",
+            "version": "v1.2.1",
+            "fr": {
+                "title": "CROUStillant Web",
+                "shortDescription": "CROUStillant Web est une version web de CROUStillant, accessible depuis n'importe quel navigateur.",
+                "fullDescription": "CROUStillant Web est une version web de CROUStillant, accessible depuis n'importe quel navigateur. Cette version permet de consulter les menus de la semaine, de la journée, et de la soirée des Restaurants Universitaires de France et d'outre-mer."
+            },
+            "en": {
+                "title": "CROUStillant Web",
+                "shortDescription": "CROUStillant Web is a web version of CROUStillant, accessible from any browser.",
+                "fullDescription": "CROUStillant Web is a web version of CROUStillant, accessible from any browser. This version allows you to view the menus for the week, the day, and the evening of University Restaurants in France and overseas."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                },
+                {
+                    "name": "Adlen Cherif",
+                    "role": {
+                        "fr": "Concepteur de l'interface utilisateur et développeur web",
+                        "en": "UI designer and web developer"
+                    }
+                },
+                {
+                    "name": "Louis Descotes",
+                    "role": {
+                        "fr": "Développeur web",
+                        "en": "Web developer"
+                    }
+                }
+            ]
+        },
+        {
+            "date": "2025-01-30T12:00:00Z",
+            "version": "v1.1.0",
+            "fr": {
+                "title": "CROUStillant Web",
+                "shortDescription": "Mise à jour de l'interface utilisateur et ajout de nouvelles fonctionnalités.",
+                "fullDescription": "Cette mise à jour apporte une nouvelle interface utilisateur et de nouvelles fonctionnalités, notamment sur le filtre des restaurants."
+            },
+            "en": {
+                "title": "CROUStillant Web",
+                "shortDescription": "Update of the user interface and addition of new features.",
+                "fullDescription": "This update brings a new user interface and new features, particularly on the restaurant filter."
+            },
+            "contributors": [
+                {
+                    "name": "Paul Bayfield",
+                    "role": {
+                        "fr": "Fondateur du projet et développeur principal",
+                        "en": "Project founder and lead developer"
+                    }
+                },
+                {
+                    "name": "Adlen Cherif",
+                    "role": {
+                        "fr": "Concepteur de l'interface utilisateur et développeur web",
+                        "en": "UI designer and web developer"
+                    }
+                }
+            ]
+        },
+        {
+            "date": "2024-12-30T11:57:00Z",
             "version": "v1.0.0",
             "fr": {
                 "title": "CROUStillant Web",
@@ -22,7 +89,7 @@
                     }
                 },
                 {
-                    "name": "Alden Cherif",
+                    "name": "Adlen Cherif",
                     "role": {
                         "fr": "Concepteur de l'interface utilisateur et développeur web",
                         "en": "UI designer and web developer"
