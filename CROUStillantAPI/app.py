@@ -86,7 +86,7 @@ app.ext.openapi.describe(
             - GitHub : [github.com/CROUStillant-Developpement](https://github.com/CROUStillant-Developpement)  
               
             ⁣  
-            ![empty](https://croustillant.bayfield.dev/banner-small.png)  
+            ![empty](https://croustillant.menu/banner-small.png)  
 
             **CROUStillant Développement © 2022 - {year} | Tous droits réservés.**  
             *CROUStillant n'est pas affilié au 'CROUS' ou au 'CNOUS'.*  

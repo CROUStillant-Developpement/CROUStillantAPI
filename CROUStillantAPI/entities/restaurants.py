@@ -32,7 +32,7 @@ class Restaurants:
                             JOURS_OUVERT,
                             CASE 
                                 WHEN IMAGE_URL IS NULL THEN NULL
-                                ELSE CONCAT('https://api-croustillant.bayfield.dev/v1/restaurants/', RID, '/preview')
+                                ELSE CONCAT('https://api.croustillant.menu/v1/restaurants/', RID, '/preview')
                             END AS IMAGE_URL,
                             EMAIL,
                             TELEPHONE,
@@ -66,7 +66,7 @@ class Restaurants:
                             JOURS_OUVERT,
                             CASE 
                                 WHEN IMAGE_URL IS NULL THEN NULL
-                                ELSE CONCAT('https://api-croustillant.bayfield.dev/v1/restaurants/', RID, '/preview')
+                                ELSE CONCAT('https://api.croustillant.menu/v1/restaurants/', RID, '/preview')
                             END AS IMAGE_URL,
                             EMAIL,
                             TELEPHONE,
@@ -110,7 +110,7 @@ class Restaurants:
                         JOURS_OUVERT,
                         CASE 
                             WHEN IMAGE_URL IS NULL THEN NULL
-                            ELSE CONCAT('https://api-croustillant.bayfield.dev/v1/restaurants/', RID, '/preview')
+                            ELSE CONCAT('https://api.croustillant.menu/v1/restaurants/', RID, '/preview')
                         END AS IMAGE_URL,
                         EMAIL,
                         TELEPHONE,
