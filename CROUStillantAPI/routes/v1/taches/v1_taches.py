@@ -1,6 +1,8 @@
 from ....components.ratelimit import ratelimit
 from ....components.cache import cache
 from ....components.response import JSON
+from ....components.argument import Argument, inputs
+from ....components.rules import Rules
 from ....models.responses import Taches, Tache
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.format import getIntFromString
@@ -92,6 +94,20 @@ async def getTaches(request: Request) -> JSONResponse:
 
 # /taches/{code}
 @bp.route("/<code>", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID de la tâche",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Détails d'une tâche",
     description="Détails d'une tâche en fonction de son code.",
@@ -142,17 +158,7 @@ async def getTache(request: Request, code: int) -> JSONResponse:
     :param code: ID de la tâche
     :return: Les détails de la tâche
     """
-    try:
-        tacheID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID de la tâche doit être un nombre.",
-            status=400
-        ).generate()
-
-    tache = await request.app.ctx.entities.taches.getOne(tacheID)
+    tache = await request.app.ctx.entities.taches.getOne(code)
 
     if tache is None:
         return JSON(
@@ -187,7 +193,7 @@ async def getTache(request: Request, code: int) -> JSONResponse:
             "fin_compositions": tache.get("fin_compositions"),
             "requetes": tache.get("requetes"),
             "restaurants": [
-                restaurant.get("rid") for restaurant in await request.app.ctx.entities.taches.getRestaurants(tacheID)
+                restaurant.get("rid") for restaurant in await request.app.ctx.entities.taches.getRestaurants(code)
             ]
         },
         status=200
