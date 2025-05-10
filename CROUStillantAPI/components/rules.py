@@ -11,7 +11,7 @@ class Rules:
 
 
     @staticmethod
-    def integer(arg: str) -> bool:
+    def integer(arg: str|int) -> bool:
         """
         Un entier est une chaîne de caractères qui ne peut contenir que des chiffres. Il doit être positif.
         """
@@ -22,7 +22,7 @@ class Rules:
 
 
     @staticmethod
-    def float(arg: str) -> bool:
+    def float(arg: str|int) -> bool:
         """
         Un flottant est une chaîne de caractères qui peut contenir uniquement des chiffres et un point décimal. Il doit être positif.
         """
@@ -30,20 +30,22 @@ class Rules:
             return float(arg) >= 0
         except ValueError:
             return False
+
+
     @staticmethod
-    def timestamp_ms(arg: str) -> bool:
+    def timestamp_ms(arg: str|int) -> bool:
         """
         Un timestamp en millisecondes est une chaîne de caractères qui ne peut contenir que des chiffres. Il doit comporter 13 caractères.
         """
-        return all([x in "0123456789" for x in arg]) and len(arg) == 13
+        return all([x in "0123456789" for x in str(arg)]) and len(str(arg)) == 13
 
 
     @staticmethod
-    def timestamp_s(arg: str) -> bool:
+    def timestamp_s(arg: str|int) -> bool:
         """
         Un timestamp en secondes est une chaîne de caractères qui ne peut contenir que des chiffres. Il doit comporter 10 caractères.
         """
-        return all([x in "0123456789" for x in arg]) and len(arg) == 10
+        return all([x in "0123456789" for x in str(arg)]) and len(str(arg)) == 10
 
 
     @staticmethod
@@ -55,7 +57,7 @@ class Rules:
 
 
     @staticmethod
-    def history(arg: str) -> bool:
+    def history(arg: str|int) -> bool:
         """
         Un historique est une chaîne de caractères qui ne peut contenir que des chiffres. Il doit être compris entre 1 et 365 caractères.
         """
