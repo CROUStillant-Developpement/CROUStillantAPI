@@ -26,9 +26,10 @@ class Rules:
         """
         Un flottant est une chaîne de caractères qui peut contenir uniquement des chiffres et un point décimal. Il doit être positif.
         """
-        return all([x in "0123456789." for x in arg])
-
-
+        try:
+            return float(arg) >= 0
+        except ValueError:
+            return False
     @staticmethod
     def timestamp_ms(arg: str) -> bool:
         """
