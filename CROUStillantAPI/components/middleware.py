@@ -42,7 +42,7 @@ class Middleware:
             if hasattr(request.ctx, "process_time_start"):
                 request.ctx.process_time = int((request.ctx.process_time_end - request.ctx.process_time_start) * 1000)
             else:
-                self.app.ctx.logs.warning(f"Le temps de traitement n'est pas défini pour la requête {request.ctx.request_id} ({request.method} {request.path})")
+                app.ctx.logs.warning(f"Le temps de traitement n'est pas défini pour la requête {request.ctx.request_id} ({request.method} {request.path})")
 
                 request.ctx.process_time = -999
 
