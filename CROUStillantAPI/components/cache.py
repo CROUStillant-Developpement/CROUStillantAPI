@@ -119,16 +119,19 @@ def cache(ttl: int = 60, key: str = None):
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
-            cached_response = await request.app.ctx.cache.get(request, key)
-            if cached_response:
-                cached_response.headers["X-Cache"] = "HIT"
-                cached_response.headers["Cache-Control"] = f"public, max-age={ttl}"
-                cached_response.headers["X-Cache-TTL"] = ttl
+            if not request.app.debug:
+                cached_response = await request.app.ctx.cache.get(request, key)
+                if cached_response:
+                    cached_response.headers["X-Cache"] = "HIT"
+                    cached_response.headers["Cache-Control"] = f"public, max-age={ttl}"
+                    cached_response.headers["X-Cache-TTL"] = ttl
 
-                return cached_response
+                    return cached_response
 
             response = await func(request, *args, **kwargs)
-            await request.app.ctx.cache.set(request, response, ttl, key)
+
+            if not request.app.debug:
+                await request.app.ctx.cache.set(request, response, ttl, key)
 
             response.headers["X-Cache"] = "MISS"
             response.headers["Cache-Control"] = f"public, max-age={ttl}"

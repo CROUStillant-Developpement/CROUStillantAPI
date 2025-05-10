@@ -2,6 +2,8 @@ from ....components.ratelimit import ratelimit
 from ....components.cache import cache
 from ....components.generate import generate
 from ....components.response import JSON
+from ....components.argument import Argument, inputs
+from ....components.rules import Rules
 from ....models.responses import Restaurants, Restaurant, TypesRestaurants, RestaurantInfo, Menus, Menu, Dates, Image
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
@@ -102,6 +104,20 @@ async def getRestaurants(request: Request) -> JSONResponse:
 
 # /restaurants/{code}
 @bp.route("/<code>", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Détails d'un restaurant",
     description="Détails d'un restaurant en fonction de son code.",
@@ -152,18 +168,7 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     :param code: ID du restaurant
     :return: Le restaurant
     """
-    try:
-        restaurantID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre.",
-            status=400
-        ).generate()
-
-
-    restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
+    restaurant = await request.app.ctx.entities.restaurants.getOne(code)
 
     if restaurant is None:
         return JSON(
@@ -209,6 +214,20 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/menu
 @bp.route("/<code>/menu", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Menu d'un restaurant",
     description="Menu d'un restaurant en fonction de son code.",
@@ -259,19 +278,8 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     :param code: ID du restaurant
     :return: Le menu du restaurant
     """
-    try:
-        restaurantID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre.",
-            status=400
-        ).generate()
-
-
     menu = await request.app.ctx.entities.menus.getCurrent(
-        id=restaurantID, 
+        id=code, 
         date=datetime.now(
             tz=timezone("Europe/Paris")
         )
@@ -343,6 +351,20 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/menu/dates
 @bp.route("/<code>/menu/dates", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Dates des prochains menus disponibles d'un restaurant",
     description="Dates des prochains menus disponibles d'un restaurant en fonction de son code.",
@@ -393,19 +415,8 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     :param code: ID du restaurant
     :return: Le menu du restaurant
     """
-    try:
-        restaurantID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre.",
-            status=400
-        ).generate()
-
-
     dates = await request.app.ctx.entities.menus.getDates(
-        id=restaurantID
+        id=code
     )
 
     if dates is None or len(dates) == 0:
@@ -432,6 +443,20 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/menu/dates/all
 @bp.route("/<code>/menu/dates/all", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Dates des menus disponibles d'un restaurant",
     description="Dates des menus disponibles d'un restaurant en fonction de son code.",
@@ -482,19 +507,8 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
     :param code: ID du restaurant
     :return: Le menu du restaurant
     """
-    try:
-        restaurantID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre.",
-            status=400
-        ).generate()
-
-
     dates = await request.app.ctx.entities.menus.getAllDates(
-        id=restaurantID
+        id=code
     )
 
     if dates is None or len(dates) == 0:
@@ -521,6 +535,34 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
 
 # /restaurants/{code}/menu/{date}
 @bp.route("/<code>/menu/<date>", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="date",
+        description="Date du menu",
+        methods={
+            "date": Rules.date
+        },
+        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Menu d'un restaurant à une date donnée",
     description="Menu d'un restaurant en fonction de son code et d'une date donnée.",
@@ -580,21 +622,8 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     :param date: Date du menu
     :return: Le menu du restaurant
     """
-    try:
-        restaurantID = int(code)
-
-        date = datetime.strptime(date, "%d-%m-%Y")
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY.",
-            status=400
-        ).generate()
-
-
     menu = await request.app.ctx.entities.menus.getFromDate(
-        id=restaurantID, 
+        id=code, 
         date=date
     )
 
@@ -660,6 +689,34 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
 
 # /restaurants/{code}/menu/{date}/image
 @bp.route("/<code>/menu/<date>/image", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="date",
+        description="Date du menu",
+        methods={
+            "date": Rules.date
+        },
+        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+    )
 @openapi.definition(
     summary="Menu d'un restaurant à une date donnée sous forme d'image",
     description="Menu d'un restaurant en fonction de son code et d'une date donnée sous forme d'image.",
@@ -737,23 +794,10 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     :param date: Date du menu
     :return: Le menu du restaurant
     """
-    try:
-        restaurantID = int(code)
-
-        date = datetime.strptime(date, "%d-%m-%Y")
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre et la date doit être au format DD-MM-YYYY.",
-            status=400
-        ).generate()
-
-
     repas = request.args.get("repas", "midi").lower() if request.args.get("repas", "midi").lower() in ["matin", "midi", "soir"] else "midi"
     theme = request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "purple", "dark"] else "light"
 
-    restaurant = await request.app.ctx.entities.restaurants.getOne(restaurantID)
+    restaurant = await request.app.ctx.entities.restaurants.getOne(code)
 
     if not restaurant:
         return JSON(
@@ -763,11 +807,11 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             status=404
         ).generate()
 
-    preview = await request.app.ctx.entities.restaurants.getPreview(restaurantID)
+    preview = await request.app.ctx.entities.restaurants.getPreview(code)
 
     try:
         menu = await request.app.ctx.entities.menus.getFromDate(
-            id=restaurantID, 
+            id=code, 
             date=date
         )
 
@@ -864,20 +908,34 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             content_type="image/png"
         )
     except Exception as e:
-        logger.error(f"/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}", e)
+        logger.error(f"/restaurants/{code}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}&theme={theme}", e)
 
         raise ServerErrorException(
             headers={
                 "Retry-After": 60
             },
             extra={
-                "message": f"Une erreur est survenue lors de la génération de l'image (/restaurants/{restaurantID}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}?theme={theme})"
+                "message": f"Une erreur est survenue lors de la génération de l'image (/restaurants/{code}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}?theme={theme})"
             }
         )
 
 
 # /restaurants/{code}/info
 @bp.route("/<code>/info", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Informations d'un restaurant",
     description="Informations d'un restaurant en fonction de son code.",
@@ -928,18 +986,7 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     :param code: ID du restaurant
     :return: Les informations du restaurant
     """
-    try:
-        restaurantID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre.",
-            status=400
-        ).generate()
-
-
-    info = await request.app.ctx.entities.restaurants.getInfo(restaurantID)
+    info = await request.app.ctx.entities.restaurants.getInfo(code)
 
     if info is None:
         return JSON(
@@ -965,6 +1012,20 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/preview
 @bp.route("/<code>/preview", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Image d'un restaurant",
     description="Image d'un restaurant en fonction de son code.",
@@ -1017,17 +1078,7 @@ async def getRestaurantPreview(request: Request, code: int) -> HTTPResponse:
     :param code: ID du restaurant
     :return: Le menu du restaurant
     """
-    try:
-        restaurantID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            message="L'ID du restaurant doit être un nombre.",
-            status=400
-        ).generate()
-
-    restaurant = await request.app.ctx.entities.restaurants.getPreview(restaurantID)
+    restaurant = await request.app.ctx.entities.restaurants.getPreview(code)
 
     if restaurant is None:
         return JSON(

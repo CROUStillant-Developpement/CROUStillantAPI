@@ -1,6 +1,8 @@
 from ....components.ratelimit import ratelimit
 from ....components.cache import cache
 from ....components.response import JSON
+from ....components.argument import Argument, inputs
+from ....components.rules import Rules
 from ....models.responses import Plats, Plat, PlatsWithTotal
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse
@@ -63,6 +65,20 @@ async def getPlats(request: Request) -> JSONResponse:
 
 # /plats/{code}
 @bp.route("/<code>", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID du plat",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Détails d'un plat",
     description="Détails d'un plat en fonction de son code.",
@@ -113,18 +129,7 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
     :param code: ID du plat
     :return: Le plat
     """
-    try:
-        platID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            status=400,
-            message="L'ID du plat doit être un nombre."
-        ).generate()
-
-
-    plat = await request.app.ctx.entities.plats.getOne(platID)
+    plat = await request.app.ctx.entities.plats.getOne(code)
 
     if plat is None:
         return JSON(

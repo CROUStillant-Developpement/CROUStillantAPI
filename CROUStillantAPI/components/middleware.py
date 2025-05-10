@@ -35,7 +35,16 @@ class Middleware:
             :param response: Response
             """
             request.ctx.process_time_end = datetime.now(timezone("Europe/Paris")).timestamp()
-            request.ctx.process_time = int((request.ctx.process_time_end - request.ctx.process_time_start) * 1000)
+
+            # Dans de très rares cas, le temps de traitement peut ne pas être défini
+            # (par exemple, si la requête échoue avant d'atteindre le middleware de réponse)
+            # Dans ce cas, nous définissons le temps de traitement sur -999 pour indiquer une erreur et mettre en évidence le problème
+            if hasattr(request.ctx, "process_time_start"):
+                request.ctx.process_time = int((request.ctx.process_time_end - request.ctx.process_time_start) * 1000)
+            else:
+                app.ctx.logs.warning(f"Le temps de traitement n'est pas défini pour la requête {request.ctx.request_id} ({request.method} {request.path})")
+
+                request.ctx.process_time = -999
 
             response.headers["X-Request-ID"] = request.ctx.request_id
             response.headers["X-Processing-Time"] = f"{request.ctx.process_time}ms"

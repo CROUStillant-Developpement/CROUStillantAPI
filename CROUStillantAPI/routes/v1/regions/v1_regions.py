@@ -1,6 +1,8 @@
 from ....components.ratelimit import ratelimit
 from ....components.cache import cache
 from ....components.response import JSON
+from ....components.argument import Argument, inputs
+from ....components.rules import Rules
 from ....models.responses import Regions, Region, Restaurants
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
@@ -64,6 +66,20 @@ async def getRegions(request: Request) -> JSONResponse:
 
 # /regions/{code}
 @bp.route("/<code>", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID de la région",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Détails d'une région",
     description="Détails d'une région en fonction de son code.",
@@ -114,18 +130,7 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     :param code: ID de la région
     :return: La région
     """
-    try:
-        regionID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            status=400,
-            message="L'ID de la région doit être un nombre."
-        ).generate()
-
-
-    region = await request.app.ctx.entities.regions.getOne(regionID)
+    region = await request.app.ctx.entities.regions.getOne(code)
 
     if region is None:
         return JSON(
@@ -149,6 +154,20 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
 
 # /regions/{code}/restaurants
 @bp.route("/<code>/restaurants", methods=["GET"])
+@inputs(
+    Argument(
+        name="code",
+        description="ID de la région",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @openapi.definition(
     summary="Liste des restaurants d'une région",
     description="Liste des restaurants disponibles dans une région en fonction de son code.",
@@ -198,17 +217,7 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
 
     :return: Les restaurants
     """
-    try:
-        regionID = int(code)
-    except ValueError:
-        return JSON(
-            request=request,
-            success=False,
-            status=400,
-            message="L'ID de la région doit être un nombre."
-        ).generate()
-
-    region = await request.app.ctx.entities.regions.getOne(regionID)
+    region = await request.app.ctx.entities.regions.getOne(code)
 
     if region is None:
         return JSON(
@@ -219,7 +228,7 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
         ).generate()
 
 
-    restaurants = await request.app.ctx.entities.regions.getRestaurants(regionID)
+    restaurants = await request.app.ctx.entities.regions.getRestaurants(code)
 
     return JSON(
         request=request,
