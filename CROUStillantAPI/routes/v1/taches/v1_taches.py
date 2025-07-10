@@ -94,20 +94,6 @@ async def getTaches(request: Request) -> JSONResponse:
 
 # /taches/{code}
 @bp.route("/<code>", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID de la tâche",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Détails d'une tâche",
     description="Détails d'une tâche en fonction de son code.",
@@ -148,6 +134,20 @@ async def getTaches(request: Request) -> JSONResponse:
     schema=int,
     location="path",
     example=1
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID de la tâche",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache()

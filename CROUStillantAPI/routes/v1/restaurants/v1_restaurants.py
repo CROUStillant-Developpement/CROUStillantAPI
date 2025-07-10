@@ -104,20 +104,6 @@ async def getRestaurants(request: Request) -> JSONResponse:
 
 # /restaurants/{code}
 @bp.route("/<code>", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Détails d'un restaurant",
     description="Détails d'un restaurant en fonction de son code.",
@@ -158,6 +144,20 @@ async def getRestaurants(request: Request) -> JSONResponse:
     schema=int,
     location="path",
     example=1
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache()
@@ -214,20 +214,6 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/menu
 @bp.route("/<code>/menu", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Menu d'un restaurant",
     description="Menu d'un restaurant en fonction de son code.",
@@ -268,6 +254,20 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     schema=int,
     location="path",
     example=1
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache()
@@ -351,20 +351,6 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/menu/dates
 @bp.route("/<code>/menu/dates", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Dates des prochains menus disponibles d'un restaurant",
     description="Dates des prochains menus disponibles d'un restaurant en fonction de son code.",
@@ -406,6 +392,20 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1
 )
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @ratelimit()
 @cache()
 async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
@@ -443,20 +443,6 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/menu/dates/all
 @bp.route("/<code>/menu/dates/all", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Dates des menus disponibles d'un restaurant",
     description="Dates des menus disponibles d'un restaurant en fonction de son code.",
@@ -498,6 +484,20 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1
 )
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @ratelimit()
 @cache()
 async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse:
@@ -535,34 +535,6 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
 
 # /restaurants/{code}/menu/{date}
 @bp.route("/<code>/menu/<date>", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
-@inputs(
-    Argument(
-        name="date",
-        description="Date du menu",
-        methods={
-            "date": Rules.date
-        },
-        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Menu d'un restaurant à une date donnée",
     description="Menu d'un restaurant en fonction de son code et d'une date donnée.",
@@ -611,6 +583,34 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
     schema=str,
     location="path",
     example="21-10-2024"
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="date",
+        description="Date du menu",
+        methods={
+            "date": Rules.date
+        },
+        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache()
@@ -689,34 +689,6 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
 
 # /restaurants/{code}/menu/{date}/image
 @bp.route("/<code>/menu/<date>/image", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
-@inputs(
-    Argument(
-        name="date",
-        description="Date du menu",
-        methods={
-            "date": Rules.date
-        },
-        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-    )
 @openapi.definition(
     summary="Menu d'un restaurant à une date donnée sous forme d'image",
     description="Menu d'un restaurant en fonction de son code et d'une date donnée sous forme d'image.",
@@ -781,6 +753,34 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     schema=str,
     location="query",
     example="light"
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="date",
+        description="Date du menu",
+        methods={
+            "date": Rules.date
+        },
+        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache(
@@ -922,20 +922,6 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
 
 # /restaurants/{code}/info
 @bp.route("/<code>/info", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Informations d'un restaurant",
     description="Informations d'un restaurant en fonction de son code.",
@@ -977,6 +963,20 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     location="path",
     example=1
 )
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @ratelimit()
 @cache()
 async def getInformations(request: Request, code: int) -> JSONResponse:
@@ -1012,20 +1012,6 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
 
 # /restaurants/{code}/preview
 @bp.route("/<code>/preview", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du restaurant",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Image d'un restaurant",
     description="Image d'un restaurant en fonction de son code.",
@@ -1066,6 +1052,20 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     schema=int,
     location="path",
     example=1
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache(

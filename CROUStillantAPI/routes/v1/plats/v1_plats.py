@@ -65,20 +65,6 @@ async def getPlats(request: Request) -> JSONResponse:
 
 # /plats/{code}
 @bp.route("/<code>", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID du plat",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Détails d'un plat",
     description="Détails d'un plat en fonction de son code.",
@@ -119,6 +105,20 @@ async def getPlats(request: Request) -> JSONResponse:
     schema=int,
     location="path",
     example=1
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du plat",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache()
