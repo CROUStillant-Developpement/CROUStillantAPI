@@ -20,6 +20,16 @@ class Menus:
 
             return await connection.fetch(
                 """
+                    WITH LatestMenus AS (
+                        SELECT DISTINCT ON (M.DATE)
+                            M.MID,
+                            M.DATE
+                        FROM PUBLIC.MENU M
+                        WHERE M.RID = $1
+                        AND M.DATE >= $2
+                        ORDER BY M.DATE, M.MID DESC
+                    )
+
                     SELECT
                         M.MID,
                         M.DATE,
@@ -32,12 +42,11 @@ class Menus:
                         P.LIBELLE AS PLAT,
                         CO.ORDRE AS PLAT_ORDRE
                     FROM PUBLIC.MENU M
-                    JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
+                    JOIN LatestMenus LM ON M.MID = LM.MID
                     JOIN PUBLIC.REPAS RP ON M.MID = RP.MID
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
                     JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
                     JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
-                    WHERE R.RID = $1 AND M.DATE >= $2
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
@@ -75,7 +84,13 @@ class Menus:
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
                     JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
                     JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
-                    WHERE R.RID = $1 AND M.DATE = $2
+                    WHERE R.RID = $1
+                    AND M.DATE = $2
+                    AND M.MID = (
+                        SELECT MAX(M2.MID)
+                        FROM PUBLIC.MENU M2
+                        WHERE M2.RID = R.RID AND M2.DATE = $2
+                    )
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
@@ -95,13 +110,14 @@ class Menus:
 
             return await connection.fetch(
                 """
-                    SELECT
+                    SELECT DISTINCT ON (M.DATE)
                         M.MID,
                         M.DATE
                     FROM PUBLIC.MENU M
                     JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
-                    WHERE R.RID = $1 AND M.DATE >= CURRENT_DATE
-                    ORDER BY M.DATE ASC
+                    WHERE R.RID = $1
+                    AND M.DATE >= CURRENT_DATE
+                    ORDER BY M.DATE, M.MID DESC
                 """,
                 id
             )
@@ -119,13 +135,13 @@ class Menus:
 
             return await connection.fetch(
                 """
-                    SELECT
+                    SELECT DISTINCT ON (M.DATE)
                         M.MID,
                         M.DATE
                     FROM PUBLIC.MENU M
                     JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
                     WHERE R.RID = $1
-                    ORDER BY M.DATE ASC
+                    ORDER BY M.DATE, M.MID DESC
                 """,
                 id
             )
