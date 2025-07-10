@@ -66,20 +66,6 @@ async def getRegions(request: Request) -> JSONResponse:
 
 # /regions/{code}
 @bp.route("/<code>", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID de la région",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Détails d'une région",
     description="Détails d'une région en fonction de son code.",
@@ -121,6 +107,20 @@ async def getRegions(request: Request) -> JSONResponse:
     location="path",
     example=1
 )
+@inputs(
+    Argument(
+        name="code",
+        description="ID de la région",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
 @ratelimit()
 @cache()
 async def getRegion(request: Request, code: int) -> JSONResponse:
@@ -154,20 +154,6 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
 
 # /regions/{code}/restaurants
 @bp.route("/<code>/restaurants", methods=["GET"])
-@inputs(
-    Argument(
-        name="code",
-        description="ID de la région",
-        methods={
-            "code": Rules.integer
-        },
-        call=int,
-        required=True,
-        headers=False,
-        allow_multiple=False,
-        deprecated=False,
-    )
-)
 @openapi.definition(
     summary="Liste des restaurants d'une région",
     description="Liste des restaurants disponibles dans une région en fonction de son code.",
@@ -208,6 +194,20 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     schema=int,
     location="path",
     example=1
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID de la région",
+        methods={
+            "code": Rules.integer
+        },
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
 )
 @ratelimit()
 @cache()
