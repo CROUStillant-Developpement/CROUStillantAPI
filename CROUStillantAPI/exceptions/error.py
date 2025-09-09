@@ -3,7 +3,7 @@ from sanic.exceptions import SanicException
 
 class ServerErrorException(SanicException):
     status_code = 500
-    
+
     @property
     def message(self):
         if self.extra["message"]:

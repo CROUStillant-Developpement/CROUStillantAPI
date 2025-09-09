@@ -3,7 +3,8 @@ from sanic.exceptions import SanicException
 
 class ForbiddenException(SanicException):
     status_code = 403
-    
+    quiet = True
+
     @property
     def message(self):
         if self.extra["ban"]:
