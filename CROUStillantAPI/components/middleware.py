@@ -1,6 +1,6 @@
+import time
+
 from sanic import Sanic, Request
-from datetime import datetime
-from pytz import timezone
 from uuid import uuid1
 
 
@@ -23,7 +23,7 @@ class Middleware:
             :param request: Request
             """
             request.ctx.request_id = str(uuid1())
-            request.ctx.process_time_start = datetime.now(timezone("Europe/Paris")).timestamp()
+            request.ctx.process_time_start = time.perf_counter()
 
 
         @app.on_response
@@ -34,7 +34,7 @@ class Middleware:
             :param request: Request
             :param response: Response
             """
-            request.ctx.process_time_end = datetime.now(timezone("Europe/Paris")).timestamp()
+            request.ctx.process_time_end = time.perf_counter()
 
             # Dans de très rares cas, le temps de traitement peut ne pas être défini
             # (par exemple, si la requête échoue avant d'atteindre le middleware de réponse)
