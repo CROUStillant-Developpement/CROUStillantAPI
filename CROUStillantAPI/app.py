@@ -2,7 +2,6 @@ from sanic import Sanic
 from .config import AppConfig
 from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
-from .components.statistics import PrometheusStatistics
 from .components.analytics import Analytics
 from .components.cache import Cache
 from .components.blueprint import BlueprintLoader
@@ -108,9 +107,6 @@ app.ctx.cache = Cache(app)
 
 # Enregistrement des statistiques d'analyse
 Analytics(app)
-
-# Ajoute les statistiques Prometheus
-PrometheusStatistics(app)
 
 # Enregistrement des routes
 BlueprintLoader(app).register()
