@@ -75,9 +75,21 @@ app.ext.openapi.describe(
             - Vous ne pouvez pas utiliser l'API à des fins commerciales.
             - Vous ne pouvez pas utiliser l'API pour des activités illégales / malveillantes.
             - Vous ne devez pas abuser de l'API (limite de 200 requêtes par minute), l'utilisation de plusieurs adresses IP pour contourner cette limite est interdite.  
+            - Vous devez créditer CROUStillant (voir la section "Crédits" ci-dessous).
                
             ⁣  
-            ⚠️ ***Tout abus de l'API entraînera un bannissement de l'adresse IP.***  
+            ⚠️ ***Tout abus de l'API entraînera un bannissement temporaire ou définitif.***
+            ⁣  
+            # 📑 • Crédits
+            Pour toute utilisation de l'API CROUStillant ou de ses parties, merci de créditer le projet en mentionnant "CROUStillant" et en incluant un lien vers le site officiel du projet : [https://croustillant.menu](https://croustillant.menu).  
+            Exemple de crédit à afficher sur un site web, une application, un projet, etc... :   
+            > Données fournies par [CROUStillant.menu](https://croustillant.menu)  
+            > Propulsé par [CROUStillant.menu](https://croustillant.menu)  
+            > Menus fournis par [CROUStillant.menu](https://croustillant.menu)  
+            > Application réalisée avec [CROUStillant.menu](https://croustillant.menu)  
+            > API réalisée avec [CROUStillant.menu](https://croustillant.menu)  
+            > ...
+               
             ⁣  
             # 📩 • Contact
             Pour toute question, suggestion, bug, ou problème n'hésitez pas à nous contacter !  
