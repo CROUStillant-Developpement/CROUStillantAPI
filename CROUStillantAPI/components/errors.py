@@ -4,6 +4,7 @@ from ..exceptions.ratelimit import RatelimitException
 from ..exceptions.forbidden import ForbiddenException
 from sanic import Sanic
 from sanic.exceptions import NotFound, SanicException
+from asyncpg.exceptions import ConnectionDoesNotExistError
 
 
 class ErrorHandler:
@@ -58,4 +59,17 @@ class ErrorHandler:
                 success=False,
                 message=exception.message if hasattr(exception, "message") else "Une erreur s'est produite lors du traitement de votre requête. Nous nous excusons pour la gêne occasionnée, notre équipe est sur le coup !",
                 status=500
+            ).generate()
+
+
+        @app.exception(ConnectionDoesNotExistError)
+        @ratelimit()
+        async def handle_db_connection_error(request, exception):
+            self.app.ctx.logs.error(f"Erreur de connexion à la base de données: {exception}")
+
+            return JSON(
+                request=request,
+                success=False,
+                message="Le service est temporairement indisponible en raison de problèmes de connexion à la base de données. Veuillez réessayer plus tard.",
+                status=503
             ).generate()
