@@ -9,6 +9,7 @@ from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
 from ....utils.image import saveImageToBuffer
 from ....utils.format import getBoolFromString
+from ....utils.colors import parse_custom_colours
 from ....exceptions.error import ServerErrorException
 from sanic.response import HTTPResponse, JSONResponse, raw
 from sanic import Blueprint, Request
@@ -754,6 +755,38 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
     location="query",
     example="light"
 )
+@openapi.parameter(
+    name="color_header",
+    description="Couleur personnalisée pour l'en-tête (format: #RRGGBB ou #RGB)",
+    required=False,
+    schema=str,
+    location="query",
+    example="#000000"
+)
+@openapi.parameter(
+    name="color_content",
+    description="Couleur personnalisée pour le contenu (format: #RRGGBB ou #RGB)",
+    required=False,
+    schema=str,
+    location="query",
+    example="#373737"
+)
+@openapi.parameter(
+    name="color_title",
+    description="Couleur personnalisée pour les titres (format: #RRGGBB ou #RGB)",
+    required=False,
+    schema=str,
+    location="query",
+    example="#333333"
+)
+@openapi.parameter(
+    name="color_infos",
+    description="Couleur personnalisée pour les informations (format: #RRGGBB ou #RGB)",
+    required=False,
+    schema=str,
+    location="query",
+    example="#4F4F4F"
+)
 @inputs(
     Argument(
         name="code",
@@ -796,6 +829,9 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
     """
     repas = request.args.get("repas", "midi").lower() if request.args.get("repas", "midi").lower() in ["matin", "midi", "soir"] else "midi"
     theme = request.args.get("theme", "light").lower() if request.args.get("theme", "light").lower() in ["light", "purple", "dark"] else "light"
+    
+    # Parse custom colours from query parameters
+    custom_colours = parse_custom_colours(request.args)
 
     restaurant = await request.app.ctx.entities.restaurants.getOne(code)
 
@@ -873,13 +909,14 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
             data = None
 
 
-        def generate_image_in_background(restaurant, menu, date, preview, theme):
+        def generate_image_in_background(restaurant, menu, date, preview, theme, custom_colours):
             image = generate(
                 restaurant=restaurant, 
                 menu=menu,
                 date=date, 
                 preview=preview,
-                theme=theme
+                theme=theme,
+                custom_colours=custom_colours
             )
             buffer = saveImageToBuffer(image, compression_level=1)
             return buffer.getvalue()
@@ -894,7 +931,7 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
         content = await loop.run_in_executor(
             request.app.ctx.executor, 
             generate_image_in_background, 
-            restaurant, data, date, preview, theme
+            restaurant, data, date, preview, theme, custom_colours
         )
 
         return raw(
