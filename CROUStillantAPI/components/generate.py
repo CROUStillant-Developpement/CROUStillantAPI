@@ -9,7 +9,7 @@ from json import loads
 from io import BytesIO
 
 
-def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light") -> Image:
+def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light", custom_colours: dict = None) -> Image:
     """
     Génère une image du menu d'un restaurant universitaire.
 
@@ -18,10 +18,11 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
     :param date: Date du menu.
     :param preview: Prévisualisation de l'image.
     :param theme: Thème de l'image.
+    :param custom_colours: Couleurs personnalisées (header, content, title, infos).
     :return: L'image du menu.
     """
 
-    colours = {
+    default_colours = {
         "light": {
             "header": "#000000",
             "content": "#373737",
@@ -42,6 +43,11 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
         }
     }
 
+    # Use custom colours if provided, otherwise use theme colours
+    if custom_colours:
+        colours = {theme: {**default_colours.get(theme, default_colours["light"]), **custom_colours}}
+    else:
+        colours = default_colours
 
     image = Image.open(f'./assets/images/themes/{theme}/background.png')
     drawer = ImageDraw.Draw(image)
