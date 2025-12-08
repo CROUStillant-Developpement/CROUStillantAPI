@@ -707,8 +707,8 @@ wheels = [
 
 [[package]]
 name = "sanic-ext"
-version = "23.12.0"
-source = { git = "https://github.com/PaulBayfield/sanic-ext#de2e2aa5e2bb74578fa2984b5fab5886972309af" }
+version = "24.12.0"
+source = { git = "https://github.com/PaulBayfield/sanic-ext#fa736b61473b72aea4440ae53c54e5bc2de5a073" }
 dependencies = [
     { name = "pyyaml" },
 ]
