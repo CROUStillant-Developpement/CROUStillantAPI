@@ -14,13 +14,9 @@ def sanitize_for_json(data: dict) -> dict:
     """
     def sanitize_string(s: str) -> str:
         """Replace invalid surrogate pairs with replacement character"""
-        try:
-            # Encode with surrogatepass to handle unpaired surrogates,
-            # then decode with replace to convert them to safe characters
-            return s.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
-        except (UnicodeDecodeError, UnicodeEncodeError):
-            # If any encoding error occurs, use strict replacement
-            return s.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+        # Encode with surrogatepass to handle unpaired surrogates,
+        # then decode with replace to convert them to safe characters
+        return s.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
     
     sanitized = {}
     for key, value in data.items():
@@ -58,7 +54,8 @@ class Analytics:
             :param response: Response
             """
 
-            headers = request.headers
+            # Create a copy of headers to avoid modifying the original
+            headers = dict(request.headers)
             if "cookie" in headers:
                 del headers["cookie"]
 
@@ -104,7 +101,7 @@ class Analytics:
                 request.path,
                 response.status,
                 dumps(sanitize_for_json(dict(request.args))),
-                dumps(sanitize_for_json(dict(headers))),
+                dumps(sanitize_for_json(headers)),
                 response.headers.get("x-ratelimit-limit", -1),
                 response.headers.get("x-ratelimit-remaining", -1),
                 response.headers.get("x-ratelimit-used", -1),
