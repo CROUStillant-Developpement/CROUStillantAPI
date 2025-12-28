@@ -49,7 +49,7 @@ class ErrorHandler:
             ).generate()
 
 
-        @app.exception(ConnectionDoesNotExistError)
+        @app.exception(ConnectionDoesNotExistError, ConnectionRefusedError)
         @ratelimit()
         async def handle_db_connection_error(request, exception):
             self.app.ctx.logs.error(f"Erreur de connexion à la base de données: {exception}")
