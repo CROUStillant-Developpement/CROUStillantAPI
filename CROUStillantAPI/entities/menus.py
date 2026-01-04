@@ -45,8 +45,8 @@ class Menus:
                     JOIN LatestMenus LM ON M.MID = LM.MID
                     JOIN PUBLIC.REPAS RP ON M.MID = RP.MID
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
-                    JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
-                    JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
+                    LEFT JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
+                    LEFT JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
@@ -82,8 +82,8 @@ class Menus:
                     JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
                     JOIN PUBLIC.REPAS RP ON M.MID = RP.MID
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
-                    JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
-                    JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
+                    LEFT JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
+                    LEFT JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
                     WHERE R.RID = $1
                     AND M.DATE = $2
                     AND M.MID = (
