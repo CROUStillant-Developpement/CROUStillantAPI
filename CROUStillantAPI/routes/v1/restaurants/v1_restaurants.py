@@ -329,13 +329,14 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
                 }
             )
 
-        categories_list[-1]["plats"].append(
-            {
-                "code": row.get("platid"),
-                "ordre": row.get("plat_ordre") + 1,
-                "libelle": row.get("plat")
-            }
-        )
+        if row.get("platid") is not None:
+            categories_list[-1]["plats"].append(
+                {
+                    "code": row.get("platid"),
+                    "ordre": row.get("plat_ordre") + 1,
+                    "libelle": row.get("plat")
+                }
+            )
 
     keys = list(menu_per_day.keys())
     menus = []
@@ -671,13 +672,14 @@ async def getRestaurantMenuFromDate(request: Request, code: int, date: str) -> J
                 }
             )
 
-        categories_list[-1]["plats"].append(
-            {
-                "code": row.get("platid"),
-                "ordre": row.get("plat_ordre") + 1,
-                "libelle": row.get("plat")
-            }
-        )
+        if row.get("platid") is not None:
+            categories_list[-1]["plats"].append(
+                {
+                    "code": row.get("platid"),
+                    "ordre": row.get("plat_ordre") + 1,
+                    "libelle": row.get("plat")
+                }
+            )
 
 
     return JSON(
@@ -889,13 +891,14 @@ async def getRestaurantMenuFromDateImage(request: Request, code: int, date: str)
                         }
                     )
 
-                categories_list[-1]["plats"].append(
-                    {
-                        "code": row.get("platid"),
-                        "ordre": row.get("plat_ordre") + 1,
-                        "libelle": row.get("plat")
-                    }
-                )
+                if row.get("platid") is not None:
+                    categories_list[-1]["plats"].append(
+                        {
+                            "code": row.get("platid"),
+                            "ordre": row.get("plat_ordre") + 1,
+                            "libelle": row.get("plat")
+                        }
+                    )
 
             data = None
             for menu in menu_per_day:
