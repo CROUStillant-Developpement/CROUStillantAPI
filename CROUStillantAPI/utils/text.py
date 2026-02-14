@@ -81,7 +81,7 @@ def splitText(text: str, maximum: int) -> list:
 
 def clean(text: str) -> str:
     """
-    Formatte une chaîne de charactères
+    Formatte une chaîne de caractères en supprimant les doubles espaces et les espaces avant les parenthèses, les deux points et les virgules.
 
     :param: Texte à formatter
     :type: str

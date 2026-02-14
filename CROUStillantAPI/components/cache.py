@@ -77,6 +77,7 @@ class Cache:
             Connexion à Redis avant le démarrage du serveur
             """
             self.redis = redis.from_url(redis_url, decode_responses=False)
+
         @app.after_server_stop
         async def close_redis(app, _):
             """
