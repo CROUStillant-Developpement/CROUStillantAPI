@@ -11,12 +11,7 @@ from sanic import Blueprint, Request
 from sanic_ext import openapi
 
 
-bp = Blueprint(
-    name="Taches",
-    url_prefix="/taches",
-    version=1,
-    version_prefix="v"
-)
+bp = Blueprint(name="Taches", url_prefix="/taches", version=1, version_prefix="v")
 
 
 # /taches
@@ -28,17 +23,13 @@ bp = Blueprint(
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": Taches
-    },
-    description="Liste des 100 dernières tâches ajoutées à la base de données."
+    content={"application/json": Taches},
+    description="Liste des 100 dernières tâches ajoutées à la base de données.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @openapi.parameter(
     name="offset",
@@ -46,7 +37,7 @@ bp = Blueprint(
     required=False,
     schema=bool,
     location="query",
-    example=0
+    example=0,
 )
 @ratelimit()
 @cache()
@@ -57,8 +48,7 @@ async def getTaches(request: Request) -> JSONResponse:
     :return: Les 100 dernières tâches
     """
     taches = await request.app.ctx.entities.taches.getLast(
-        limit=100, 
-        offset=getIntFromString(request.args.get("offset", 0))
+        limit=100, offset=getIntFromString(request.args.get("offset", 0))
     )
 
     return JSON(
@@ -76,7 +66,9 @@ async def getTaches(request: Request) -> JSONResponse:
                 "debut_categories": tache.get("debut_categories"),
                 "debut_plats": tache.get("debut_plats"),
                 "debut_compositions": tache.get("debut_compositions"),
-                "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S") if tache.get("fin") is not None else None,
+                "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S")
+                if tache.get("fin") is not None
+                else None,
                 "fin_regions": tache.get("fin_regions"),
                 "fin_restaurants": tache.get("fin_restaurants"),
                 "fin_types_restaurants": tache.get("fin_types_restaurants"),
@@ -86,9 +78,10 @@ async def getTaches(request: Request) -> JSONResponse:
                 "fin_plats": tache.get("fin_plats"),
                 "fin_compositions": tache.get("fin_compositions"),
                 "requetes": tache.get("requetes"),
-            } for tache in taches
+            }
+            for tache in taches
         ],
-        status=200
+        status=200,
     ).generate()
 
 
@@ -100,32 +93,22 @@ async def getTaches(request: Request) -> JSONResponse:
     tag="Taches",
 )
 @openapi.response(
-    status=200,
-    content={
-        "application/json": Tache
-    },
-    description="Détails d'une tâche."
+    status=200, content={"application/json": Tache}, description="Détails d'une tâche."
 )
 @openapi.response(
     status=400,
-    content={
-        "application/json": BadRequest
-    },
-    description="L'ID de la tâche doit être un nombre."
+    content={"application/json": BadRequest},
+    description="L'ID de la tâche doit être un nombre.",
 )
 @openapi.response(
     status=404,
-    content={
-        "application/json": NotFound
-    },
-    description="La tâche n'existe pas."
+    content={"application/json": NotFound},
+    description="La tâche n'existe pas.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @openapi.parameter(
     name="code",
@@ -133,15 +116,13 @@ async def getTaches(request: Request) -> JSONResponse:
     required=True,
     schema=int,
     location="path",
-    example=1
+    example=1,
 )
 @inputs(
     Argument(
         name="code",
         description="ID de la tâche",
-        methods={
-            "code": Rules.integer
-        },
+        methods={"code": Rules.integer},
         call=int,
         required=True,
         headers=False,
@@ -162,10 +143,7 @@ async def getTache(request: Request, code: int) -> JSONResponse:
 
     if tache is None:
         return JSON(
-            request=request,
-            success=False,
-            message="La tâche n'existe pas.",
-            status=404
+            request=request, success=False, message="La tâche n'existe pas.", status=404
         ).generate()
 
     return JSON(
@@ -182,7 +160,9 @@ async def getTache(request: Request, code: int) -> JSONResponse:
             "debut_categories": tache.get("debut_categories"),
             "debut_plats": tache.get("debut_plats"),
             "debut_compositions": tache.get("debut_compositions"),
-            "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S") if tache.get("fin") is not None else None,
+            "fin": tache.get("fin").strftime("%d-%m-%Y %H:%M:%S")
+            if tache.get("fin") is not None
+            else None,
             "fin_regions": tache.get("fin_regions"),
             "fin_restaurants": tache.get("fin_restaurants"),
             "fin_types_restaurants": tache.get("fin_types_restaurants"),
@@ -193,8 +173,11 @@ async def getTache(request: Request, code: int) -> JSONResponse:
             "fin_compositions": tache.get("fin_compositions"),
             "requetes": tache.get("requetes"),
             "restaurants": [
-                restaurant.get("rid") for restaurant in await request.app.ctx.entities.taches.getRestaurants(code)
-            ]
+                restaurant.get("rid")
+                for restaurant in await request.app.ctx.entities.taches.getRestaurants(
+                    code
+                )
+            ],
         },
-        status=200
+        status=200,
     ).generate()

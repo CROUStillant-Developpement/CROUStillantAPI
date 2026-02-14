@@ -17,6 +17,7 @@ class Bucket:
     :param limit: Nombre de requêtes autorisées
     :param secs: Durée du bucket
     """
+
     def __init__(self, ident: str, limit: int, secs: int) -> None:
         self.ident = binascii.crc32(ident.encode())
         self.limit = limit
@@ -27,6 +28,7 @@ class Ratelimiter:
     """
     Classe permettant de gérer les rate limits
     """
+
     def __init__(self) -> None:
         """
         Initialisation de la classe
@@ -38,11 +40,10 @@ class Ratelimiter:
         self.cache_refresh = 300
         self.DEFAULT = Bucket("default", 200, 60)
 
-
     async def check_ratelimit(self, key: str, bucket: Bucket) -> dict:
         """
         Vérifie si une requête est autorisée
-        
+
         :param key: Clé de la requête
         :param bucket: Bucket de rate limiting
         :return: Headers de la requête
@@ -54,38 +55,40 @@ class Ratelimiter:
 
         window_start = current_time // bucket.secs * bucket.secs
 
-        self.ratelimits[key].setdefault(bucket.ident, {
-            'remaining': bucket.limit,
-            'reset': window_start + bucket.secs,
-            'window_start': window_start,
-        })
+        self.ratelimits[key].setdefault(
+            bucket.ident,
+            {
+                "remaining": bucket.limit,
+                "reset": window_start + bucket.secs,
+                "window_start": window_start,
+            },
+        )
 
         bucket_data = self.ratelimits[key][bucket.ident]
 
-        if current_time >= bucket_data['reset']:
-            bucket_data['remaining'] = bucket.limit
-            bucket_data['reset'] = window_start + bucket.secs
-            bucket_data['window_start'] = window_start
+        if current_time >= bucket_data["reset"]:
+            bucket_data["remaining"] = bucket.limit
+            bucket_data["reset"] = window_start + bucket.secs
+            bucket_data["window_start"] = window_start
 
-        bucket_data['remaining'] -= 1
+        bucket_data["remaining"] -= 1
 
         headers = {
-            'X-RateLimit-Limit': bucket.limit,
-            'X-RateLimit-Remaining': max(bucket_data['remaining'], 0),
-            'X-RateLimit-Reset': bucket_data['reset'] - current_time,  # Time remaining to reset
-            'X-RateLimit-Bucket': bucket.ident,
-            'X-RateLimit-Used': bucket.limit - bucket_data['remaining']
+            "X-RateLimit-Limit": bucket.limit,
+            "X-RateLimit-Remaining": max(bucket_data["remaining"], 0),
+            "X-RateLimit-Reset": bucket_data["reset"]
+            - current_time,  # Time remaining to reset
+            "X-RateLimit-Bucket": bucket.ident,
+            "X-RateLimit-Used": bucket.limit - bucket_data["remaining"],
         }
 
-        if bucket_data['remaining'] < 0:
-            headers.update({'Retry-After': bucket_data['reset'] - current_time})
+        if bucket_data["remaining"] < 0:
+            headers.update({"Retry-After": bucket_data["reset"] - current_time})
             raise RatelimitException(
-                headers=headers,
-                extra={'cooldown': bucket_data['reset'] - current_time}
+                headers=headers, extra={"cooldown": bucket_data["reset"] - current_time}
             )
 
         return headers
-
 
     async def cleanup(self) -> None:
         """
@@ -98,11 +101,10 @@ class Ratelimiter:
 
         for key, buckets in self.ratelimits.items():
             for bucket, data in list(buckets.items()):
-                if data['reset'] < current_time:
+                if data["reset"] < current_time:
                     del self.ratelimits[key][bucket]
 
         self.last_ratelimit_cleanup = current_time
-
 
     async def getBucket(self, pool: Pool, key: str) -> Bucket:
         """
@@ -113,7 +115,9 @@ class Ratelimiter:
         :param key: Clé de la requête (IP ou API Key)
         :return: Bucket
         """
-        if key in self.cache_buckets and self.cache_buckets[key]["expires"] > int(time.time()):
+        if key in self.cache_buckets and self.cache_buckets[key]["expires"] > int(
+            time.time()
+        ):
             if self.cache_buckets[key]["bucket"].limit == 0:
                 raise ForbiddenException(
                     headers={
@@ -121,20 +125,22 @@ class Ratelimiter:
                         "X-RateLimit-Remaining": 0,
                         "X-RateLimit-Reset": 0,
                         "X-RateLimit-Bucket": "banned",
-                        "X-RateLimit-Used": 0
-                    }, 
-                    extra={"ban": True}
+                        "X-RateLimit-Used": 0,
+                    },
+                    extra={"ban": True},
                 )
             else:
                 return self.cache_buckets[key]["bucket"]
         else:
             async with pool.acquire() as connection:
-                data = await connection.fetchrow("SELECT key, b_limit, b_secs FROM bucket WHERE key = $1", key)
+                data = await connection.fetchrow(
+                    "SELECT key, b_limit, b_secs FROM bucket WHERE key = $1", key
+                )
 
             if data is None:
                 self.cache_buckets[key] = {
                     "expires": int(time.time()) + self.cache_refresh,
-                    "bucket": self.DEFAULT
+                    "bucket": self.DEFAULT,
                 }
 
                 return self.DEFAULT
@@ -142,11 +148,7 @@ class Ratelimiter:
                 if data["b_limit"] == 0:
                     self.cache_buckets[key] = {
                         "expires": int(time.time()) + self.cache_refresh,
-                        "bucket": Bucket(
-                            ident="banned",
-                            limit=0,
-                            secs=0
-                        )
+                        "bucket": Bucket(ident="banned", limit=0, secs=0),
                     }
 
                     raise ForbiddenException(
@@ -155,43 +157,54 @@ class Ratelimiter:
                             "X-RateLimit-Remaining": 0,
                             "X-RateLimit-Reset": 0,
                             "X-RateLimit-Bucket": "banned",
-                            "X-RateLimit-Used": 0
-                        }, 
-                        extra={"ban": True}
+                            "X-RateLimit-Used": 0,
+                        },
+                        extra={"ban": True},
                     )
                 else:
                     bucket = Bucket(data["key"], data["b_limit"], data["b_secs"])
                     self.cache_buckets[key] = {
                         "expires": int(time.time()) + self.cache_refresh,
-                        "bucket": bucket
+                        "bucket": bucket,
                     }
 
                     return bucket
 
 
-def ratelimit():
+def ratelimit(default_bucket: Bucket = Ratelimiter.DEFAULT) -> callable:
     """
     Décorateur permettant de limiter le nombre de requêtes par seconde
+
+    :param default_bucket: Bucket par défaut
+    :type default_bucket: Bucket
+    :return: Fonction décorée
+    :rtype: callable
     """
-    def wrapper(func) -> callable:
+
+    def wrapper(func: callable) -> callable:
         """
         Fonction interne du décorateur
-        
+
         :param func: Fonction à décorer
+        :type func: callable
         :return: Fonction décorée
+        :rtype: callable
         """
+
         @functools.wraps(func)
         async def wrapped(request: Request, *args, **kwargs) -> HTTPResponse:
             """
             Fonction interne du décorateur
-            
+
             :param request: Requête
             :param args: Arguments
             :param kwargs: Arguments nommés
             :return: Réponse
             """
-            key = request.headers.get('CF-Connecting-IP', request.client_ip)
-            apikey = request.headers.get("X-API-Key", None)  # Pour les utilisateurs qui ont une adresse IP dynamique
+            key = request.headers.get("CF-Connecting-IP", request.client_ip)
+            apikey = request.headers.get(
+                "X-API-Key", None
+            )  # Pour les utilisateurs qui ont une adresse IP dynamique
             if apikey:
                 key = apikey
 
@@ -200,8 +213,12 @@ def ratelimit():
             pool: Pool = request.app.ctx.pool
             if pool:
                 bucket: Bucket = await ratelimiter.getBucket(pool, key)
+
+                # Dans certains cas comme pour les images CDN, on veut appliquer la limite la moins restrictive
+                if bucket.limit < default_bucket.limit:
+                    bucket = default_bucket
             else:
-                bucket = ratelimiter.DEFAULT
+                bucket = default_bucket
 
             headers = await ratelimiter.check_ratelimit(key, bucket)
 
@@ -209,5 +226,7 @@ def ratelimit():
             resp.headers.update(headers)
 
             return resp
+
         return wrapped
+
     return wrapper

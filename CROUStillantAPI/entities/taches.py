@@ -5,7 +5,6 @@ class Taches:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def getAll(self) -> list:
         """
         Récupère toutes les tâches.
@@ -23,7 +22,6 @@ class Taches:
                         tache
                 """
             )
-
 
     async def getLast(self, limit: int, offset: int) -> list:
         """
@@ -47,9 +45,9 @@ class Taches:
                     LIMIT $1
                     OFFSET $2
                 """,
-                limit, offset
+                limit,
+                offset,
             )
-
 
     async def getOne(self, id: int) -> dict:
         """
@@ -70,14 +68,13 @@ class Taches:
                     WHERE
                         id = $1
                 """,
-                id
+                id,
             )
-
 
     async def getRestaurants(self, id: int) -> list:
         """
         Récupère les restaurants d'une tâche.
-        
+
         :param id: ID de la tâche
         :return: Les restaurants
         """
@@ -93,5 +90,5 @@ class Taches:
                     WHERE
                         idtache = $1
                 """,
-                id
+                id,
             )

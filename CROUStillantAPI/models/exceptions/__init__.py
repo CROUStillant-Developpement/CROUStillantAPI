@@ -4,9 +4,4 @@ from .notfound import NotFound
 from .unauthorized import Unauthorized
 
 
-__all__ = [
-    "RateLimited",
-    "BadRequest",
-    "NotFound",
-    "Unauthorized"
-]
+__all__ = ["RateLimited", "BadRequest", "NotFound", "Unauthorized"]

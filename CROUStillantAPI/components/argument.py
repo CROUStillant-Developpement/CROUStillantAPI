@@ -99,7 +99,9 @@ def inputs(*args: Argument) -> callable:
                 for input_name, input_rule in argument.methods.items():
                     if input_value := requests_inputs.get(input_name, None):
                         # Gestion des valeurs multiples
-                        if not argument.allow_multiple and isinstance(input_value, (list, tuple)):
+                        if not argument.allow_multiple and isinstance(
+                            input_value, (list, tuple)
+                        ):
                             if len(input_value) > 1:
                                 return JSON(
                                     request=request,
@@ -118,7 +120,8 @@ def inputs(*args: Argument) -> callable:
                             if input_rule(input_value):
                                 finished_kwargs[argument.name] = (
                                     argument.call(input_value)
-                                    if argument.call else input_value
+                                    if argument.call
+                                    else input_value
                                 )
                                 break
                             else:
@@ -135,7 +138,8 @@ def inputs(*args: Argument) -> callable:
                         else:
                             finished_kwargs[argument.name] = (
                                 argument.call(input_value)
-                                if argument.call else input_value
+                                if argument.call
+                                else input_value
                             )
                             break
                 else:
@@ -152,7 +156,9 @@ def inputs(*args: Argument) -> callable:
 
             for arg in args:
                 if not isinstance(arg, Argument):
-                    raise TypeError("Tous les arguments doivent être de type Argument !")
+                    raise TypeError(
+                        "Tous les arguments doivent être de type Argument !"
+                    )
 
                 override_exit = input_handler(argument=arg)
                 if override_exit:

@@ -5,7 +5,6 @@ class Regions:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def getAll(self) -> list:
         """
         Récupère toutes les régions.
@@ -23,7 +22,6 @@ class Regions:
                         region
                 """
             )
-
 
     async def getOne(self, id: int) -> dict:
         """
@@ -44,9 +42,8 @@ class Regions:
                     WHERE
                         idreg = $1
                 """,
-                id
+                id,
             )
-
 
     async def getRestaurants(self, id: int) -> list[dict]:
         """
@@ -90,5 +87,5 @@ class Regions:
                     WHERE
                         restaurant.idreg = $1
                 """,
-                id
+                id,
             )

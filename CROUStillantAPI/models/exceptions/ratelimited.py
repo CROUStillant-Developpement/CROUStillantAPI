@@ -8,5 +8,5 @@ class RateLimited:
     )
     message = openapi.String(
         description="Message de retour",
-        example="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+        example="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
     )

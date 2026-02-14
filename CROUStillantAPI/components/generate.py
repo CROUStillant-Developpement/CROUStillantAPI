@@ -9,7 +9,14 @@ from json import loads
 from io import BytesIO
 
 
-def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light", custom_colours: dict = None) -> Image:
+def generate(
+    restaurant,
+    menu,
+    date: datetime,
+    preview: str,
+    theme: str = "light",
+    custom_colours: dict = None,
+) -> Image:
     """
     Génère une image du menu d'un restaurant universitaire.
 
@@ -27,31 +34,35 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
             "header": "#000000",
             "content": "#373737",
             "title": "#333333",
-            "infos": "#4F4F4F"
+            "infos": "#4F4F4F",
         },
         "purple": {
             "header": "#FFFFFF",
             "content": "#F4EEE0",
             "title": "#F4EEE0",
-            "infos": "#F4EEE0"
+            "infos": "#F4EEE0",
         },
         "dark": {
             "header": "#FFFFFF",
             "content": "#F4EEE0",
             "title": "#F4EEE0",
-            "infos": "#F4EEE0"
-        }
+            "infos": "#F4EEE0",
+        },
     }
 
     # Use custom colours if provided, otherwise use theme colours
     if custom_colours:
-        colours = {theme: {**default_colours.get(theme, default_colours["light"]), **custom_colours}}
+        colours = {
+            theme: {
+                **default_colours.get(theme, default_colours["light"]),
+                **custom_colours,
+            }
+        }
     else:
         colours = default_colours
 
-    image = Image.open(f'./assets/images/themes/{theme}/background.png')
+    image = Image.open(f"./assets/images/themes/{theme}/background.png")
     drawer = ImageDraw.Draw(image)
-
 
     # Titre
 
@@ -60,11 +71,22 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
     space = 70
 
     header_1 = Text(size=60, weight=Weights.BOLD)
-    header_1.draw(drawer=drawer, text=shorten(restaurant.get("nom"), width=34, placeholder='...'), colour=colours[theme]['header'], x=x, y=y)
+    header_1.draw(
+        drawer=drawer,
+        text=shorten(restaurant.get("nom"), width=34, placeholder="..."),
+        colour=colours[theme]["header"],
+        x=x,
+        y=y,
+    )
 
     header_2 = Text(size=45, weight=Weights.BOLD)
-    header_2.draw(drawer=drawer, text=getCleanDate(date), colour=colours[theme]['header'], x=x, y=y+space)
-
+    header_2.draw(
+        drawer=drawer,
+        text=getCleanDate(date),
+        colour=colours[theme]["header"],
+        x=x,
+        y=y + space,
+    )
 
     # Repas
 
@@ -83,7 +105,7 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
     small = Text(size=30, weight=Weights.BOLD_ITALIC)
 
     if menu:
-        img = Image.open(f'./assets/images/themes/{theme}/square.png')
+        img = Image.open(f"./assets/images/themes/{theme}/square.png")
         image.paste(img, (35, 168), img)
         image.paste(img, (658, 168), img)
 
@@ -99,39 +121,80 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
                 total = len([d for c in menu for d in c if d != "" and d != " "])
 
                 if total - count > 0:
-                    small.draw(drawer=drawer, text=f"+ {total-count} autres plats non affichés...", colour=colours[theme]['content'], x=content_x, y=content_y)
+                    small.draw(
+                        drawer=drawer,
+                        text=f"+ {total - count} autres plats non affichés...",
+                        colour=colours[theme]["content"],
+                        x=content_x,
+                        y=content_y,
+                    )
 
                 stop = True
                 break
 
-            title.draw(drawer=drawer, text=shorten(category.get("libelle"), width=25, placeholder='...'), colour=colours[theme]['content'], x=content_x, y=content_y)
+            title.draw(
+                drawer=drawer,
+                text=shorten(category.get("libelle"), width=25, placeholder="..."),
+                colour=colours[theme]["content"],
+                x=content_x,
+                y=content_y,
+            )
 
             content_y += content_space
 
             for dish in category["plats"]:
                 count += 1
-                if dish.get("libelle") != "" and dish.get("libelle") != " " and not (content_y >= 940 and moved):
-
+                if (
+                    dish.get("libelle") != ""
+                    and dish.get("libelle") != " "
+                    and not (content_y >= 940 and moved)
+                ):
                     dish_list = splitText(dish.get("libelle"), 27)
                     if len(dish_list) == 1:
-                        text.draw(drawer=drawer, text=f"• {dish_list[0]}", colour=colours[theme]['content'], x=content_x, y=content_y)
+                        text.draw(
+                            drawer=drawer,
+                            text=f"• {dish_list[0]}",
+                            colour=colours[theme]["content"],
+                            x=content_x,
+                            y=content_y,
+                        )
                     else:
                         if not moved and content_y >= 920:
                             moved = True
                             content_x = content_x2
                             content_y = content_y_save
 
-                        text.draw(drawer=drawer, text=f"• {dish_list[0]}", colour=colours[theme]['content'], x=content_x, y=content_y)
+                        text.draw(
+                            drawer=drawer,
+                            text=f"• {dish_list[0]}",
+                            colour=colours[theme]["content"],
+                            x=content_x,
+                            y=content_y,
+                        )
                         content_y += content_y_space
-                        text.draw(drawer=drawer, text=f"   {shorten(dish_list[1], width=25, placeholder='')}...", colour=colours[theme]['content'], x=content_x, y=content_y)
+                        text.draw(
+                            drawer=drawer,
+                            text=f"   {shorten(dish_list[1], width=25, placeholder='')}...",
+                            colour=colours[theme]["content"],
+                            x=content_x,
+                            y=content_y,
+                        )
 
                     content_y += content_y_space
 
                     if moved and content_y >= 930:
-                        total = len([d for c in menu for d in c if d != "" and d != " "])
+                        total = len(
+                            [d for c in menu for d in c if d != "" and d != " "]
+                        )
 
                         if total - count > 0:
-                            small.draw(drawer=drawer, text=f"+ {total-count} autres plat{'s' if total-count>1 else ''} non affiché{'s' if total-count>1 else ''}...", colour=colours[theme]['content'], x=content_x, y=content_y)
+                            small.draw(
+                                drawer=drawer,
+                                text=f"+ {total - count} autres plat{'s' if total - count > 1 else ''} non affiché{'s' if total - count > 1 else ''}...",
+                                colour=colours[theme]["content"],
+                                x=content_x,
+                                y=content_y,
+                            )
 
                         stop = True
                         break
@@ -150,14 +213,20 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
                     total = len([d for c in menu for d in c if d != "" and d != " "])
 
                     if total - count > 0:
-                        small.draw(drawer=drawer, text=f"+ {total-count} autres plat{'s' if total-count>1 else ''} non affiché{'s' if total-count>1 else ''}...", colour=colours[theme]['content'], x=content_x, y=content_y)
+                        small.draw(
+                            drawer=drawer,
+                            text=f"+ {total - count} autres plat{'s' if total - count > 1 else ''} non affiché{'s' if total - count > 1 else ''}...",
+                            colour=colours[theme]["content"],
+                            x=content_x,
+                            y=content_y,
+                        )
                 break
             elif content_y >= 995:
                 moved = True
                 content_x = content_x2
                 content_y = content_y_save
     else:
-        img = Image.open(f'./assets/images/themes/{theme}/none.png')
+        img = Image.open(f"./assets/images/themes/{theme}/none.png")
         image.paste(img, (35, 168), img)
 
         m = "Menu non disponible."
@@ -168,15 +237,19 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
 
         text = Text(size=50, weight=Weights.EXTRA_BOLD_ITALIC)
         x = (1200 - drawer.textlength(text=m, font=text.font)) / 2 + 50
-        text.draw(drawer=drawer, text=m, colour=colours[theme]['title'], x=x, y=y)
-
+        text.draw(drawer=drawer, text=m, colour=colours[theme]["title"], x=x, y=y)
 
         x = 525
         y = 624
 
         text = Text(size=50, weight=Weights.MEDIUM_ITALIC)
-        text.draw(drawer=drawer, text=f"Erreur {code}", colour=colours[theme]['title'], x=x, y=y)
-
+        text.draw(
+            drawer=drawer,
+            text=f"Erreur {code}",
+            colour=colours[theme]["title"],
+            x=x,
+            y=y,
+        )
 
     # Infos
 
@@ -191,7 +264,6 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
     img = addCorners(img, 20)
     image.paste(img, (1366, 51), img)
 
-
     ## Repas
 
     if menu:
@@ -202,10 +274,9 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
         elif menu["type"] == "soir":
             rID = 3
 
-        img = Image.open(f'./assets/images/layers/repas-{rID}.png')
+        img = Image.open(f"./assets/images/layers/repas-{rID}.png")
         img = img.resize((100, 100))
         image.paste(img, (1723, 56), img)
-
 
     ## Titre
 
@@ -216,15 +287,42 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
     titles = Text(size=35, weight=Weights.BOLD)
 
     if restaurant.get("opened"):
-        titles.draw(drawer=drawer, text="Ouvert !", colour=colours[theme]['title'], x=x, y=y)
+        titles.draw(
+            drawer=drawer, text="Ouvert !", colour=colours[theme]["title"], x=x, y=y
+        )
     else:
-        titles.draw(drawer=drawer, text="Fermé !", colour=colours[theme]['title'], x=x, y=y)
+        titles.draw(
+            drawer=drawer, text="Fermé !", colour=colours[theme]["title"], x=x, y=y
+        )
 
-    titles.draw(drawer=drawer, text="Contact", colour=colours[theme]['title'], x=x, y=y+y_space)
-    titles.draw(drawer=drawer, text="Paiements", colour=colours[theme]['title'], x=x, y=y+y_space*2)
-    titles.draw(drawer=drawer, text="Localisation", colour=colours[theme]['title'], x=x, y=y+y_space*3)
-    titles.draw(drawer=drawer, text="Accès", colour=colours[theme]['title'], x=x, y=y+y_space*4)
-
+    titles.draw(
+        drawer=drawer,
+        text="Contact",
+        colour=colours[theme]["title"],
+        x=x,
+        y=y + y_space,
+    )
+    titles.draw(
+        drawer=drawer,
+        text="Paiements",
+        colour=colours[theme]["title"],
+        x=x,
+        y=y + y_space * 2,
+    )
+    titles.draw(
+        drawer=drawer,
+        text="Localisation",
+        colour=colours[theme]["title"],
+        x=x,
+        y=y + y_space * 3,
+    )
+    titles.draw(
+        drawer=drawer,
+        text="Accès",
+        colour=colours[theme]["title"],
+        x=x,
+        y=y + y_space * 4,
+    )
 
     ## Contenu
 
@@ -245,50 +343,136 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
             t = splitText(horaires[0], 36)
 
             if len(t) > 1 and not len(horaires) > 0:
-                text.draw(drawer=drawer, text=f"• {t[0]}", colour=colours[theme]['infos'], x=x, y=y)
+                text.draw(
+                    drawer=drawer,
+                    text=f"• {t[0]}",
+                    colour=colours[theme]["infos"],
+                    x=x,
+                    y=y,
+                )
 
                 if len(t) > 2:
-                    text.draw(drawer=drawer, text=f"   {t[1][0:33]+'...'}", colour=colours[theme]['infos'], x=x, y=y+space)
+                    text.draw(
+                        drawer=drawer,
+                        text=f"   {t[1][0:33] + '...'}",
+                        colour=colours[theme]["infos"],
+                        x=x,
+                        y=y + space,
+                    )
                 else:
-                    text.draw(drawer=drawer, text=f"   {t[1]}", colour=colours[theme]['infos'], x=x, y=y+space)
+                    text.draw(
+                        drawer=drawer,
+                        text=f"   {t[1]}",
+                        colour=colours[theme]["infos"],
+                        x=x,
+                        y=y + space,
+                    )
             else:
-                text.draw(drawer=drawer, text=f"• {shorten(horaires[0], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y)
+                text.draw(
+                    drawer=drawer,
+                    text=f"• {shorten(horaires[0], width=short, placeholder='...')}",
+                    colour=colours[theme]["infos"],
+                    x=x,
+                    y=y,
+                )
 
             if horaires and len(horaires) > 1:
-                text.draw(drawer=drawer, text=f"• {shorten(horaires[1], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+space)
+                text.draw(
+                    drawer=drawer,
+                    text=f"• {shorten(horaires[1], width=short, placeholder='...')}",
+                    colour=colours[theme]["infos"],
+                    x=x,
+                    y=y + space,
+                )
         else:
-            text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y)
-    
+            text.draw(
+                drawer=drawer,
+                text="• Aucune information disponible.",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y,
+            )
 
     if restaurant.get("email"):
-        text.draw(drawer=drawer, text=f"• {shorten('Email : ' + restaurant.get('email'), width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space)
+        text.draw(
+            drawer=drawer,
+            text=f"• {shorten('Email : ' + restaurant.get('email'), width=short, placeholder='...')}",
+            colour=colours[theme]["infos"],
+            x=x,
+            y=y + y_space,
+        )
 
         if restaurant.get("telephone"):
-            text.draw(drawer=drawer, text=f"• Téléphone : {restaurant.get('telephone')}", colour=colours[theme]['infos'], x=x, y=y+y_space+space)
+            text.draw(
+                drawer=drawer,
+                text=f"• Téléphone : {restaurant.get('telephone')}",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y + y_space + space,
+            )
     else:
         if restaurant.get("telephone"):
-            text.draw(drawer=drawer, text=f"• Téléphone : {restaurant.get('telephone')}", colour=colours[theme]['infos'], x=x, y=y+y_space)
+            text.draw(
+                drawer=drawer,
+                text=f"• Téléphone : {restaurant.get('telephone')}",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y + y_space,
+            )
 
     if not restaurant.get("email") and not restaurant.get("telephone"):
-        text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space)
-
+        text.draw(
+            drawer=drawer,
+            text="• Aucune information disponible.",
+            colour=colours[theme]["infos"],
+            x=x,
+            y=y + y_space,
+        )
 
     if restaurant.get("paiement"):
         paiement = loads(restaurant.get("paiement"))
         if paiement:
-            text.draw(drawer=drawer, text=f"• {paiement[0]}", colour=colours[theme]['infos'], x=x, y=y+y_space*2)
+            text.draw(
+                drawer=drawer,
+                text=f"• {paiement[0]}",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y + y_space * 2,
+            )
 
         if paiement and len(paiement) > 1:
-            text.draw(drawer=drawer, text=f"• {paiement[1]}", colour=colours[theme]['infos'], x=x, y=y+y_space*2+space)
+            text.draw(
+                drawer=drawer,
+                text=f"• {paiement[1]}",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y + y_space * 2 + space,
+            )
     else:
-        text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*2)
+        text.draw(
+            drawer=drawer,
+            text="• Aucune information disponible.",
+            colour=colours[theme]["infos"],
+            x=x,
+            y=y + y_space * 2,
+        )
 
-
-    text.draw(drawer=drawer, text=f"• {shorten(restaurant.get('zone'), width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*3)
+    text.draw(
+        drawer=drawer,
+        text=f"• {shorten(restaurant.get('zone'), width=short, placeholder='...')}",
+        colour=colours[theme]["infos"],
+        x=x,
+        y=y + y_space * 3,
+    )
 
     if restaurant.get("adresse"):
-        text.draw(drawer=drawer, text=f"• {shorten(restaurant.get('adresse'), width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*3+space)
-
+        text.draw(
+            drawer=drawer,
+            text=f"• {shorten(restaurant.get('adresse'), width=short, placeholder='...')}",
+            colour=colours[theme]["infos"],
+            x=x,
+            y=y + y_space * 3 + space,
+        )
 
     if restaurant.get("acces"):
         acces = loads(restaurant.get("acces"))
@@ -296,22 +480,57 @@ def generate(restaurant, menu, date: datetime, preview: str, theme: str = "light
         acces = None
 
     if restaurant.get("pmr"):
-        text.draw(drawer=drawer, text="• Accessible aux PMR", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
+        text.draw(
+            drawer=drawer,
+            text="• Accessible aux PMR",
+            colour=colours[theme]["infos"],
+            x=x,
+            y=y + y_space * 4,
+        )
 
         if acces:
-            text.draw(drawer=drawer, text=f"• {shorten(acces[0], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*4+space)
+            text.draw(
+                drawer=drawer,
+                text=f"• {shorten(acces[0], width=short, placeholder='...')}",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y + y_space * 4 + space,
+            )
     else:
         if acces:
             if len(acces) >= 2:
-                text.draw(drawer=drawer, text=f"• {shorten(acces[0], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
+                text.draw(
+                    drawer=drawer,
+                    text=f"• {shorten(acces[0], width=short, placeholder='...')}",
+                    colour=colours[theme]["infos"],
+                    x=x,
+                    y=y + y_space * 4,
+                )
 
                 if acces[1]:
-                    text.draw(drawer=drawer, text=f"• {shorten(acces[1], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*4+space)
+                    text.draw(
+                        drawer=drawer,
+                        text=f"• {shorten(acces[1], width=short, placeholder='...')}",
+                        colour=colours[theme]["infos"],
+                        x=x,
+                        y=y + y_space * 4 + space,
+                    )
             else:
-                text.draw(drawer=drawer, text=f"• {shorten(acces[0], width=short, placeholder='...')}", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
+                text.draw(
+                    drawer=drawer,
+                    text=f"• {shorten(acces[0], width=short, placeholder='...')}",
+                    colour=colours[theme]["infos"],
+                    x=x,
+                    y=y + y_space * 4,
+                )
         else:
-            text.draw(drawer=drawer, text="• Aucune information disponible.", colour=colours[theme]['infos'], x=x, y=y+y_space*4)
-
+            text.draw(
+                drawer=drawer,
+                text="• Aucune information disponible.",
+                colour=colours[theme]["infos"],
+                x=x,
+                y=y + y_space * 4,
+            )
 
     # Conversion en RGBA pour la transparence des coins
     return image.convert("RGBA")

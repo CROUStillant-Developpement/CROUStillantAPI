@@ -6,7 +6,6 @@ class Menus:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def getCurrent(self, id: int, date: datetime) -> dict:
         """
         Récupère le menu d'un restaurant.
@@ -50,9 +49,8 @@ class Menus:
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
-                date
+                date,
             )
-
 
     async def getFromDate(self, id: int, date: datetime) -> dict:
         """
@@ -94,9 +92,8 @@ class Menus:
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
-                date
+                date,
             )
-
 
     async def getDates(self, id: int) -> dict:
         """
@@ -119,9 +116,8 @@ class Menus:
                     AND M.DATE >= CURRENT_DATE
                     ORDER BY M.DATE, M.MID DESC
                 """,
-                id
+                id,
             )
-
 
     async def getAllDates(self, id: int) -> dict:
         """
@@ -143,5 +139,5 @@ class Menus:
                     WHERE R.RID = $1
                     ORDER BY M.DATE, M.MID DESC
                 """,
-                id
+                id,
             )

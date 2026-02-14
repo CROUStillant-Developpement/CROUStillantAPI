@@ -17,9 +17,14 @@ class Cache:
     """
     Classe pour gérer un cache avec Redis (Utilisation de redis-py au lieu de aioredis)
     """
+
     redis: Redis
 
-    def __init__(self, app: Sanic, redis_url: str = f"redis://{environ.get('REDIS_HOST', 'localhost')}:{environ.get('REDIS_PORT', 6379)}"):
+    def __init__(
+        self,
+        app: Sanic,
+        redis_url: str = f"redis://{environ.get('REDIS_HOST', 'localhost')}:{environ.get('REDIS_PORT', 6379)}",
+    ):
         """
         Initialise la classe avec une connexion Redis
 
@@ -28,11 +33,43 @@ class Cache:
         """
         self.redis = None
         self.cache_ignored_statuses = {
-            400, 401, 403, 405, 406, 408, 409, 410, 411, 412, 413, 414, 
-            415, 416, 417, 418, 422, 423, 424, 425, 426, 428, 429, 431, 
-            451, 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
+            400,
+            401,
+            403,
+            405,
+            406,
+            408,
+            409,
+            410,
+            411,
+            412,
+            413,
+            414,
+            415,
+            416,
+            417,
+            418,
+            422,
+            423,
+            424,
+            425,
+            426,
+            428,
+            429,
+            431,
+            451,
+            500,
+            501,
+            502,
+            503,
+            504,
+            505,
+            506,
+            507,
+            508,
+            510,
+            511,
         }
-
 
         @app.before_server_start
         async def setup_redis(app, _):
@@ -41,7 +78,6 @@ class Cache:
             """
             self.redis = redis.from_url(redis_url, decode_responses=False)
 
-
         @app.after_server_stop
         async def close_redis(app, _):
             """
@@ -49,7 +85,6 @@ class Cache:
             """
             if self.redis:
                 await self.redis.close()
-
 
     async def get_cache_key(self, request: Request) -> str:
         """
@@ -61,8 +96,9 @@ class Cache:
         raw_key = request.url + str(sorted(request.args.items()))
         return hashlib.blake2b(raw_key.encode(), digest_size=16).hexdigest()
 
-
-    async def get(self, request: Request, key: str = None) -> JSONResponse | HTTPResponse | None:
+    async def get(
+        self, request: Request, key: str = None
+    ) -> JSONResponse | HTTPResponse | None:
         """
         Récupère la réponse mise en cache si elle existe
 
@@ -85,8 +121,13 @@ class Cache:
 
         return None
 
-
-    async def set(self, request: Request, response: JSONResponse | HTTPResponse, ttl: int, key: str = None):
+    async def set(
+        self,
+        request: Request,
+        response: JSONResponse | HTTPResponse,
+        ttl: int,
+        key: str = None,
+    ):
         """
         Stocke une réponse dans le cache si elle a un statut 200
 
@@ -140,4 +181,5 @@ def cache(ttl: int = 60, key: str = None):
             return response
 
         return wrapper
+
     return decorator

@@ -8,29 +8,34 @@ def sanitize_for_json(data: dict) -> dict:
     """
     Sanitize dictionary data to ensure it can be safely serialized to JSON
     and stored in PostgreSQL. Replaces invalid Unicode surrogate pairs.
-    
+
     :param data: Dictionary to sanitize
     :return: Sanitized dictionary
     """
+
     def sanitize_string(s: str) -> str:
         """Replace invalid surrogate pairs with replacement character"""
         # Encode with surrogatepass to handle unpaired surrogates,
         # then decode with replace to convert them to safe characters
-        return s.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
-    
+        return s.encode("utf-8", errors="surrogatepass").decode(
+            "utf-8", errors="replace"
+        )
+
     sanitized = {}
     for key, value in data.items():
         # Sanitize both keys and values
         safe_key = sanitize_string(key) if isinstance(key, str) else key
-        
+
         if isinstance(value, str):
             sanitized[safe_key] = sanitize_string(value)
         elif isinstance(value, list):
             # Handle list values (common in query parameters)
-            sanitized[safe_key] = [sanitize_string(v) if isinstance(v, str) else v for v in value]
+            sanitized[safe_key] = [
+                sanitize_string(v) if isinstance(v, str) else v for v in value
+            ]
         else:
             sanitized[safe_key] = value
-    
+
     return sanitized
 
 
@@ -38,6 +43,7 @@ class Analytics:
     """
     Classe pour les statistiques d'analyse des requêtes
     """
+
     def __init__(self, app: Sanic) -> None:
         """
         Initialisation de la classe
@@ -109,5 +115,8 @@ class Analytics:
                 response.headers.get("x-ratelimit-bucket", -1),
                 request.ctx.process_time,
                 app.config.API_VERSION,
-                hashlib.blake2b(request.headers.get('CF-Connecting-IP', request.client_ip).encode(), digest_size=20).hexdigest()
+                hashlib.blake2b(
+                    request.headers.get("CF-Connecting-IP", request.client_ip).encode(),
+                    digest_size=20,
+                ).hexdigest(),
             )

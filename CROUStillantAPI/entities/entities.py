@@ -4,7 +4,7 @@ from .restaurants import Restaurants
 from .types_restaurants import TypesRestaurants
 from .plats import Plats
 from .menus import Menus
-from. taches import Taches
+from .taches import Taches
 from asyncpg import Pool
 
 

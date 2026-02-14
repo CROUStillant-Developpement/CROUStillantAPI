@@ -5,7 +5,6 @@ class TypesRestaurants:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def getAll(self) -> list:
         """
         Récupère tous les types des restaurants.

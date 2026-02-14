@@ -8,12 +8,7 @@ from sanic import Blueprint, Request
 from sanic_ext import openapi
 
 
-bp = Blueprint(
-    name="Service",
-    url_prefix="/",
-    version=1,
-    version_prefix="v"
-)
+bp = Blueprint(name="Service", url_prefix="/", version=1, version_prefix="v")
 
 
 # /status
@@ -24,18 +19,12 @@ bp = Blueprint(
     tag="Service",
 )
 @openapi.response(
-    status=200,
-    content={
-        "application/json": Status
-    },
-    description="L'API est en ligne."
+    status=200, content={"application/json": Status}, description="L'API est en ligne."
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
 async def getStatus(request: Request) -> JSONResponse:
@@ -60,18 +49,12 @@ async def getStatus(request: Request) -> JSONResponse:
     tag="Service",
 )
 @openapi.response(
-    status=200,
-    content={
-        "application/json": Stats
-    },
-    description="L'API est en ligne."
+    status=200, content={"application/json": Stats}, description="L'API est en ligne."
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
 @cache()

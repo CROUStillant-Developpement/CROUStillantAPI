@@ -19,14 +19,17 @@ class Text:
         :param weight: Poids du texte
         """
         if not isinstance(weight, Weights):
-            raise TypeError(f"weight doit être de type Weights, pas {weight.__class__.__name__}")
+            raise TypeError(
+                f"weight doit être de type Weights, pas {weight.__class__.__name__}"
+            )
 
         self.size = size
         self.weight = weight.value
 
-        self.font = ImageFont.truetype("./assets/fonts/Inter-VariableFont.ttf", self.size)
+        self.font = ImageFont.truetype(
+            "./assets/fonts/Inter-VariableFont.ttf", self.size
+        )
         self.font.set_variation_by_name(self.weight)
-
 
     def draw(self, drawer: ImageDraw, text: str, colour: str, x: int, y: int) -> None:
         """
@@ -78,7 +81,7 @@ def splitText(text: str, maximum: int) -> list:
 
 def clean(text: str) -> str:
     """
-    Formatte une chaîne de charactères 
+    Formatte une chaîne de caractères en supprimant les doubles espaces et les espaces avant les parenthèses, les deux points et les virgules.
 
     :param: Texte à formatter
     :type: str
@@ -87,20 +90,20 @@ def clean(text: str) -> str:
     :rtype: str
     """
     formats = {
-        "   "  : " ",
-        "  "   : " ",
-        "   )" : ")",
-        "  )"  : ")",
-        "   (" : " (",
-        "  ("  : " (",
-        "   :" : " :",
-        "  :"  : " :",
-        "   ," : ",",
-        "  ,"  : ",",
-        "( "   : "(",
-        " )"   : ")",
-        " ,"   : ",",
-        " €"   : "€"
+        "   ": " ",
+        "  ": " ",
+        "   )": ")",
+        "  )": ")",
+        "   (": " (",
+        "  (": " (",
+        "   :": " :",
+        "  :": " :",
+        "   ,": ",",
+        "  ,": ",",
+        "( ": "(",
+        " )": ")",
+        " ,": ",",
+        " €": "€",
     }
 
     for format in formats:
