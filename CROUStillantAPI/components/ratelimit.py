@@ -29,6 +29,8 @@ class Ratelimiter:
     Classe permettant de gérer les rate limits
     """
 
+    DEFAULT = Bucket("default", 200, 60)
+
     def __init__(self) -> None:
         """
         Initialisation de la classe
@@ -38,7 +40,6 @@ class Ratelimiter:
 
         self.cache_buckets = {}
         self.cache_refresh = 300
-        self.DEFAULT = Bucket("default", 200, 60)
 
     async def check_ratelimit(self, key: str, bucket: Bucket) -> dict:
         """
