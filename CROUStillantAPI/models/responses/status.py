@@ -7,6 +7,5 @@ class Status:
         example=True,
     )
     message = openapi.String(
-        description="Message de retour",
-        example="L'API est en ligne."
+        description="Message de retour", example="L'API est en ligne."
     )

@@ -6,6 +6,7 @@ class Response:
     """
     Classe pour les réponses
     """
+
     def __init__(self, request: Request) -> None:
         """
         Initialisation de la classe
@@ -13,7 +14,6 @@ class Response:
         :param request: Request
         """
         self.request = request
-
 
     def generate(self) -> None:
         """
@@ -26,7 +26,15 @@ class JSON(Response):
     """
     Classe pour les réponses JSON
     """
-    def __init__(self, request: Request, success: bool = True, data: dict = None, status: int = 200, message: str = None) -> None:
+
+    def __init__(
+        self,
+        request: Request,
+        success: bool = True,
+        data: dict = None,
+        status: int = 200,
+        message: str = None,
+    ) -> None:
         """
         Initialisation de la classe
 
@@ -42,35 +50,24 @@ class JSON(Response):
         self.status = status
         self.message = message
 
-
     def generate(self) -> JSONResponse:
         """
         Génère la réponse
 
         :return: JSONResponse
         """
-        if not self.data and not self.message:
+        if self.data is None and self.message is None:
             return json(
                 {
                     "success": self.success,
-                    "message": "Quelque chose s'est mal passé... Veuillez réessayer plus tard. Si le problème persiste, contactez nous !"
+                    "message": "Quelque chose s'est mal passé... Veuillez réessayer plus tard. Si le problème persiste, contactez nous !",
                 },
-                status=self.status
+                status=500,
             )
 
         if self.message:
             return json(
-                {
-                    "success": self.success,
-                    "message": self.message
-                },
-                status=self.status
+                {"success": self.success, "message": self.message}, status=self.status
             )
 
-        return json(
-                {
-                "success": self.success,
-                "data": self.data
-            },
-            status=self.status
-        )
+        return json({"success": self.success, "data": self.data}, status=self.status)

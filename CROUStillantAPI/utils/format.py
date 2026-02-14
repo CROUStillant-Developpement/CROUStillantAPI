@@ -1,4 +1,4 @@
-def getBoolFromString(b: str|bool) -> bool:
+def getBoolFromString(b: str | bool) -> bool:
     """
     Convertit une chaîne de caractères en booléen.
 
@@ -16,7 +16,7 @@ def getBoolFromString(b: str|bool) -> bool:
         return None
 
 
-def getIntFromString(i: str|int) -> int:
+def getIntFromString(i: str | int) -> int:
     """
     Convertit une chaîne de caractères en entier.
 

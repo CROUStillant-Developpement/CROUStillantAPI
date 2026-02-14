@@ -17,13 +17,8 @@ __routes__ = [
     RoutePlats,
     RouteMisc,
     RouteTaches,
-    RouteInterne
+    RouteInterne,
 ]
 
 
-__all__ = [
-    "__version__",
-    "__author__",
-    "__description__",
-    "__routes__"
-]
+__all__ = ["__version__", "__author__", "__description__", "__routes__"]

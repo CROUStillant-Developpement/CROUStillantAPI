@@ -5,7 +5,6 @@ class Stats:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def get(self) -> list:
         """
         Récupère toutes les statistiques.

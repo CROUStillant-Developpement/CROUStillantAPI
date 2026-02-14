@@ -12,12 +12,7 @@ from sanic_ext import openapi
 from json import loads
 
 
-bp = Blueprint(
-    name="Regions",
-    url_prefix="/regions",
-    version=1,
-    version_prefix="v"
-)
+bp = Blueprint(name="Regions", url_prefix="/regions", version=1, version_prefix="v")
 
 
 # /regions
@@ -29,17 +24,13 @@ bp = Blueprint(
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": Regions
-    },
-    description="Liste des régions disponibles"
+    content={"application/json": Regions},
+    description="Liste des régions disponibles",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
 @cache()
@@ -58,11 +49,12 @@ async def getRegions(request: Request) -> JSONResponse:
             {
                 "code": region.get("idreg"),
                 "libelle": region.get("libelle"),
-            } for region in regions
+            }
+            for region in regions
         ],
-        status=200
+        status=200,
     ).generate()
-    
+
 
 # /regions/{code}
 @bp.route("/<code>", methods=["GET"])
@@ -73,31 +65,23 @@ async def getRegions(request: Request) -> JSONResponse:
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": Region
-    },
-    description="Détails d'une région."
+    content={"application/json": Region},
+    description="Détails d'une région.",
 )
 @openapi.response(
     status=400,
-    content={
-        "application/json": BadRequest
-    },
-    description="L'ID de la région doit être un nombre."
+    content={"application/json": BadRequest},
+    description="L'ID de la région doit être un nombre.",
 )
 @openapi.response(
     status=404,
-    content={
-        "application/json": NotFound
-    },
-    description="La région n'existe pas."
+    content={"application/json": NotFound},
+    description="La région n'existe pas.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @openapi.parameter(
     name="code",
@@ -105,15 +89,13 @@ async def getRegions(request: Request) -> JSONResponse:
     required=True,
     schema=int,
     location="path",
-    example=1
+    example=1,
 )
 @inputs(
     Argument(
         name="code",
         description="ID de la région",
-        methods={
-            "code": Rules.integer
-        },
+        methods={"code": Rules.integer},
         call=int,
         required=True,
         headers=False,
@@ -137,9 +119,8 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
             request=request,
             success=False,
             status=404,
-            message="La région n'existe pas."
+            message="La région n'existe pas.",
         ).generate()
-
 
     return JSON(
         request=request,
@@ -148,7 +129,7 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
             "code": region.get("idreg"),
             "libelle": region.get("libelle"),
         },
-        status=200
+        status=200,
     ).generate()
 
 
@@ -161,31 +142,23 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": Restaurants
-    },
-    description="Liste des restaurants disponibles dans une région."
+    content={"application/json": Restaurants},
+    description="Liste des restaurants disponibles dans une région.",
 )
 @openapi.response(
     status=400,
-    content={
-        "application/json": BadRequest
-    },
-    description="L'ID de la région doit être un nombre."
+    content={"application/json": BadRequest},
+    description="L'ID de la région doit être un nombre.",
 )
 @openapi.response(
     status=404,
-    content={
-        "application/json": NotFound
-    },
-    description="La région n'existe pas."
+    content={"application/json": NotFound},
+    description="La région n'existe pas.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @openapi.parameter(
     name="code",
@@ -193,15 +166,13 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     required=True,
     schema=int,
     location="path",
-    example=1
+    example=1,
 )
 @inputs(
     Argument(
         name="code",
         description="ID de la région",
-        methods={
-            "code": Rules.integer
-        },
+        methods={"code": Rules.integer},
         call=int,
         required=True,
         headers=False,
@@ -224,9 +195,8 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
             request=request,
             success=False,
             status=404,
-            message="La région n'existe pas."
+            message="La région n'existe pas.",
         ).generate()
-
 
     restaurants = await request.app.ctx.entities.regions.getRestaurants(code)
 
@@ -238,27 +208,34 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
                 "code": restaurant.get("rid"),
                 "region": {
                     "code": restaurant.get("idreg"),
-                    "libelle": restaurant.get("region")
+                    "libelle": restaurant.get("region"),
                 },
                 "type": {
                     "code": restaurant.get("idtpr"),
-                    "libelle": restaurant.get("type")
+                    "libelle": restaurant.get("type"),
                 },
                 "nom": restaurant.get("nom"),
                 "adresse": restaurant.get("adresse"),
                 "latitude": restaurant.get("latitude"),
                 "longitude": restaurant.get("longitude"),
-                "horaires": loads(restaurant.get("horaires")) if restaurant.get("horaires", None) else None,
+                "horaires": loads(restaurant.get("horaires"))
+                if restaurant.get("horaires", None)
+                else None,
                 "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
                 "image_url": restaurant.get("image_url"),
                 "email": restaurant.get("email"),
                 "telephone": restaurant.get("telephone"),
                 "ispmr": restaurant.get("ispmr"),
                 "zone": restaurant.get("zone"),
-                "paiement": loads(restaurant.get("paiement")) if restaurant.get("paiement", None) else None,
-                "acces": loads(restaurant.get("acces")) if restaurant.get("acces", None) else None,
-                "ouvert": restaurant.get("opened")
-            } for restaurant in restaurants
+                "paiement": loads(restaurant.get("paiement"))
+                if restaurant.get("paiement", None)
+                else None,
+                "acces": loads(restaurant.get("acces"))
+                if restaurant.get("acces", None)
+                else None,
+                "ouvert": restaurant.get("opened"),
+            }
+            for restaurant in restaurants
         ],
-        status=200
+        status=200,
     ).generate()

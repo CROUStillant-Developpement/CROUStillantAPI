@@ -33,15 +33,13 @@ app.ext.openapi.raw(
         "servers": [
             {
                 "url": f"{environ.get('API_DOMAIN')}",
-                "description": "Serveur de production"
+                "description": "Serveur de production",
             }
         ],
     }
 )
 
-year = datetime.now(
-    tz=timezone("Europe/Paris")
-).year
+year = datetime.now(tz=timezone("Europe/Paris")).year
 
 app.ext.openapi.describe(
     title=app.name,
@@ -134,33 +132,32 @@ async def setup_app(app: Sanic, loop):
     # Chargement de la base de données
     try:
         app.ctx.pool = await create_pool(
-            database=environ["POSTGRES_DATABASE"], 
-            user=environ["POSTGRES_USER"], 
-            password=environ["POSTGRES_PASSWORD"], 
+            database=environ["POSTGRES_DATABASE"],
+            user=environ["POSTGRES_USER"],
+            password=environ["POSTGRES_PASSWORD"],
             host=environ["POSTGRES_HOST"],
             port=environ["POSTGRES_PORT"],
-            min_size=10,        # 10 connections
-            max_size=10,        # 10 connections
+            min_size=10,  # 10 connections
+            max_size=10,  # 10 connections
             max_queries=50000,  # 50,000 queries
-            loop=loop
+            loop=loop,
         )
 
         app.ctx.analytics = await create_pool(
-            database=environ["POSTGRES_DATABASE"], 
-            user=environ["POSTGRES_USER"], 
-            password=environ["POSTGRES_PASSWORD"], 
+            database=environ["POSTGRES_DATABASE"],
+            user=environ["POSTGRES_USER"],
+            password=environ["POSTGRES_PASSWORD"],
             host=environ["POSTGRES_HOST"],
             port=environ["POSTGRES_PORT"],
-            min_size=10,        # 10 connections
-            max_size=10,        # 10 connections
+            min_size=10,  # 10 connections
+            max_size=10,  # 10 connections
             max_queries=50000,  # 50,000 queries
-            loop=loop
+            loop=loop,
         )
     except OSError:
         app.ctx.logs.error("Impossible de se connecter à la base de données !")
         app.ctx.logs.debug("Arrêt de l'API !")
         exit(1)
-
 
     app.ctx.executor = ThreadPoolExecutor(max_workers=4)
 

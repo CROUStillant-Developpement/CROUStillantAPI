@@ -13,9 +13,9 @@ def validate_color(color: str) -> bool:
     """
     if not color:
         return False
-    
+
     # Support both #RRGGBB and #RGB formats
-    pattern = r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+    pattern = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
     return bool(re.match(pattern, color))
 
 

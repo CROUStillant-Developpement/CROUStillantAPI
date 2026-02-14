@@ -7,6 +7,5 @@ class BadRequest:
         example=False,
     )
     message = openapi.String(
-        description="Message de retour",
-        example="La requête est incorrecte."
+        description="Message de retour", example="La requête est incorrecte."
     )

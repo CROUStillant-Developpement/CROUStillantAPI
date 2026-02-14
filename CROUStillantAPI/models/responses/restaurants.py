@@ -35,7 +35,7 @@ class Data:
         example="2024-10-19 19:44:31",
     )
     nb = openapi.Integer(
-        description="Nombre de fois que le restaurant a été mis à jour", 
+        description="Nombre de fois que le restaurant a été mis à jour",
         example=1,
     )
 

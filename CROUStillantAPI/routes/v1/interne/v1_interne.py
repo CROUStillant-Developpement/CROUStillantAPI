@@ -9,12 +9,7 @@ from sanic_ext import openapi
 from json import loads
 
 
-bp = Blueprint(
-    name="Interne",
-    url_prefix="/interne",
-    version=1,
-    version_prefix="v"
-)
+bp = Blueprint(name="Interne", url_prefix="/interne", version=1, version_prefix="v")
 
 
 # /changelog
@@ -26,17 +21,13 @@ bp = Blueprint(
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": ChangeLog
-    },
-    description="Les dernières modifications des services de CROUStillant."
+    content={"application/json": ChangeLog},
+    description="Les dernières modifications des services de CROUStillant.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
 @cache()
@@ -49,9 +40,4 @@ async def getChangelog(request: Request) -> JSONResponse:
     with open("changelog.json", "r") as f:
         changelog = loads(f.read())
 
-    return JSON(
-        request=request,
-        success=True,
-        data=changelog,
-        status=200
-    ).generate()
+    return JSON(request=request, success=True, data=changelog, status=200).generate()

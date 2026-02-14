@@ -5,7 +5,6 @@ class Plats:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def getAll(self) -> list:
         """
         Récupère tous les plats.
@@ -23,7 +22,6 @@ class Plats:
                         plat
                 """
             )
-
 
     async def getLast(self, limit: int) -> list:
         """
@@ -45,9 +43,8 @@ class Plats:
                         platid DESC
                     LIMIT $1
                 """,
-                limit
+                limit,
             )
-
 
     async def getOne(self, id: int) -> dict:
         """
@@ -68,9 +65,8 @@ class Plats:
                     WHERE
                         platid = $1
                 """,
-                id
+                id,
             )
-
 
     async def getTop(self, limit: int = 100) -> dict:
         """
@@ -101,5 +97,5 @@ class Plats:
                         nb DESC
                     LIMIT $1;
                 """,
-                limit
+                limit,
             )

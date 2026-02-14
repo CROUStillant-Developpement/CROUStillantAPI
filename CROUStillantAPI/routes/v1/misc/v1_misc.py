@@ -5,10 +5,7 @@ from sanic import Blueprint, Request
 from sanic_ext import openapi
 
 
-bp = Blueprint(
-    name="Misc",
-    url_prefix="/"
-)
+bp = Blueprint(name="Misc", url_prefix="/")
 
 
 # /contact
@@ -32,7 +29,7 @@ async def redirectEmail(request: Request) -> HTTPResponse:
 @ratelimit()
 @cache(
     ttl=60 * 60 * 24,  # 1 jour
-    key="favicon"
+    key="favicon",
 )
 async def favicon(request: Request) -> HTTPResponse:
     """
@@ -40,6 +37,4 @@ async def favicon(request: Request) -> HTTPResponse:
 
     :return: Redirige vers l'icône du site
     """
-    return await file(
-        location="./static/favicon.ico"
-    )
+    return await file(location="./static/favicon.ico")

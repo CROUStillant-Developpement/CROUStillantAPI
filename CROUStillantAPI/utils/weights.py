@@ -24,21 +24,22 @@ class Weights(Enum):
     :cvar BLACK: Poids noir
     :cvar BLACK_ITALIC: Poids noir italique
     """
-    THIN = 'Thin' 
-    THIN_ITALIC = 'Thin Italic'
-    EXTRA_LIGHT = 'ExtraLight'
-    EXTRA_LIGHT_ITALIC = 'ExtraLight Italic'
-    LIGHT = 'Light'
-    LIGHT_ITALIC = 'Light Italic'
-    REGULAR = 'Regular'
-    ITALIC = 'Italic'
-    MEDIUM = 'Medium'
-    MEDIUM_ITALIC = 'Medium Italic'
-    SEMI_BOLD = 'SemiBold'
-    SEMI_BOLD_ITALIC = 'SemiBold Italic'
-    BOLD = 'Bold'
-    BOLD_ITALIC = 'Bold Italic'
-    EXTRA_BOLD = 'ExtraBold'
-    EXTRA_BOLD_ITALIC = 'ExtraBold Italic'
-    BLACK = 'Black'
-    BLACK_ITALIC = 'Black Italic'
+
+    THIN = "Thin"
+    THIN_ITALIC = "Thin Italic"
+    EXTRA_LIGHT = "ExtraLight"
+    EXTRA_LIGHT_ITALIC = "ExtraLight Italic"
+    LIGHT = "Light"
+    LIGHT_ITALIC = "Light Italic"
+    REGULAR = "Regular"
+    ITALIC = "Italic"
+    MEDIUM = "Medium"
+    MEDIUM_ITALIC = "Medium Italic"
+    SEMI_BOLD = "SemiBold"
+    SEMI_BOLD_ITALIC = "SemiBold Italic"
+    BOLD = "Bold"
+    BOLD_ITALIC = "Bold Italic"
+    EXTRA_BOLD = "ExtraBold"
+    EXTRA_BOLD_ITALIC = "ExtraBold Italic"
+    BLACK = "Black"
+    BLACK_ITALIC = "Black Italic"

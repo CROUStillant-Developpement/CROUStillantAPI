@@ -10,12 +10,7 @@ from sanic import Blueprint, Request
 from sanic_ext import openapi
 
 
-bp = Blueprint(
-    name="Plats",
-    url_prefix="/plats",
-    version=1,
-    version_prefix="v"
-)
+bp = Blueprint(name="Plats", url_prefix="/plats", version=1, version_prefix="v")
 
 
 # /plats
@@ -27,17 +22,13 @@ bp = Blueprint(
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": Plats
-    },
-    description="Liste des 100 derniers plats ajoutés à la base de données."
+    content={"application/json": Plats},
+    description="Liste des 100 derniers plats ajoutés à la base de données.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
 @cache()
@@ -57,9 +48,10 @@ async def getPlats(request: Request) -> JSONResponse:
             {
                 "code": plat.get("platid"),
                 "libelle": plat.get("libelle"),
-            } for plat in plats
+            }
+            for plat in plats
         ],
-        status=200
+        status=200,
     ).generate()
 
 
@@ -71,32 +63,22 @@ async def getPlats(request: Request) -> JSONResponse:
     tag="Plats",
 )
 @openapi.response(
-    status=200,
-    content={
-        "application/json": Plat
-    },
-    description="Détails d'un plat."
+    status=200, content={"application/json": Plat}, description="Détails d'un plat."
 )
 @openapi.response(
     status=400,
-    content={
-        "application/json": BadRequest
-    },
-    description="L'ID du plat doit être un nombre."
+    content={"application/json": BadRequest},
+    description="L'ID du plat doit être un nombre.",
 )
 @openapi.response(
     status=404,
-    content={
-        "application/json": NotFound
-    },
-    description="Le plat n'existe pas."
+    content={"application/json": NotFound},
+    description="Le plat n'existe pas.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @openapi.parameter(
     name="code",
@@ -104,15 +86,13 @@ async def getPlats(request: Request) -> JSONResponse:
     required=True,
     schema=int,
     location="path",
-    example=1
+    example=1,
 )
 @inputs(
     Argument(
         name="code",
         description="ID du plat",
-        methods={
-            "code": Rules.integer
-        },
+        methods={"code": Rules.integer},
         call=int,
         required=True,
         headers=False,
@@ -133,12 +113,8 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
 
     if plat is None:
         return JSON(
-            request=request,
-            success=False,
-            status=404,
-            message="Le plat n'existe pas."
+            request=request, success=False, status=404, message="Le plat n'existe pas."
         ).generate()
-
 
     return JSON(
         request=request,
@@ -147,7 +123,7 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
             "code": plat.get("platid"),
             "libelle": plat.get("libelle"),
         },
-        status=200
+        status=200,
     ).generate()
 
 
@@ -160,17 +136,13 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
 )
 @openapi.response(
     status=200,
-    content={
-        "application/json": PlatsWithTotal
-    },
-    description="Top 100 des plats les plus populaires."
+    content={"application/json": PlatsWithTotal},
+    description="Top 100 des plats les plus populaires.",
 )
 @openapi.response(
     status=429,
-    content={
-        "application/json": RateLimited
-    },
-    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard."
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
 @cache()
@@ -189,8 +161,9 @@ async def getPlatTop(request: Request) -> JSONResponse:
             {
                 "code": plat.get("platid"),
                 "libelle": plat.get("libelle"),
-                "total": plat.get("nb")
-            } for plat in plats
+                "total": plat.get("nb"),
+            }
+            for plat in plats
         ],
-        status=200
+        status=200,
     ).generate()

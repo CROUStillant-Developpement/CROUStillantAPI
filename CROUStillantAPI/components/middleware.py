@@ -8,10 +8,11 @@ class Middleware:
     """
     Classe pour les middlewares
     """
+
     def __init__(self, app: Sanic) -> None:
         """
         Initialisation de la classe
-        
+
         :param app: Sanic
         """
 
@@ -24,7 +25,6 @@ class Middleware:
             """
             request.ctx.request_id = str(uuid1())
             request.ctx.process_time_start = time.perf_counter()
-
 
         @app.on_response
         async def after_request(request: Request, response):
@@ -40,9 +40,14 @@ class Middleware:
             # (par exemple, si la requête échoue avant d'atteindre le middleware de réponse)
             # Dans ce cas, nous définissons le temps de traitement sur -999 pour indiquer une erreur et mettre en évidence le problème
             if hasattr(request.ctx, "process_time_start"):
-                request.ctx.process_time = int((request.ctx.process_time_end - request.ctx.process_time_start) * 1000)
+                request.ctx.process_time = int(
+                    (request.ctx.process_time_end - request.ctx.process_time_start)
+                    * 1000
+                )
             else:
-                app.ctx.logs.warning(f"Le temps de traitement n'est pas défini pour la requête {request.ctx.request_id} ({request.method} {request.path})")
+                app.ctx.logs.warning(
+                    f"Le temps de traitement n'est pas défini pour la requête {request.ctx.request_id} ({request.method} {request.path})"
+                )
 
                 request.ctx.process_time = -999
 

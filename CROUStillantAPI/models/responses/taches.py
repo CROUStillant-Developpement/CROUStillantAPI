@@ -7,10 +7,7 @@ class Taches:
         description="Statut de la requête",
         example=True,
     )
-    data = openapi.Array(
-        description="Liste des tâches",
-        items=TacheComponent
-    )
+    data = openapi.Array(description="Liste des tâches", items=TacheComponent)
 
 
 class Tache:

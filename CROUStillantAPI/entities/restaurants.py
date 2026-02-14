@@ -5,7 +5,6 @@ class Restaurants:
     def __init__(self, pool: Pool) -> None:
         self.pool = pool
 
-
     async def getAll(self, actif: bool = True) -> list:
         """
         Récupère tous les restaurants.
@@ -83,7 +82,6 @@ class Restaurants:
                     """
                 )
 
-
     async def getOne(self, id: int) -> dict:
         """
         Récupère un restaurant.
@@ -127,9 +125,8 @@ class Restaurants:
                     WHERE
                         rid = $1
                 """,
-                id
+                id,
             )
-
 
     async def getInfo(self, id: int) -> dict:
         """
@@ -153,9 +150,8 @@ class Restaurants:
                     WHERE
                         R.RID = $1
                 """,
-                id
+                id,
             )
-
 
     async def getPreview(self, id: int) -> dict:
         """
@@ -179,5 +175,5 @@ class Restaurants:
                     WHERE
                         R.RID = $1
                 """,
-                id
+                id,
             )

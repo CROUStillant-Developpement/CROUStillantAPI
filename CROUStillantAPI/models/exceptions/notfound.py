@@ -7,6 +7,5 @@ class NotFound:
         example=False,
     )
     message = openapi.String(
-        description="Message de retour",
-        example="La ressource demandée n'existe pas."
+        description="Message de retour", example="La ressource demandée n'existe pas."
     )
