@@ -126,7 +126,7 @@ ErrorHandler(app)
 
 
 @app.listener("before_server_start")
-async def setup_app(app: Sanic, loop):
+async def setup_app(app: Sanic):
     app.ctx.session = ClientSession()
 
     # Chargement de la base de données
@@ -140,7 +140,7 @@ async def setup_app(app: Sanic, loop):
             min_size=10,  # 10 connections
             max_size=10,  # 10 connections
             max_queries=50000,  # 50,000 queries
-            loop=loop,
+            loop=app.loop,
         )
 
         app.ctx.analytics = await create_pool(
@@ -152,7 +152,7 @@ async def setup_app(app: Sanic, loop):
             min_size=10,  # 10 connections
             max_size=10,  # 10 connections
             max_queries=50000,  # 50,000 queries
-            loop=loop,
+            loop=app.loop,
         )
     except OSError:
         app.ctx.logs.error("Impossible de se connecter à la base de données !")
@@ -167,7 +167,7 @@ async def setup_app(app: Sanic, loop):
 
 
 @app.listener("after_server_stop")
-async def close_app(app: Sanic, loop):
+async def close_app(app: Sanic):
     await app.ctx.pool.close()
     await app.ctx.analytics.close()
     await app.ctx.session.close()
