@@ -1,3 +1,4 @@
+from ....components.response import JSON
 from sanic import Request
 from sanic.response import raw, HTTPResponse
 from sanic.log import logger
@@ -6,20 +7,20 @@ from pytz import timezone
 from jinja2 import Environment, FileSystemLoader
 
 
-async def restaurantMenuIframe(request: Request, code: int, date: str, jinja_env: Environment)-> HTTPResponse:
+async def restaurantMenuIframe(request: Request, code: int, date: datetime, jinja_env: Environment)-> HTTPResponse:
     """
     Retourne le menu d'un restaurant sous forme de iframe.
 
     :param request: La requête
-    :type Request
+    :type request: Request
     :param code: Le code du restaurant
-    :type int
+    :type code: int
     :param date: La date du menu
-    :type str
+    :type date: datetime
     :param jinja_env: L'environnement Jinja2
-    :type Environment
+    :type jinja_env: Environment
     :return: Le menu sous forme de iframe
-    :rtype HTTPResponse
+    :rtype: HTTPResponse
     """
     restaurant = await request.app.ctx.entities.restaurants.getOne(code)
 
@@ -33,13 +34,7 @@ async def restaurantMenuIframe(request: Request, code: int, date: str, jinja_env
 
     preview = await request.app.ctx.entities.restaurants.getPreview(code)
 
-    if isinstance(date, str):
-        try:
-            dt_date = datetime.strptime(date, "%d-%m-%Y")
-        except:
-            dt_date = datetime.now()
-    else:
-        dt_date = date
+    dt_date = date
 
     date_str = dt_date.strftime("%d-%m-%Y")
 

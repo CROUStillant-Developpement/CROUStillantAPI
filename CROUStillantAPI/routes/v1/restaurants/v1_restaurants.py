@@ -36,7 +36,10 @@ bp = Blueprint(
     name="Restaurants", url_prefix="/restaurants", version=1, version_prefix="v"
 )
 
-jinja_env = Environment(loader=FileSystemLoader("CROUStillantAPI/templates"))
+jinja_env = Environment(
+    loader=FileSystemLoader("CROUStillantAPI/templates"), 
+    autoescape=select_autoescape(["html", "htm", "xml"])
+)
 
 
 # /restaurants
@@ -736,7 +739,7 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
 @ratelimit()
 @cache()
 async def getRestaurantMenuFromDate(
-    request: Request, code: int, date: str
+    request: Request, code: int, date: datetime
 ) -> JSONResponse:
     """
     Retourne le menu d'un restaurant.
@@ -877,7 +880,7 @@ async def getRestaurantMenuFromDate(
 )
 @ratelimit()
 @cache(ttl=60 * 5)
-async def getRestaurantMenuIframe(request: Request, code: int, date: str) -> HTTPResponse:
+async def getRestaurantMenuIframe(request: Request, code: int, date: datetime) -> HTTPResponse:
     """
     Retourne un widget Iframe du menu d'un restaurant.
 
@@ -1008,7 +1011,7 @@ async def getRestaurantMenuIframe(request: Request, code: int, date: str) -> HTT
     ttl=60 * 5  # 5 minutes
 )
 async def getRestaurantMenuFromDateImage(
-    request: Request, code: int, date: str
+    request: Request, code: int, date: datetime
 ) -> HTTPResponse:
     """
     Retourne le menu d'un restaurant.
