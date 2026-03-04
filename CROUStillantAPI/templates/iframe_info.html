@@ -6,24 +6,16 @@
     <title>Widget CROUStillant - Infos {{ restaurant.nom }}</title>
     <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script>
-        tailwind.config = {
-            darkMode: ['class', '[data-theme="dark"]'],
-            theme: {
-                extend: {
-                    colors: {
-                        crous: {
-                            50: '#fef2f2',
-                            100: '#fee2e2',
-                            500: '#ef4444',
-                            600: '#dc2626',
-                            900: '#7f1d1d',
-                        }
-                    }
-                }
-            }
+    <style type="text/tailwindcss">
+        @theme {
+            --color-crous-50: #fef2f2;
+            --color-crous-100: #fee2e2;
+            --color-crous-500: #ef4444;
+            --color-crous-600: #dc2626;
+            --color-crous-900: #7f1d1d;
         }
-    </script>
+        @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+    </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: transparent; }
@@ -70,11 +62,11 @@
                     {% if restaurant.opened %}
                         <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800/50">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                            Ouvert actuellement
+                            Ouvert
                         </span>
                     {% else %}
                         <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800/50">
-                            Fermé actuellement
+                            Fermé
                         </span>
                     {% endif %}
                 </div>
@@ -89,7 +81,7 @@
                     </h3>
                     <ul class="space-y-1 text-sm">
                         {% for item in restaurant.horaires %}
-                            <li class="text-slate-600 dark:text-slate-300 pl-3 relative before:content-[''] before:absolute before:left-0 before:top-2.5 before:w-1.5 before:h-1.5 before:bg-slate-300 dark:before:bg-slate-700 before:rounded-full flex items-start justify-between">
+                            <li class="text-slate-600 dark:text-slate-300 pl-3 relative before:content-[''] before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-slate-300 dark:before:bg-slate-700 before:rounded-full flex items-start justify-between">
                                 <span class="font-medium capitalize">{{ item }}</span>
                             </li>
                         {% endfor %}
@@ -109,7 +101,7 @@
                             </h3>
                             <ul class="space-y-1 text-slate-600 dark:text-slate-300 text-xs">
                                 {% for p in paiements %}
-                                    <li class="text-slate-600 dark:text-slate-300 pl-3 relative before:content-[''] before:absolute before:left-0 before:top-2.5 before:w-1.5 before:h-1.5 before:bg-slate-300 dark:before:bg-slate-700 before:rounded-full flex items-start">
+                                    <li class="text-slate-600 dark:text-slate-300 pl-3 relative before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-slate-300 dark:before:bg-slate-700 before:rounded-full flex items-start">
                                         <span>{{ p }}</span>
                                     </li>
                                 {% endfor %}
@@ -128,7 +120,7 @@
                             </h3>
                             <ul class="space-y-1 text-slate-600 dark:text-slate-300 text-xs">
                                 {% for a in acc %}
-                                    <li class="text-slate-600 dark:text-slate-300 pl-3 relative before:content-[''] before:absolute before:left-0 before:top-2.5 before:w-1.5 before:h-1.5 before:bg-slate-300 dark:before:bg-slate-700 before:rounded-full flex items-start">
+                                    <li class="text-slate-600 dark:text-slate-300 pl-3 relative before:content-[''] before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:bg-slate-300 dark:before:bg-slate-700 before:rounded-full flex items-start">
                                         <span>{{ a }}</span>
                                     </li>
                                 {% endfor %}
@@ -153,6 +145,7 @@
         <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-center shrink-0">
             <a href="https://croustillant.menu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs font-medium text-slate-500 hover:text-crous-600 dark:text-slate-400 dark:hover:text-crous-500 transition-colors">
                 Propulsé par <span class="font-bold ml-1">CROUStillant.menu</span>
+                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </a>
         </div>
         
