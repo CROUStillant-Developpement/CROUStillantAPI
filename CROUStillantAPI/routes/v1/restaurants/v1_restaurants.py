@@ -19,6 +19,7 @@ from ....utils.opening import Opening
 from ....utils.image import saveImageToBuffer
 from ....utils.format import getBoolFromString
 from ....utils.colors import parse_custom_colours
+from ....utils.iframes import restaurantMenuIframe
 from ....exceptions.error import ServerErrorException
 from sanic.response import HTTPResponse, JSONResponse, raw
 from sanic import Blueprint, Request
@@ -28,11 +29,14 @@ from json import loads
 from datetime import datetime
 from pytz import timezone
 from asyncio import get_event_loop
+from jinja2 import Environment, FileSystemLoader
 
 
 bp = Blueprint(
     name="Restaurants", url_prefix="/restaurants", version=1, version_prefix="v"
 )
+
+jinja_env = Environment(loader=FileSystemLoader("CROUStillantAPI/templates"))
 
 
 # /restaurants
@@ -219,6 +223,115 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     ).generate()
 
 
+# /restaurants/{code}/iframe
+@bp.route("/<code>/iframe", methods=["GET"])
+@openapi.definition(
+    summary="Widget Iframe Informations d'un restaurant",
+    description="Retourne un widget HTML intégrable affichant les informations d'un restaurant.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"text/html": str},
+    description="Widget Iframe HTML",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="L'ID du restaurant doit être un nombre.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Le restaurant n'existe pas.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1,
+)
+@openapi.parameter(
+    name="theme",
+    description="Thème du widget (light, dark)",
+    required=False,
+    schema=str,
+    location="query",
+    example="light",
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={"code": Rules.integer},
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@ratelimit()
+@cache(ttl=60 * 5)
+async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
+    """
+    Retourne un widget Iframe d'informations d'un restaurant.
+
+    :param code: ID du restaurant
+    :return: Le widget Iframe HTML
+    """
+    restaurant = await request.app.ctx.entities.restaurants.getOne(code)
+
+    if not restaurant:
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
+            status=404,
+        ).generate()
+
+    preview = await request.app.ctx.entities.restaurants.getPreview(code)
+    
+    # Pre-parse JSON fields for the template
+    import json
+    parsed_restaurant = dict(restaurant)
+    if parsed_restaurant.get("horaires"):
+        try:
+            parsed_restaurant["horaires"] = json.loads(parsed_restaurant.get("horaires"))
+        except:
+            parsed_restaurant["horaires"] = None
+    if parsed_restaurant.get("paiement"):
+        try:
+            parsed_restaurant["paiement"] = json.loads(parsed_restaurant.get("paiement"))
+        except:
+            parsed_restaurant["paiement"] = None
+    if parsed_restaurant.get("acces"):
+        try:
+            parsed_restaurant["acces"] = json.loads(parsed_restaurant.get("acces"))
+        except:
+            parsed_restaurant["acces"] = None
+
+    template = jinja_env.get_template("iframe_info.html")
+    html_content = template.render(
+        request=request,
+        restaurant=parsed_restaurant,
+        preview=preview is not None
+    )
+
+    return raw(
+        body=html_content,
+        content_type="text/html; charset=utf-8",
+        status=200
+    )
+
+
 # /restaurants/{code}/menu
 @bp.route("/<code>/menu", methods=["GET"])
 @openapi.definition(
@@ -331,6 +444,74 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
         menus.append(menu_per_day[key])
 
     return JSON(request=request, success=True, data=menus, status=200).generate()
+
+
+# /restaurants/{code}/menu/iframe
+@bp.route("/<code>/menu/iframe", methods=["GET"])
+@openapi.definition(
+    summary="Widget Iframe Menu d'un restaurant (Aujourd'hui)",
+    description="Retourne un widget HTML intégrable affichant le menu d'un restaurant pour la date d'aujourd'hui.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"text/html": str},
+    description="Widget Iframe HTML",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="L'ID du restaurant doit être un nombre.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Le restaurant n'existe pas.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1,
+)
+@openapi.parameter(
+    name="theme",
+    description="Thème du widget (light, dark)",
+    required=False,
+    schema=str,
+    location="query",
+    example="light",
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={"code": Rules.integer},
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@ratelimit()
+@cache(ttl=60 * 5)
+async def getRestaurantTodayMenuIframe(request: Request, code: int) -> HTTPResponse:
+    """
+    Retourne un widget Iframe du menu d'un restaurant pour aujourd'hui.
+
+    :param code: ID du restaurant
+    :return: Le widget Iframe HTML
+    """
+    today = datetime.now(tz=timezone("Europe/Paris"))
+    return await restaurantMenuIframe(request, code, today, jinja_env)
 
 
 # /restaurants/{code}/menu/dates
@@ -617,6 +798,94 @@ async def getRestaurantMenuFromDate(
     return JSON(
         request=request, success=True, data=menu_per_day[date], status=200
     ).generate()
+
+
+# /restaurants/{code}/menu/{date}/iframe
+@bp.route("/<code>/menu/<date>/iframe", methods=["GET"])
+@openapi.definition(
+    summary="Widget Iframe Menu d'un restaurant",
+    description="Retourne un widget HTML intégrable affichant le menu d'un restaurant pour une date précise.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"text/html": str},
+    description="Widget Iframe HTML",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="L'ID du restaurant doit être un nombre et la date au format DD-MM-YYYY.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Le restaurant n'existe pas.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1,
+)
+@openapi.parameter(
+    name="date",
+    description="Date du menu",
+    required=True,
+    schema=str,
+    location="path",
+    example="10-10-2026",
+)
+@openapi.parameter(
+    name="theme",
+    description="Thème du widget (light, dark)",
+    required=False,
+    schema=str,
+    location="query",
+    example="light",
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={"code": Rules.integer},
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="date",
+        description="Date du menu",
+        methods={"date": Rules.date},
+        call=lambda x: datetime.strptime(x, "%d-%m-%Y"),
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@ratelimit()
+@cache(ttl=60 * 5)
+async def getRestaurantMenuIframe(request: Request, code: int, date: str) -> HTTPResponse:
+    """
+    Retourne un widget Iframe du menu d'un restaurant.
+
+    :param code: ID du restaurant
+    :param date: Date du menu
+    :return: Le widget Iframe HTML
+    """
+    return await restaurantMenuIframe(request, code, date, jinja_env)
 
 
 # /restaurants/{code}/menu/{date}/image
