@@ -29,7 +29,7 @@ from json import loads
 from datetime import datetime
 from pytz import timezone
 from asyncio import get_event_loop
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 bp = Blueprint(

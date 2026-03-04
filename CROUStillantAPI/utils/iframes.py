@@ -1,4 +1,4 @@
-from ....components.response import JSON
+from ..components.response import JSON
 from sanic import Request
 from sanic.response import raw, HTTPResponse
 from sanic.log import logger
