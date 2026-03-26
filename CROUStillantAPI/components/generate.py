@@ -9,6 +9,161 @@ from json import loads
 from io import BytesIO
 
 
+def _build_menu_entries(menu: dict, title_chars: int, dish_chars: int) -> list[dict]:
+    """
+    Build drawable menu entries with wrapped text lines.
+
+    :param menu: Menu du restaurant universitaire.
+    :type menu: dict
+    :param title_chars: Nombre de caractères maximum pour les titres de catégories.
+    :type title_chars: int
+    :param dish_chars: Nombre de caractères maximum pour les plats.
+    :type dish_chars: int
+    :return: Liste d'entrées de menu formatées pour le dessin.
+    :rtype: list[dict]
+    """
+    entries: list[dict] = []
+
+    categories = menu.get("categories", []) if menu else []
+    for category in categories:
+        category_label = (category.get("libelle") or "").strip()
+        if category_label:
+            entries.append(
+                {
+                    "type": "category",
+                    "text": shorten(category_label, width=title_chars, placeholder="..."),
+                }
+            )
+
+        for dish in category.get("plats", []):
+            dish_label = (dish.get("libelle") or "").strip()
+            if not dish_label:
+                continue
+
+            lines = splitText(dish_label, dish_chars)
+            if not lines:
+                continue
+
+            for index, line in enumerate(lines):
+                entries.append(
+                    {
+                        "type": "dish",
+                        "text": f"• {line}" if index == 0 else f"   {line}",
+                    }
+                )
+
+        entries.append({"type": "gap"})
+
+    return entries
+
+
+def _fits_two_columns(entries: list[dict], top: int, bottom: int, sizes: dict) -> bool:
+    """
+    Return True when all menu entries fit in two columns for a given layout.
+
+    :param entries: Liste d'entrées de menu formatées pour le dessin.
+    :type entries: list[dict]
+    :param top: Position y du haut de la zone de contenu.
+    :type top: int
+    :param bottom: Position y du bas de la zone de contenu.
+    :type bottom: int
+    :param sizes: Tailles et espacements du layout à tester.
+    :type sizes: dict
+    :return: True si les entrées tiennent dans deux colonnes, sinon False.
+    :rtype: bool
+    """
+    y = top
+    column = 1
+
+    for entry in entries:
+        if entry["type"] == "category":
+            height = sizes["category_step"]
+        elif entry["type"] == "dish":
+            height = sizes["dish_step"]
+        else:
+            height = sizes["gap_step"]
+
+        if y + height > bottom:
+            if column == 1:
+                column = 2
+                y = top
+            else:
+                return False
+
+        y += height
+
+    return True
+
+
+def _select_menu_layout(menu: dict, top: int, bottom: int) -> dict:
+    """
+    Pick the biggest readable layout that still fits all categories and dishes.
+
+    :param menu: Menu du restaurant universitaire.
+    :type menu: dict
+    :param top: Position y du haut de la zone de contenu.
+    :type top: int
+    :param bottom: Position y du bas de la zone de contenu.
+    :type bottom: int
+    :return: Layout choisi avec les tailles et les entrées formatées.
+    :rtype: dict
+    """
+    max_scale = 1.25
+    min_scale = 0.45
+    step = 0.05
+
+    scale = max_scale
+    chosen = None
+
+    while scale >= min_scale:
+        title_size = max(16, int(round(40 * scale)))
+        dish_size = max(14, int(round(35 * scale)))
+        title_chars = max(14, int(round(25 * (40 / title_size))))
+        dish_chars = max(16, int(round(27 * (35 / dish_size))))
+
+        sizes = {
+            "title_size": title_size,
+            "dish_size": dish_size,
+            "category_step": max(22, int(round(50 * scale))),
+            "dish_step": max(18, int(round(40 * scale))),
+            "gap_step": max(14, int(round(40 * scale))),
+            "title_chars": title_chars,
+            "dish_chars": dish_chars,
+        }
+
+        entries = _build_menu_entries(menu, title_chars=title_chars, dish_chars=dish_chars)
+        if _fits_two_columns(entries=entries, top=top, bottom=bottom, sizes=sizes):
+            chosen = {
+                "sizes": sizes,
+                "entries": entries,
+            }
+            break
+
+        scale = round(scale - step, 2)
+
+    if chosen:
+        return chosen
+
+    # Safety fallback for extremely dense menus.
+    fallback_sizes = {
+        "title_size": 14,
+        "dish_size": 12,
+        "category_step": 18,
+        "dish_step": 15,
+        "gap_step": 12,
+        "title_chars": 50,
+        "dish_chars": 60,
+    }
+    return {
+        "sizes": fallback_sizes,
+        "entries": _build_menu_entries(
+            menu,
+            title_chars=fallback_sizes["title_chars"],
+            dish_chars=fallback_sizes["dish_chars"],
+        ),
+    }
+
+
 def generate(
     restaurant,
     menu,
@@ -94,137 +249,54 @@ def generate(
 
     content_x = 92
     content_x2 = 712
-    content_y = 215
-    content_y_save = content_y
-    content_y_space = 40
-    content_space = 50
-    content_h_space = 40
-
-    title = Text(size=40, weight=Weights.EXTRA_BOLD)
-    text = Text(size=35, weight=Weights.MEDIUM)
-    small = Text(size=30, weight=Weights.BOLD_ITALIC)
+    content_top = 215
+    content_bottom = 1040  # 960
 
     if menu:
         img = Image.open(f"./assets/images/themes/{theme}/square.png")
         image.paste(img, (35, 168), img)
         image.paste(img, (658, 168), img)
 
-        stop = False
-        moved = False
-        count = 0
-        for category in menu["categories"]:
-            if content_y >= 930 and not moved:
-                moved = True
-                content_x = content_x2
-                content_y = content_y_save
-            elif content_y >= 930 and moved:
-                total = len([d for c in menu for d in c if d != "" and d != " "])
+        layout = _select_menu_layout(menu=menu, top=content_top, bottom=content_bottom)
+        sizes = layout["sizes"]
+        entries = layout["entries"]
 
-                if total - count > 0:
-                    small.draw(
-                        drawer=drawer,
-                        text=f"+ {total - count} autres plats non affichés...",
-                        colour=colours[theme]["content"],
-                        x=content_x,
-                        y=content_y,
-                    )
+        title = Text(size=sizes["title_size"], weight=Weights.EXTRA_BOLD)
+        text = Text(size=sizes["dish_size"], weight=Weights.MEDIUM)
 
-                stop = True
-                break
+        content_y = content_top
+        content_column_x = content_x
 
-            title.draw(
-                drawer=drawer,
-                text=shorten(category.get("libelle"), width=25, placeholder="..."),
-                colour=colours[theme]["content"],
-                x=content_x,
-                y=content_y,
-            )
-
-            content_y += content_space
-
-            for dish in category["plats"]:
-                count += 1
-                if (
-                    dish.get("libelle") != ""
-                    and dish.get("libelle") != " "
-                    and not (content_y >= 940 and moved)
-                ):
-                    dish_list = splitText(dish.get("libelle"), 27)
-                    if len(dish_list) == 1:
-                        text.draw(
-                            drawer=drawer,
-                            text=f"• {dish_list[0]}",
-                            colour=colours[theme]["content"],
-                            x=content_x,
-                            y=content_y,
-                        )
-                    else:
-                        if not moved and content_y >= 920:
-                            moved = True
-                            content_x = content_x2
-                            content_y = content_y_save
-
-                        text.draw(
-                            drawer=drawer,
-                            text=f"• {dish_list[0]}",
-                            colour=colours[theme]["content"],
-                            x=content_x,
-                            y=content_y,
-                        )
-                        content_y += content_y_space
-                        text.draw(
-                            drawer=drawer,
-                            text=f"   {shorten(dish_list[1], width=25, placeholder='')}...",
-                            colour=colours[theme]["content"],
-                            x=content_x,
-                            y=content_y,
-                        )
-
-                    content_y += content_y_space
-
-                    if moved and content_y >= 930:
-                        total = len(
-                            [d for c in menu for d in c if d != "" and d != " "]
-                        )
-
-                        if total - count > 0:
-                            small.draw(
-                                drawer=drawer,
-                                text=f"+ {total - count} autres plat{'s' if total - count > 1 else ''} non affiché{'s' if total - count > 1 else ''}...",
-                                colour=colours[theme]["content"],
-                                x=content_x,
-                                y=content_y,
-                            )
-
-                        stop = True
-                        break
-                    elif not moved and content_y >= 995:
-                        moved = True
-                        content_x = content_x2
-                        content_y = content_y_save
-
-            if moved and content_y == content_y_save:
-                pass
+        for entry in entries:
+            if entry["type"] == "category":
+                height = sizes["category_step"]
+            elif entry["type"] == "dish":
+                height = sizes["dish_step"]
             else:
-                content_y += content_h_space
+                height = sizes["gap_step"]
 
-            if moved and content_y >= 940:
-                if not stop:
-                    total = len([d for c in menu for d in c if d != "" and d != " "])
+            if content_y + height > content_bottom:
+                content_column_x = content_x2
+                content_y = content_top
 
-                    if total - count > 0:
-                        small.draw(
-                            drawer=drawer,
-                            text=f"+ {total - count} autres plat{'s' if total - count > 1 else ''} non affiché{'s' if total - count > 1 else ''}...",
-                            colour=colours[theme]["content"],
-                            x=content_x,
-                            y=content_y,
-                        )
-                break
-            elif content_y >= 995:
-                moved = True
-                content_x = content_x2
-                content_y = content_y_save
+            if entry["type"] == "category":
+                title.draw(
+                    drawer=drawer,
+                    text=entry["text"],
+                    colour=colours[theme]["content"],
+                    x=content_column_x,
+                    y=content_y,
+                )
+            elif entry["type"] == "dish":
+                text.draw(
+                    drawer=drawer,
+                    text=entry["text"],
+                    colour=colours[theme]["content"],
+                    x=content_column_x,
+                    y=content_y,
+                )
+
+            content_y += height
     else:
         img = Image.open(f"./assets/images/themes/{theme}/none.png")
         image.paste(img, (35, 168), img)
