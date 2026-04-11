@@ -37,7 +37,7 @@ class Restaurants:
                             TELEPHONE,
                             ISPMR,
                             ZONE,
-                            PAIEMENT,
+                            (PAIEMENT::jsonb - 'Carte bancaire') AS PAIEMENT,
                             ACCES,
                             OPENED
                         FROM
@@ -71,7 +71,7 @@ class Restaurants:
                             TELEPHONE,
                             ISPMR,
                             ZONE,
-                            PAIEMENT,
+                            (PAIEMENT::jsonb - 'Carte bancaire') AS PAIEMENT,
                             ACCES,
                             OPENED,
                             ACTIF
@@ -114,7 +114,7 @@ class Restaurants:
                         TELEPHONE,
                         ISPMR,
                         ZONE,
-                        PAIEMENT,
+                        (PAIEMENT::jsonb - 'Carte bancaire') AS PAIEMENT,
                         ACCES,
                         OPENED,
                         ACTIF
