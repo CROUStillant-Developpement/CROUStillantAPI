@@ -46,8 +46,8 @@ app.ext.openapi.describe(
     version=f"v{app.config.API_VERSION}",
     description=dedent(
         f"""
-            ![banner](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/images/banner.png)  
             # 📝 • Introduction
+            ![banner](https://raw.githubusercontent.com/CROUStillant-Developpement/CROUStillantAssets/main/images/banner.png)  
             CROUStillant est un projet open-source et gratuit qui a pour but de fournir des informations sur les menus des restaurants universitaires en France et en Outre-Mer.  
             ⁣  
             L'API CROUStillant permet d'accéder à toutes les informations stockées dans la base de données du projet :  
@@ -65,7 +65,7 @@ app.ext.openapi.describe(
             🏫 *Si vous êtes une organisation (université, entreprise, association, etc.), ou un particulier et que vous avez besoin de plus de requêtes, vous pouvez nous contacter à l'adresse suivante : [croustillant@bayfield.dev](mailto:croustillant@bayfield.dev) !*   
             ⁣  
             # ⚙️ • Données
-            - Les données sont mises à jour 4 fois par jour (1h, 9h, 11h et 15h).
+            - Les données sont mises à jour plusieurs fois par jour, en fonction des changements dans les menus des restaurants universitaires.
             - Toutes les dates sont stockées en UTC+0.  
             ⁣  
             # 📄 • Termes d'utilisation
