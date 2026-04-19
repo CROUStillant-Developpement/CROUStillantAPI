@@ -1,7 +1,7 @@
 from .stats import Stats
 from .status import Status
 from .regions import Regions, Region
-from .restaurants import Restaurants, Restaurant, RestaurantInfo
+from .restaurants import Restaurants, Restaurant, RestaurantsStatus, RestaurantInfo
 from .types_restaurants import TypesRestaurants
 from .plats import Plats, Plat, PlatsWithTotal
 from .menus import Menus, Menu, Dates
@@ -17,6 +17,7 @@ __all__ = [
     "Region",
     "Restaurants",
     "Restaurant",
+    "RestaurantsStatus",
     "RestaurantInfo",
     "TypesRestaurants",
     "Plats",
