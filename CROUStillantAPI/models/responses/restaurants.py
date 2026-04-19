@@ -1,5 +1,5 @@
 from sanic_ext import openapi
-from ..components import RestaurantComponent
+from ..components import RestaurantComponent, RestaurantStatusComponent
 
 
 class Restaurants:
@@ -37,6 +37,17 @@ class Data:
     nb = openapi.Integer(
         description="Nombre de fois que le restaurant a été mis à jour",
         example=1,
+    )
+
+
+class RestaurantsStatus:
+    success = openapi.Boolean(
+        description="Statut de la requête",
+        example=True,
+    )
+    data = openapi.Array(
+        items=RestaurantStatusComponent,
+        description="Liste des statuts des restaurants",
     )
 
 

@@ -7,6 +7,7 @@ from ....components.rules import Rules
 from ....models.responses import (
     Restaurants,
     Restaurant,
+    RestaurantsStatus,
     TypesRestaurants,
     RestaurantInfo,
     Menus,
@@ -17,7 +18,7 @@ from ....models.responses import (
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
 from ....utils.image import saveImageToBuffer
-from ....utils.format import getBoolFromString
+from ....utils.format import getBoolFromString, getIntFromString
 from ....utils.colors import parse_custom_colours
 from ....utils.iframes import restaurantMenuIframe
 from ....exceptions.error import ServerErrorException
@@ -67,6 +68,46 @@ jinja_env = Environment(
     location="query",
     example=True,
 )
+@openapi.parameter(
+    name="ouvert",
+    description="Filtre les restaurants par statut d'ouverture",
+    required=False,
+    schema=bool,
+    location="query",
+    example=True,
+)
+@openapi.parameter(
+    name="region",
+    description="Filtre les restaurants par code de région",
+    required=False,
+    schema=int,
+    location="query",
+    example=17,
+)
+@openapi.parameter(
+    name="type",
+    description="Filtre les restaurants par code de type",
+    required=False,
+    schema=int,
+    location="query",
+    example=1,
+)
+@openapi.parameter(
+    name="ispmr",
+    description="Filtre les restaurants accessibles aux PMR",
+    required=False,
+    schema=bool,
+    location="query",
+    example=True,
+)
+@openapi.parameter(
+    name="zone",
+    description="Filtre les restaurants par zone (insensible à la casse)",
+    required=False,
+    schema=str,
+    location="query",
+    example="Pau",
+)
 @ratelimit()
 @cache()
 async def getRestaurants(request: Request) -> JSONResponse:
@@ -75,8 +116,19 @@ async def getRestaurants(request: Request) -> JSONResponse:
 
     :return: Les restaurants
     """
+    ouvert_param = request.args.get("ouvert", None)
+    ispmr_param = request.args.get("ispmr", None)
+    region_param = request.args.get("region", None)
+    type_param = request.args.get("type", None)
+    zone_param = request.args.get("zone", None)
+
     restaurants = await request.app.ctx.entities.restaurants.getAll(
-        actif=getBoolFromString(request.args.get("actif", True))
+        actif=getBoolFromString(request.args.get("actif", True)),
+        ouvert=getBoolFromString(ouvert_param) if ouvert_param is not None else None,
+        ispmr=getBoolFromString(ispmr_param) if ispmr_param is not None else None,
+        region=getIntFromString(region_param) if region_param is not None else None,
+        type_=getIntFromString(type_param) if type_param is not None else None,
+        zone=zone_param,
     )
 
     return JSON(
@@ -112,6 +164,63 @@ async def getRestaurants(request: Request) -> JSONResponse:
                 "acces": loads(restaurant.get("acces"))
                 if restaurant.get("acces", None)
                 else None,
+                "ouvert": restaurant.get("opened"),
+                "actif": restaurant.get("actif"),
+            }
+            for restaurant in restaurants
+        ],
+        status=200,
+    ).generate()
+
+
+# /restaurants/status
+@bp.route("/status", methods=["GET"])
+@openapi.definition(
+    summary="Statut d'ouverture des restaurants",
+    description="Liste des restaurants actifs avec leur statut d'ouverture.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": RestaurantsStatus},
+    description="Liste des statuts des restaurants.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="ouvert",
+    description="Filtre les restaurants par statut d'ouverture",
+    required=False,
+    schema=bool,
+    location="query",
+    example=True,
+)
+@ratelimit()
+@cache()
+async def getRestaurantsStatus(request: Request) -> JSONResponse:
+    ouvert_param = request.args.get("ouvert", None)
+    restaurants = await request.app.ctx.entities.restaurants.getStatus(
+        ouvert=getBoolFromString(ouvert_param) if ouvert_param is not None else None,
+    )
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": restaurant.get("rid"),
+                "nom": restaurant.get("nom"),
+                "region": {
+                    "code": restaurant.get("idreg"),
+                    "libelle": restaurant.get("region"),
+                },
+                "type": {
+                    "code": restaurant.get("idtpr"),
+                    "libelle": restaurant.get("type"),
+                },
                 "ouvert": restaurant.get("opened"),
                 "actif": restaurant.get("actif"),
             }
