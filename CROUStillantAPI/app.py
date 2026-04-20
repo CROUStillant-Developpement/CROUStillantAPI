@@ -137,21 +137,9 @@ async def setup_app(app: Sanic):
             password=environ["POSTGRES_PASSWORD"],
             host=environ["POSTGRES_HOST"],
             port=environ["POSTGRES_PORT"],
-            min_size=10,  # 10 connections
-            max_size=10,  # 10 connections
-            max_queries=50000,  # 50,000 queries
-            loop=app.loop,
-        )
-
-        app.ctx.analytics = await create_pool(
-            database=environ["POSTGRES_DATABASE"],
-            user=environ["POSTGRES_USER"],
-            password=environ["POSTGRES_PASSWORD"],
-            host=environ["POSTGRES_HOST"],
-            port=environ["POSTGRES_PORT"],
-            min_size=10,  # 10 connections
-            max_size=10,  # 10 connections
-            max_queries=50000,  # 50,000 queries
+            min_size=10,
+            max_size=25,
+            max_queries=50000,
             loop=app.loop,
         )
     except OSError:
@@ -169,7 +157,6 @@ async def setup_app(app: Sanic):
 @app.listener("after_server_stop")
 async def close_app(app: Sanic):
     await app.ctx.pool.close()
-    await app.ctx.analytics.close()
     await app.ctx.session.close()
 
     app.ctx.logs.info("API arrêtée")
