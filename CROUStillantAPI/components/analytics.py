@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import logging
 from typing import TYPE_CHECKING
 
 from sanic import Sanic, Request
@@ -7,6 +8,9 @@ from json import dumps
 
 if TYPE_CHECKING:
     from asyncpg import Pool
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def sanitize_for_json(data: dict) -> dict:
@@ -188,8 +192,7 @@ class Analytics:
             now = asyncio.get_running_loop().time()
             if now - self._last_error_log >= _ERROR_LOG_INTERVAL:
                 self._last_error_log = now
-                app_logger = __import__("logging").getLogger(__name__)
-                app_logger.exception(
+                _LOGGER.exception(
                     "Analytics flush failed — re-queueing %d entries: %s",
                     len(batch),
                     e,
@@ -201,8 +204,7 @@ class Analytics:
                 self._queue = self._queue[-_MAX_QUEUE_SIZE:]
                 if now - self._last_drop_log >= _ERROR_LOG_INTERVAL:
                     self._last_drop_log = now
-                    app_logger = __import__("logging").getLogger(__name__)
-                    app_logger.error(
+                    _LOGGER.error(
                         "Analytics queue at capacity (%d) — dropped %d oldest entries.",
                         _MAX_QUEUE_SIZE,
                         dropped,
