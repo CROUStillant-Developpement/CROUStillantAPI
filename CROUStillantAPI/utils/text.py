@@ -1,4 +1,5 @@
 from .weights import Weights
+from .fonts import make_font
 from PIL import ImageFont, ImageDraw
 
 
@@ -26,10 +27,7 @@ class Text:
         self.size = size
         self.weight = weight.value
 
-        self.font = ImageFont.truetype(
-            "./assets/fonts/Inter-VariableFont.ttf", self.size
-        )
-        self.font.set_variation_by_name(self.weight)
+        self.font = make_font(self.size, self.weight)
 
     def draw(self, drawer: ImageDraw, text: str, colour: str, x: int, y: int) -> None:
         """
@@ -42,6 +40,56 @@ class Text:
         :param y: Position Y du texte
         """
         drawer.text((x, y), text, fill=colour, font=self.font)
+
+
+def shorten_px(text: str, font, max_width: int, placeholder: str = "...") -> str:
+    """
+    Truncate *text* so its rendered pixel width fits within *max_width*,
+    appending *placeholder* when truncation occurs.
+    """
+    if font.getlength(text) <= max_width:
+        return text
+    placeholder_width = font.getlength(placeholder)
+    result = ""
+    for char in text:
+        if font.getlength(result + char) + placeholder_width > max_width:
+            break
+        result += char
+    return result.rstrip() + placeholder
+
+
+def split_px(text: str, font, max_width: int) -> list[str]:
+    """
+    Split *text* into lines whose rendered pixel width stays within *max_width*.
+    Splits on spaces when possible; force-splits within a word if it alone is
+    wider than *max_width*.
+    """
+    words = text.split()
+    lines = []
+    line = ""
+
+    for word in words:
+        candidate = (line + " " + word).strip()
+        if font.getlength(candidate) <= max_width:
+            line = candidate
+        else:
+            if line:
+                lines.append(clean(line))
+            if font.getlength(word) > max_width:
+                current = ""
+                for char in word:
+                    if font.getlength(current + char) > max_width:
+                        lines.append(clean(current))
+                        current = char
+                    else:
+                        current += char
+                line = current
+            else:
+                line = word
+
+    if line:
+        lines.append(clean(line))
+    return lines
 
 
 def splitText(text: str, maximum: int) -> list:
