@@ -1,8 +1,12 @@
 import asyncio
 import hashlib
+from typing import TYPE_CHECKING
 
 from sanic import Sanic, Request
 from json import dumps
+
+if TYPE_CHECKING:
+    from asyncpg import Pool
 
 
 def sanitize_for_json(data: dict) -> dict:
@@ -53,7 +57,29 @@ _INSERT_SQL = """
 """
 
 _BATCH_SIZE = 500
-_FLUSH_INTERVAL = 10  # seconds
+_FLUSH_INTERVAL = 10        # seconds
+_MAX_QUEUE_SIZE = 50_000    # drop oldest entries beyond this to prevent OOM
+_ERROR_LOG_INTERVAL = 60    # seconds between repeated error log lines
+
+
+# Tuple shape written to _queue on each request
+_QueueEntry = tuple[
+    str,        # id
+    str | None, # key
+    str,        # method
+    str,        # path
+    int,        # status
+    str,        # params (JSON)
+    str,        # request_headers (JSON)
+    str | int,  # ratelimit_limit
+    str | int,  # ratelimit_remaining
+    str | int,  # ratelimit_used
+    str | int,  # ratelimit_reset
+    str | int,  # ratelimit_bucket
+    int,        # process_time
+    str,        # api_version
+    str,        # hashed_ip
+]
 
 
 class Analytics:
@@ -71,8 +97,11 @@ class Analytics:
 
         :param app: Instance de l'application Sanic
         """
-        self._queue: list = []
-        self._pool = None
+        self._queue: list[_QueueEntry] = []
+        self._pool: "Pool | None" = None
+        self._flush_task: asyncio.Task | None = None
+        self._last_error_log: float = 0.0
+        self._last_drop_log: float = 0.0
 
         @app.on_response(priority=999)
         async def after_request(request: Request, response):
@@ -109,7 +138,7 @@ class Analytics:
             ))
 
             if len(self._queue) >= _BATCH_SIZE:
-                await self._flush()
+                self._schedule_flush()
 
         @app.after_server_start
         async def start_flush_task(app, loop):
@@ -130,12 +159,24 @@ class Analytics:
             :param app: Instance de l'application Sanic
             :param loop: Boucle d'événements asyncio
             """
+            if self._flush_task is not None and not self._flush_task.done():
+                await self._flush_task
             await self._flush()
+
+    def _schedule_flush(self) -> None:
+        """
+        Planifie un flush en arrière-plan s'il n'y en a pas déjà un en cours,
+        afin de ne pas bloquer le middleware de réponse.
+        """
+        if self._flush_task is None or self._flush_task.done():
+            self._flush_task = asyncio.create_task(self._flush())
 
     async def _flush(self) -> None:
         """
         Insère en base de données tous les logs accumulés dans la file d'attente.
         En cas d'erreur transitoire, les entrées sont remises en file pour le prochain flush.
+        Si la file dépasse ``_MAX_QUEUE_SIZE``, les entrées les plus anciennes sont supprimées
+        pour éviter une croissance mémoire non bornée.
         """
         if not self._queue or not self._pool:
             return
@@ -143,8 +184,29 @@ class Analytics:
         try:
             async with self._pool.acquire() as conn:
                 await conn.executemany(_INSERT_SQL, batch)
-        except Exception:
+        except Exception as e:
+            now = asyncio.get_running_loop().time()
+            if now - self._last_error_log >= _ERROR_LOG_INTERVAL:
+                self._last_error_log = now
+                app_logger = __import__("logging").getLogger(__name__)
+                app_logger.exception(
+                    "Analytics flush failed — re-queueing %d entries: %s",
+                    len(batch),
+                    e,
+                )
             self._queue = batch + self._queue
+
+            if len(self._queue) > _MAX_QUEUE_SIZE:
+                dropped = len(self._queue) - _MAX_QUEUE_SIZE
+                self._queue = self._queue[-_MAX_QUEUE_SIZE:]
+                if now - self._last_drop_log >= _ERROR_LOG_INTERVAL:
+                    self._last_drop_log = now
+                    app_logger = __import__("logging").getLogger(__name__)
+                    app_logger.error(
+                        "Analytics queue at capacity (%d) — dropped %d oldest entries.",
+                        _MAX_QUEUE_SIZE,
+                        dropped,
+                    )
 
     async def _flush_loop(self) -> None:
         """

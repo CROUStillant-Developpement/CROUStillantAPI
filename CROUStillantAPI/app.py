@@ -137,9 +137,9 @@ async def setup_app(app: Sanic):
             password=environ["POSTGRES_PASSWORD"],
             host=environ["POSTGRES_HOST"],
             port=environ["POSTGRES_PORT"],
-            min_size=10,  # 10 connections
-            max_size=25,  # 10 connections
-            max_queries=50000,  # 50,000 queries
+            min_size=10,
+            max_size=25,
+            max_queries=50000,
             loop=app.loop,
         )
     except OSError:
