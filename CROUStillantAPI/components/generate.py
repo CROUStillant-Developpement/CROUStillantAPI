@@ -1,6 +1,7 @@
 from ..utils.date import getCleanDate
 from ..utils.image import addCorners
-from ..utils.text import Text, splitText
+from ..utils.text import Text, splitText, shorten_px, split_px
+from ..utils.fonts import make_font
 from ..utils.weights import Weights
 from PIL import Image, ImageDraw
 from textwrap import shorten
@@ -9,20 +10,21 @@ from json import loads
 from io import BytesIO
 
 
-def _build_menu_entries(menu: dict, title_chars: int, dish_chars: int) -> list[dict]:
+def _build_menu_entries(menu: dict, title_font, dish_font, col_max_px: int) -> list[dict]:
     """
     Build drawable menu entries with wrapped text lines.
 
     :param menu: Menu du restaurant universitaire.
     :type menu: dict
-    :param title_chars: Nombre de caractères maximum pour les titres de catégories.
-    :type title_chars: int
-    :param dish_chars: Nombre de caractères maximum pour les plats.
-    :type dish_chars: int
+    :param title_font: Police Pillow pour les titres de catégories.
+    :param dish_font: Police Pillow pour les plats.
+    :param col_max_px: Largeur maximale en pixels d'une colonne.
+    :type col_max_px: int
     :return: Liste d'entrées de menu formatées pour le dessin.
     :rtype: list[dict]
     """
     entries: list[dict] = []
+    bullet_w = int(dish_font.getlength("• "))
 
     categories = menu.get("categories", []) if menu else []
     for category in categories:
@@ -31,7 +33,7 @@ def _build_menu_entries(menu: dict, title_chars: int, dish_chars: int) -> list[d
             entries.append(
                 {
                     "type": "category",
-                    "text": shorten(category_label, width=title_chars, placeholder="..."),
+                    "text": shorten_px(category_label, title_font, col_max_px),
                 }
             )
 
@@ -40,7 +42,7 @@ def _build_menu_entries(menu: dict, title_chars: int, dish_chars: int) -> list[d
             if not dish_label:
                 continue
 
-            lines = splitText(dish_label, dish_chars)
+            lines = split_px(dish_label, dish_font, col_max_px - bullet_w)
             if not lines:
                 continue
 
@@ -95,7 +97,14 @@ def _fits_two_columns(entries: list[dict], top: int, bottom: int, sizes: dict) -
     return True
 
 
-def _select_menu_layout(menu: dict, top: int, bottom: int) -> dict:
+def _make_fonts(title_size: int, dish_size: int):
+    return (
+        make_font(title_size, Weights.EXTRA_BOLD.value),
+        make_font(dish_size, Weights.MEDIUM.value),
+    )
+
+
+def _select_menu_layout(menu: dict, top: int, bottom: int, col_max_px: int) -> dict:
     """
     Pick the biggest readable layout that still fits all categories and dishes.
 
@@ -105,6 +114,8 @@ def _select_menu_layout(menu: dict, top: int, bottom: int) -> dict:
     :type top: int
     :param bottom: Position y du bas de la zone de contenu.
     :type bottom: int
+    :param col_max_px: Largeur maximale en pixels d'une colonne.
+    :type col_max_px: int
     :return: Layout choisi avec les tailles et les entrées formatées.
     :rtype: dict
     """
@@ -112,54 +123,56 @@ def _select_menu_layout(menu: dict, top: int, bottom: int) -> dict:
     min_scale = 0.45
     step = 0.05
 
-    scale = max_scale
-    chosen = None
+    scales = [
+        round(max_scale - i * step, 2)
+        for i in range(int(round((max_scale - min_scale) / step)) + 1)
+    ]
 
-    while scale >= min_scale:
+    def _candidate(scale: float) -> dict:
         title_size = max(16, int(round(40 * scale)))
         dish_size = max(14, int(round(35 * scale)))
-        title_chars = max(14, int(round(25 * (40 / title_size))))
-        dish_chars = max(16, int(round(27 * (35 / dish_size))))
-
+        title_font, dish_font = _make_fonts(title_size, dish_size)
         sizes = {
             "title_size": title_size,
             "dish_size": dish_size,
             "category_step": max(22, int(round(50 * scale))),
             "dish_step": max(18, int(round(40 * scale))),
             "gap_step": max(14, int(round(40 * scale))),
-            "title_chars": title_chars,
-            "dish_chars": dish_chars,
         }
+        entries = _build_menu_entries(menu, title_font=title_font, dish_font=dish_font, col_max_px=col_max_px)
+        return sizes, entries
 
-        entries = _build_menu_entries(menu, title_chars=title_chars, dish_chars=dish_chars)
+    lo, hi = 0, len(scales) - 1
+    chosen = None
+
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        sizes, entries = _candidate(scales[mid])
         if _fits_two_columns(entries=entries, top=top, bottom=bottom, sizes=sizes):
-            chosen = {
-                "sizes": sizes,
-                "entries": entries,
-            }
-            break
-
-        scale = round(scale - step, 2)
+            chosen = {"sizes": sizes, "entries": entries}
+            hi = mid - 1  # try a larger scale (lower index)
+        else:
+            lo = mid + 1  # need a smaller scale
 
     if chosen:
         return chosen
 
     # Safety fallback for extremely dense menus.
+    fallback_title_font, fallback_dish_font = _make_fonts(14, 12)
     fallback_sizes = {
         "title_size": 14,
         "dish_size": 12,
         "category_step": 18,
         "dish_step": 15,
         "gap_step": 12,
-        "title_chars": 50,
-        "dish_chars": 60,
     }
     return {
         "sizes": fallback_sizes,
         "entries": _build_menu_entries(
             menu,
-            title_chars=fallback_sizes["title_chars"],
-            dish_chars=fallback_sizes["dish_chars"],
+            title_font=fallback_title_font,
+            dish_font=fallback_dish_font,
+            col_max_px=col_max_px,
         ),
     }
 
@@ -250,14 +263,15 @@ def generate(
     content_x = 92
     content_x2 = 712
     content_top = 215
-    content_bottom = 1040  # 960
+    content_bottom = 1000  # 960
 
     if menu:
         img = Image.open(f"./assets/images/themes/{theme}/square.png")
         image.paste(img, (35, 168), img)
         image.paste(img, (658, 168), img)
 
-        layout = _select_menu_layout(menu=menu, top=content_top, bottom=content_bottom)
+        col_max_px = content_x2 - content_x - 80
+        layout = _select_menu_layout(menu=menu, top=content_top, bottom=content_bottom, col_max_px=col_max_px)
         sizes = layout["sizes"]
         entries = layout["entries"]
 
@@ -604,5 +618,7 @@ def generate(
                 y=y + y_space * 4,
             )
 
+    return image
+
     # Conversion en RGBA pour la transparence des coins
-    return image.convert("RGBA")
+    # return image.convert("RGBA")
