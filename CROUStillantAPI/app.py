@@ -147,6 +147,10 @@ async def setup_app(app: Sanic):
         app.ctx.logs.debug("Arrêt de l'API !")
         exit(1)
 
+    # Crée les partitions mensuelles manquantes pour les 6 prochains mois
+    async with app.ctx.pool.acquire() as conn:
+        await conn.execute("SELECT maintain_requests_logs_partitions(6)")
+
     app.ctx.executor = ThreadPoolExecutor(max_workers=4)
 
     app.ctx.entities = Entities(app.ctx.pool)
