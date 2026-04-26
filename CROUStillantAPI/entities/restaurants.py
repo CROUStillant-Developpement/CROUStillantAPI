@@ -26,11 +26,14 @@ class Restaurants:
             params = []
 
             if actif:
-                conditions.append("ACTIF = TRUE")
+                params.append(True)
+                conditions.append(f"ACTIF = ${len(params)}")
             if ouvert is not None:
-                conditions.append(f"OPENED = {'TRUE' if ouvert else 'FALSE'}")
+                params.append(ouvert)
+                conditions.append(f"OPENED = ${len(params)}")
             if ispmr is not None:
-                conditions.append(f"ISPMR = {'TRUE' if ispmr else 'FALSE'}")
+                params.append(ispmr)
+                conditions.append(f"ISPMR = ${len(params)}")
             if region is not None:
                 params.append(region)
                 conditions.append(f"R.IDREG = ${len(params)}")
@@ -55,7 +58,7 @@ class Restaurants:
                         ADRESSE,
                         LATITUDE,
                         LONGITUDE,
-                        HORAIRES,
+                        HORAIRES::jsonb AS HORAIRES,
                         JOURS_OUVERT,
                         CASE
                             WHEN IMAGE_URL IS NULL THEN NULL
@@ -66,7 +69,7 @@ class Restaurants:
                         ISPMR,
                         ZONE,
                         (PAIEMENT::jsonb - 'Carte bancaire') AS PAIEMENT,
-                        ACCES,
+                        ACCES::jsonb AS ACCES,
                         OPENED,
                         ACTIF
                     FROM
@@ -76,6 +79,7 @@ class Restaurants:
                     {where_clause}
                 """,
                 *params,
+                timeout=10,
             )
 
     async def getStatus(self, ouvert: bool | None = None) -> list:
@@ -88,8 +92,10 @@ class Restaurants:
             connection: Connection
 
             conditions = ["ACTIF = TRUE"]
+            params = []
             if ouvert is not None:
-                conditions.append(f"OPENED = {'TRUE' if ouvert else 'FALSE'}")
+                params.append(ouvert)
+                conditions.append(f"OPENED = ${len(params)}")
 
             where_clause = f"WHERE {' AND '.join(conditions)}"
 
@@ -109,7 +115,9 @@ class Restaurants:
                     JOIN region R ON restaurant.idreg = R.idreg
                     JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
                     {where_clause}
-                """
+                """,
+                *params,
+                timeout=10,
             )
 
     async def getOne(self, id: int) -> dict:
@@ -134,9 +142,9 @@ class Restaurants:
                         ADRESSE,
                         LATITUDE,
                         LONGITUDE,
-                        HORAIRES,
+                        HORAIRES::jsonb AS HORAIRES,
                         JOURS_OUVERT,
-                        CASE 
+                        CASE
                             WHEN IMAGE_URL IS NULL THEN NULL
                             ELSE CONCAT('https://api.croustillant.menu/v1/restaurants/', RID, '/preview')
                         END AS IMAGE_URL,
@@ -145,7 +153,7 @@ class Restaurants:
                         ISPMR,
                         ZONE,
                         (PAIEMENT::jsonb - 'Carte bancaire') AS PAIEMENT,
-                        ACCES,
+                        ACCES::jsonb AS ACCES,
                         OPENED,
                         ACTIF
                     FROM
@@ -156,6 +164,7 @@ class Restaurants:
                         rid = $1
                 """,
                 id,
+                timeout=5,
             )
 
     async def getInfo(self, id: int) -> dict:
@@ -181,6 +190,7 @@ class Restaurants:
                         R.RID = $1
                 """,
                 id,
+                timeout=5,
             )
 
     async def getPreview(self, id: int) -> dict:
@@ -206,4 +216,5 @@ class Restaurants:
                         R.RID = $1
                 """,
                 id,
+                timeout=5,
             )

@@ -20,7 +20,8 @@ class Plats:
                         *
                     FROM
                         plat
-                """
+                """,
+                timeout=10,
             )
 
     async def getLast(self, limit: int) -> list:
@@ -44,6 +45,7 @@ class Plats:
                     LIMIT $1
                 """,
                 limit,
+                timeout=5,
             )
 
     async def getOne(self, id: int) -> dict:
@@ -66,13 +68,15 @@ class Plats:
                         platid = $1
                 """,
                 id,
+                timeout=5,
             )
 
-    async def getTop(self, limit: int = 100) -> dict:
+    async def getTop(self, limit: int = 100, type_restaurant: int = 1) -> dict:
         """
-        Récupère les plat les plus populaires.
+        Récupère les plats les plus populaires.
 
         :param limit: Nombre de plats à récupérer
+        :param type_restaurant: Type de restaurant (idtpr)
         :return: Les plats
         """
         async with self.pool.acquire() as connection:
@@ -87,15 +91,17 @@ class Plats:
                     FROM
                         plat P
                     JOIN composition C ON P.platid = C.platid
-                    JOIN categorie c2 on c2.catid = C.catid
+                    JOIN categorie c2 ON c2.catid = C.catid
                     JOIN repas R ON c2.rpid = R.rpid
                     JOIN menu M ON R.mid = M.mid
-                    JOIN restaurant R2 ON M.rid = R2.rid AND R2.idtpr = 1
+                    JOIN restaurant R2 ON M.rid = R2.rid AND R2.idtpr = $2
                     GROUP BY
                         P.platid
                     ORDER BY
                         nb DESC
-                    LIMIT $1;
+                    LIMIT $1
                 """,
                 limit,
+                type_restaurant,
+                timeout=15,
             )

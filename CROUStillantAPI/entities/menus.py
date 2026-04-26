@@ -50,6 +50,7 @@ class Menus:
                 """,
                 id,
                 date,
+                timeout=10,
             )
 
     async def getFromDate(self, id: int, date: datetime) -> dict:
@@ -93,6 +94,7 @@ class Menus:
                 """,
                 id,
                 date,
+                timeout=10,
             )
 
     async def getDates(self, id: int) -> dict:
@@ -117,6 +119,7 @@ class Menus:
                     ORDER BY M.DATE, M.MID DESC
                 """,
                 id,
+                timeout=5,
             )
 
     async def getAllDates(self, id: int) -> dict:
@@ -140,4 +143,5 @@ class Menus:
                     ORDER BY M.DATE, M.MID DESC
                 """,
                 id,
+                timeout=5,
             )

@@ -21,12 +21,12 @@ from ....utils.image import saveImageToBuffer
 from ....utils.format import getBoolFromString, getIntFromString
 from ....utils.colors import parse_custom_colours
 from ....utils.iframes import restaurantMenuIframe
+from ....utils.menu import build_menu_structure
 from ....exceptions.error import ServerErrorException
 from sanic.response import HTTPResponse, JSONResponse, raw
 from sanic import Blueprint, Request
 from sanic.log import logger
 from sanic_ext import openapi
-from json import loads
 from datetime import datetime
 from pytz import timezone
 from asyncio import get_event_loop
@@ -149,21 +149,15 @@ async def getRestaurants(request: Request) -> JSONResponse:
                 "adresse": restaurant.get("adresse"),
                 "latitude": restaurant.get("latitude"),
                 "longitude": restaurant.get("longitude"),
-                "horaires": loads(restaurant.get("horaires"))
-                if restaurant.get("horaires", None)
-                else None,
+                "horaires": restaurant.get("horaires"),
                 "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
                 "image_url": restaurant.get("image_url"),
                 "email": restaurant.get("email"),
                 "telephone": restaurant.get("telephone"),
                 "ispmr": restaurant.get("ispmr"),
                 "zone": restaurant.get("zone"),
-                "paiement": loads(restaurant.get("paiement"))
-                if restaurant.get("paiement", None)
-                else None,
-                "acces": loads(restaurant.get("acces"))
-                if restaurant.get("acces", None)
-                else None,
+                "paiement": restaurant.get("paiement"),
+                "acces": restaurant.get("acces"),
                 "ouvert": restaurant.get("opened"),
                 "actif": restaurant.get("actif"),
             }
@@ -313,21 +307,15 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
             "adresse": restaurant.get("adresse"),
             "latitude": restaurant.get("latitude"),
             "longitude": restaurant.get("longitude"),
-            "horaires": loads(restaurant.get("horaires"))
-            if restaurant.get("horaires", None)
-            else None,
+            "horaires": restaurant.get("horaires"),
             "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
             "image_url": restaurant.get("image_url"),
             "email": restaurant.get("email"),
             "telephone": restaurant.get("telephone"),
             "ispmr": restaurant.get("ispmr"),
             "zone": restaurant.get("zone"),
-            "paiement": loads(restaurant.get("paiement"))
-            if restaurant.get("paiement", None)
-            else None,
-            "acces": loads(restaurant.get("acces"))
-            if restaurant.get("acces", None)
-            else None,
+            "paiement": restaurant.get("paiement"),
+            "acces": restaurant.get("acces"),
             "ouvert": restaurant.get("opened"),
             "actif": restaurant.get("actif"),
         },
@@ -410,30 +398,11 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
         ).generate()
 
     preview = await request.app.ctx.entities.restaurants.getPreview(code)
-    
-    # Pre-parse JSON fields for the template
-    import json
-    parsed_restaurant = dict(restaurant)
-    if parsed_restaurant.get("horaires"):
-        try:
-            parsed_restaurant["horaires"] = json.loads(parsed_restaurant.get("horaires"))
-        except:
-            parsed_restaurant["horaires"] = None
-    if parsed_restaurant.get("paiement"):
-        try:
-            parsed_restaurant["paiement"] = json.loads(parsed_restaurant.get("paiement"))
-        except:
-            parsed_restaurant["paiement"] = None
-    if parsed_restaurant.get("acces"):
-        try:
-            parsed_restaurant["acces"] = json.loads(parsed_restaurant.get("acces"))
-        except:
-            parsed_restaurant["acces"] = None
 
     template = jinja_env.get_template("iframe_info.html")
     html_content = template.render(
         request=request,
-        restaurant=parsed_restaurant,
+        restaurant=restaurant,
         preview=preview is not None
     )
 
@@ -510,52 +479,8 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
             status=404,
         ).generate()
 
-    menu_per_day = {}
-    for row in menu:
-        date = row.get("date").strftime("%d-%m-%Y")
-
-        day_menu = menu_per_day.setdefault(
-            date, {"code": row.get("mid"), "date": date, "repas": []}
-        )
-
-        repas_list = day_menu["repas"]
-
-        if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
-            repas_list.append(
-                {"code": row.get("rpid"), "type": row.get("tpr"), "categories": []}
-            )
-
-        repas = repas_list[-1]
-        categories_list = repas["categories"]
-
-        if (
-            not categories_list
-            or row.get("tpcat") not in categories_list[-1]["libelle"]
-        ):
-            categories_list.append(
-                {
-                    "code": row.get("catid"),
-                    "libelle": row.get("tpcat"),
-                    "ordre": row.get("cat_ordre") + 1,
-                    "plats": [],
-                }
-            )
-
-        if row.get("platid") is not None:
-            categories_list[-1]["plats"].append(
-                {
-                    "code": row.get("platid"),
-                    "ordre": row.get("plat_ordre") + 1,
-                    "libelle": row.get("plat"),
-                }
-            )
-
-    keys = list(menu_per_day.keys())
-    menus = []
-    for key in keys:
-        menus.append(menu_per_day[key])
-
-    return JSON(request=request, success=True, data=menus, status=200).generate()
+    menu_per_day = build_menu_structure(menu)
+    return JSON(request=request, success=True, data=list(menu_per_day.values()), status=200).generate()
 
 
 # /restaurants/{code}/menu/iframe
@@ -867,48 +792,10 @@ async def getRestaurantMenuFromDate(
             status=404,
         ).generate()
 
-    menu_per_day = {}
-    for row in menu:
-        date = row.get("date").strftime("%d-%m-%Y")
-
-        day_menu = menu_per_day.setdefault(
-            date, {"code": row.get("mid"), "date": date, "repas": []}
-        )
-
-        repas_list = day_menu["repas"]
-
-        if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
-            repas_list.append(
-                {"code": row.get("rpid"), "type": row.get("tpr"), "categories": []}
-            )
-
-        repas = repas_list[-1]
-        categories_list = repas["categories"]
-
-        if (
-            not categories_list
-            or row.get("tpcat") not in categories_list[-1]["libelle"]
-        ):
-            categories_list.append(
-                {
-                    "code": row.get("catid"),
-                    "libelle": row.get("tpcat"),
-                    "ordre": row.get("cat_ordre") + 1,
-                    "plats": [],
-                }
-            )
-
-        if row.get("platid") is not None:
-            categories_list[-1]["plats"].append(
-                {
-                    "code": row.get("platid"),
-                    "ordre": row.get("plat_ordre") + 1,
-                    "libelle": row.get("plat"),
-                }
-            )
-
+    menu_per_day = build_menu_structure(menu)
+    date_key = date.strftime("%d-%m-%Y")
     return JSON(
-        request=request, success=True, data=menu_per_day[date], status=200
+        request=request, success=True, data=menu_per_day[date_key], status=200
     ).generate()
 
 

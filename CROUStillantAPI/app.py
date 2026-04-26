@@ -16,6 +16,7 @@ from aiohttp import ClientSession
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pytz import timezone
+from os import cpu_count
 
 
 load_dotenv(dotenv_path=".env")
@@ -151,7 +152,9 @@ async def setup_app(app: Sanic):
     async with app.ctx.pool.acquire() as conn:
         await conn.execute("SELECT maintain_requests_logs_partitions(6)")
 
-    app.ctx.executor = ThreadPoolExecutor(max_workers=4)
+    app.ctx.executor = ThreadPoolExecutor(max_workers=(cpu_count() or 2) * 2)
+
+    app.ctx.logs.debug(f"Utilisation de {(cpu_count() or 2) * 2} workers pour le ThreadPoolExecutor.")
 
     app.ctx.entities = Entities(app.ctx.pool)
 

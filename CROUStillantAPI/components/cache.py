@@ -1,13 +1,46 @@
 import redis.asyncio as redis
-import pickle
 import hashlib
 import functools
+import struct
 
 from sanic import Sanic, Request
 from sanic.response import HTTPResponse, JSONResponse
 from redis import Redis
 from dotenv import load_dotenv
 from os import environ
+
+
+def _serialize_response(response: HTTPResponse) -> bytes:
+    """
+    Sérialise une réponse HTTP en bytes compacts.
+
+    Format binaire : ``[status: 2o][longueur content_type: 2o][content_type][body]``
+
+    :param response: La réponse HTTP à sérialiser.
+    :type response: HTTPResponse
+    :return: La réponse sérialisée en bytes.
+    :rtype: bytes
+    """
+    ct = (response.content_type or "").encode()
+    header = struct.pack("!HH", response.status, len(ct))
+    return header + ct + (response.body or b"")
+
+
+def _deserialize_response(data: bytes) -> HTTPResponse:
+    """
+    Reconstruit une réponse HTTP à partir de bytes sérialisés.
+
+    Format binaire attendu : ``[status: 2o][longueur content_type: 2o][content_type][body]``
+
+    :param data: Les bytes à désérialiser.
+    :type data: bytes
+    :return: La réponse HTTP reconstruite.
+    :rtype: HTTPResponse
+    """
+    status, ct_len = struct.unpack("!HH", data[:4])
+    content_type = data[4:4 + ct_len].decode()
+    body = data[4 + ct_len:]
+    return HTTPResponse(body=body, status=status, content_type=content_type)
 
 
 load_dotenv(dotenv_path=".env")
@@ -117,7 +150,7 @@ class Cache:
         cached_data = await self.redis.get(cache_key)
 
         if cached_data:
-            return pickle.loads(cached_data)
+            return _deserialize_response(cached_data)
 
         return None
 
@@ -144,7 +177,7 @@ class Cache:
             else:
                 cache_key = await self.get_cache_key(request)
 
-            cached_data = pickle.dumps(response)
+            cached_data = _serialize_response(response)
             await self.redis.setex(cache_key, ttl, cached_data)
 
 
