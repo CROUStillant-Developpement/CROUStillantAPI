@@ -19,13 +19,13 @@ def build_menu_structure(rows: list) -> dict[str, dict]:
         )
 
         repas_list = day_menu["repas"]
-        if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
+        if not repas_list or row.get("tpr") != repas_list[-1]["type"]:
             repas_list.append(
                 {"code": row.get("rpid"), "type": row.get("tpr"), "categories": []}
             )
 
         categories_list = repas_list[-1]["categories"]
-        if not categories_list or row.get("tpcat") not in categories_list[-1]["libelle"]:
+        if not categories_list or row.get("tpcat") != categories_list[-1]["libelle"]:
             categories_list.append(
                 {
                     "code": row.get("catid"),

@@ -74,7 +74,7 @@ class Plats:
                 timeout=5,
             )
 
-    async def getTop(self, limit: int = 100, type_restaurant: int = 1) -> dict:
+    async def getTop(self, limit: int = 100, type_restaurant: int = 1) -> list:
         """
         Récupère les plats les plus populaires.
 

@@ -16,6 +16,15 @@ def _serialize_response(response: HTTPResponse) -> bytes:
 
     Format binaire : ``[status: 2o][longueur content_type: 2o][content_type][body]``
 
+    .. note::
+        Seuls le statut, le ``Content-Type`` et le corps sont sérialisés.
+        Les en-têtes ajoutés par les middlewares (``X-Request-ID``, ``X-Processing-Time``, etc.)
+        et par le décorateur ``@ratelimit`` sont recalculés à chaque requête et n'ont pas besoin
+        d'être mis en cache. Les en-têtes ``X-Cache``, ``Cache-Control`` et ``X-Cache-TTL``
+        sont injectés par le décorateur ``@cache`` lui-même après la reconstruction.
+        Les routes ne doivent pas ajouter d'en-têtes métier sur leurs réponses si
+        celles-ci sont destinées à être mises en cache.
+
     :param response: La réponse HTTP à sérialiser.
     :type response: HTTPResponse
     :return: La réponse sérialisée en bytes.
@@ -150,7 +159,12 @@ class Cache:
         cached_data = await self.redis.get(cache_key)
 
         if cached_data:
-            return _deserialize_response(cached_data)
+            try:
+                return _deserialize_response(cached_data)
+            except Exception:
+                # Données corrompues ou entrée au format pickle (ancien format) —
+                # supprimer la clé et traiter comme un cache MISS.
+                await self.redis.delete(cache_key)
 
         return None
 
