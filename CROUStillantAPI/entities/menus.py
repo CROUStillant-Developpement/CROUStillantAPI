@@ -66,6 +66,12 @@ class Menus:
 
             return await connection.fetch(
                 """
+                    WITH LatestMenu AS (
+                        SELECT MAX(MID) AS MID
+                        FROM PUBLIC.MENU
+                        WHERE RID = $1 AND DATE = $2
+                    )
+
                     SELECT
                         M.MID,
                         M.DATE,
@@ -78,18 +84,11 @@ class Menus:
                         P.LIBELLE AS PLAT,
                         CO.ORDRE AS PLAT_ORDRE
                     FROM PUBLIC.MENU M
-                    JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
+                    JOIN LatestMenu LM ON M.MID = LM.MID
                     JOIN PUBLIC.REPAS RP ON M.MID = RP.MID
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
                     LEFT JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
                     LEFT JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
-                    WHERE R.RID = $1
-                    AND M.DATE = $2
-                    AND M.MID = (
-                        SELECT MAX(M2.MID)
-                        FROM PUBLIC.MENU M2
-                        WHERE M2.RID = R.RID AND M2.DATE = $2
-                    )
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,

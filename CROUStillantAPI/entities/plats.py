@@ -17,7 +17,8 @@ class Plats:
             return await connection.fetch(
                 """
                     SELECT
-                        *
+                        platid,
+                        libelle
                     FROM
                         plat
                 """,
@@ -37,7 +38,8 @@ class Plats:
             return await connection.fetch(
                 """
                     SELECT
-                        *
+                        platid,
+                        libelle
                     FROM
                         plat
                     ORDER BY
@@ -61,7 +63,8 @@ class Plats:
             return await connection.fetchrow(
                 """
                     SELECT
-                        *
+                        platid,
+                        libelle
                     FROM
                         plat
                     WHERE

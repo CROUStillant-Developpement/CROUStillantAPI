@@ -20,7 +20,8 @@ class Taches:
                         id
                     FROM
                         tache
-                """
+                """,
+                timeout=5,
             )
 
     async def getLast(self, limit: int, offset: int) -> list:
@@ -47,6 +48,7 @@ class Taches:
                 """,
                 limit,
                 offset,
+                timeout=5,
             )
 
     async def getOne(self, id: int) -> dict:
@@ -69,6 +71,7 @@ class Taches:
                         id = $1
                 """,
                 id,
+                timeout=5,
             )
 
     async def getRestaurants(self, id: int) -> list:
@@ -91,4 +94,5 @@ class Taches:
                         idtache = $1
                 """,
                 id,
+                timeout=5,
             )

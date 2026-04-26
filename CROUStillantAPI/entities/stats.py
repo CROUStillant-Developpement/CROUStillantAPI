@@ -17,5 +17,6 @@ class Stats:
             return await connection.fetchrow(
                 """
                     SELECT * FROM v_stats;
-                """
+                """,
+                timeout=10,
             )
