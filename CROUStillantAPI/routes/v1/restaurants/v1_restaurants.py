@@ -8,6 +8,7 @@ from ....models.responses import (
     Restaurants,
     Restaurant,
     RestaurantsStatus,
+    RestaurantsStatusMinimal,
     TypesRestaurants,
     RestaurantInfo,
     Menus,
@@ -217,6 +218,54 @@ async def getRestaurantsStatus(request: Request) -> JSONResponse:
                 },
                 "ouvert": restaurant.get("opened"),
                 "actif": restaurant.get("actif"),
+            }
+            for restaurant in restaurants
+        ],
+        status=200,
+    ).generate()
+
+
+# /restaurants/status/minimal
+@bp.route("/status/minimal", methods=["GET"])
+@openapi.definition(
+    summary="Statut d'ouverture minimal des restaurants",
+    description="Liste des restaurants actifs avec leur statut d'ouverture (champs minimaux : code, actif, ouvert).",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": RestaurantsStatusMinimal},
+    description="Liste des statuts minimaux des restaurants.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="ouvert",
+    description="Filtre les restaurants par statut d'ouverture",
+    required=False,
+    schema=bool,
+    location="query",
+    example=True,
+)
+@ratelimit()
+@cache()
+async def getRestaurantsStatusMinimal(request: Request) -> JSONResponse:
+    ouvert_param = request.args.get("ouvert", None)
+    restaurants = await request.app.ctx.entities.restaurants.getStatus(
+        ouvert=getBoolFromString(ouvert_param) if ouvert_param is not None else None,
+    )
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": restaurant.get("rid"),
+                "actif": restaurant.get("actif"),
+                "ouvert": restaurant.get("opened"),
             }
             for restaurant in restaurants
         ],
