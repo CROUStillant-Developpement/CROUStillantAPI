@@ -1,6 +1,4 @@
-import os
 import logging
-import logging.handlers
 
 
 class Logger:
@@ -14,23 +12,12 @@ class Logger:
         """
         self.file = file
 
-        path = os.path.join(f"{os.getcwd()}", "logs")
-        if not os.path.exists(path):
-            os.makedirs(path)
-
         self.logger = logging.getLogger(f"CROUStillant - {self.file}")
         self.logger.setLevel(logging.DEBUG)
 
-        handler = logging.handlers.RotatingFileHandler(
-            filename=f"{path}/{self.file}.log",
-            encoding="utf-8",
-            maxBytes=32 * 1024 * 1024,
-            backupCount=5,
-        )
-        dt_fmt = "%Y-%m-%d %H:%M:%S"
-        formatter = logging.Formatter(
-            "[{asctime}] [{levelname:<8}] {name}: {message}", dt_fmt, style="{"
-        )
+        handler = logging.StreamHandler()
+        dt_fmt = '%Y-%m-%d %H:%M:%S'
+        formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
