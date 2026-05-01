@@ -9,7 +9,6 @@ from ....utils.opening import Opening
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
-from json import loads
 
 
 bp = Blueprint(name="Regions", url_prefix="/regions", version=1, version_prefix="v")
@@ -218,21 +217,15 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
                 "adresse": restaurant.get("adresse"),
                 "latitude": restaurant.get("latitude"),
                 "longitude": restaurant.get("longitude"),
-                "horaires": loads(restaurant.get("horaires"))
-                if restaurant.get("horaires", None)
-                else None,
+                "horaires": restaurant.get("horaires"),
                 "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
                 "image_url": restaurant.get("image_url"),
                 "email": restaurant.get("email"),
                 "telephone": restaurant.get("telephone"),
                 "ispmr": restaurant.get("ispmr"),
                 "zone": restaurant.get("zone"),
-                "paiement": loads(restaurant.get("paiement"))
-                if restaurant.get("paiement", None)
-                else None,
-                "acces": loads(restaurant.get("acces"))
-                if restaurant.get("acces", None)
-                else None,
+                "paiement": restaurant.get("paiement"),
+                "acces": restaurant.get("acces"),
                 "ouvert": restaurant.get("opened"),
             }
             for restaurant in restaurants

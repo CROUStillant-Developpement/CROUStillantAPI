@@ -19,5 +19,6 @@ class TypesRestaurants:
                     SELECT *
                     FROM
                         type_restaurant
-                """
+                """,
+                timeout=5,
             )

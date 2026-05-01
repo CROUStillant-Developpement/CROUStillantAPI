@@ -20,7 +20,8 @@ class Regions:
                         *
                     FROM
                         region
-                """
+                """,
+                timeout=5,
             )
 
     async def getOne(self, id: int) -> dict:
@@ -43,6 +44,7 @@ class Regions:
                         idreg = $1
                 """,
                 id,
+                timeout=5,
             )
 
     async def getRestaurants(self, id: int) -> list[dict]:
@@ -67,9 +69,9 @@ class Regions:
                         ADRESSE,
                         LATITUDE,
                         LONGITUDE,
-                        HORAIRES,
+                        HORAIRES::jsonb AS HORAIRES,
                         JOURS_OUVERT,
-                        CASE 
+                        CASE
                             WHEN IMAGE_URL IS NULL THEN NULL
                             ELSE CONCAT('https://api.croustillant.menu/v1/restaurants/', RID, '/preview')
                         END AS IMAGE_URL,
@@ -77,8 +79,8 @@ class Regions:
                         TELEPHONE,
                         ISPMR,
                         ZONE,
-                        PAIEMENT,
-                        ACCES,
+                        (PAIEMENT::jsonb - 'Carte bancaire') AS PAIEMENT,
+                        ACCES::jsonb AS ACCES,
                         OPENED
                     FROM
                         restaurant
@@ -86,6 +88,8 @@ class Regions:
                     JOIN type_restaurant TPR ON restaurant.idtpr = TPR.idtpr
                     WHERE
                         restaurant.idreg = $1
+                        AND ACTIF = TRUE
                 """,
                 id,
+                timeout=10,
             )
