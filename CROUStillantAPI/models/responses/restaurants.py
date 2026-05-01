@@ -1,5 +1,5 @@
 from sanic_ext import openapi
-from ..components import RestaurantComponent, RestaurantStatusComponent
+from ..components import RestaurantComponent, RestaurantStatusComponent, RestaurantStatusMinimalComponent
 
 
 class Restaurants:
@@ -48,6 +48,17 @@ class RestaurantsStatus:
     data = openapi.Array(
         items=RestaurantStatusComponent,
         description="Liste des statuts des restaurants",
+    )
+
+
+class RestaurantsStatusMinimal:
+    success = openapi.Boolean(
+        description="Statut de la requête",
+        example=True,
+    )
+    data = openapi.Array(
+        items=RestaurantStatusMinimalComponent,
+        description="Liste des statuts minimaux des restaurants",
     )
 
 

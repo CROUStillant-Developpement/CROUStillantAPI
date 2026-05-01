@@ -11,3 +11,10 @@ class RestaurantStatus:
     type_restaurant = TypeRestaurant
     ouvert = openapi.Boolean(description="Le restaurant est-il ouvert ?", example=True)
     actif = openapi.Boolean(description="Le restaurant est-il actif ?", example=True)
+
+
+@openapi.component
+class RestaurantStatusMinimal:
+    code = openapi.Integer(description="Identifiant du restaurant", example=1)
+    actif = openapi.Boolean(description="Le restaurant est-il actif ?", example=True)
+    ouvert = openapi.Boolean(description="Le restaurant est-il ouvert ?", example=True)

@@ -1,6 +1,6 @@
 from .region import Region as RegionComponent
 from .restaurant import Restaurant as RestaurantComponent
-from .restaurant_status import RestaurantStatus as RestaurantStatusComponent
+from .restaurant_status import RestaurantStatus as RestaurantStatusComponent, RestaurantStatusMinimal as RestaurantStatusMinimalComponent
 from .type_restaurant import TypeRestaurant as TypeRestaurantComponent
 from .plat import Plat as PlatComponent, PlatWithTotal as PlatComponentWithTotal
 from .menu import Menu as MenuComponent, Date as DateComponent
@@ -15,6 +15,7 @@ __all__ = [
     "RegionComponent",
     "RestaurantComponent",
     "RestaurantStatusComponent",
+    "RestaurantStatusMinimalComponent",
     "TypeRestaurantComponent",
     "PlatComponent",
     "PlatComponentWithTotal",
