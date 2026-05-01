@@ -173,5 +173,7 @@ class ErrorWebhook:
             await asyncio.sleep(self._flush_interval)
             try:
                 await self.flush()
+            except asyncio.CancelledError:
+                raise
             except Exception as exc:
                 self._logger.error(f"[ErrorWebhook] Erreur lors du flush : {exc}")
