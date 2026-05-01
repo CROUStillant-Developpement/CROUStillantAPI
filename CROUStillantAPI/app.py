@@ -8,6 +8,7 @@ from .components.blueprint import BlueprintLoader
 from .components.errors import ErrorHandler
 from .entities.entities import Entities
 from .utils.logger import Logger
+from .utils.webhook import ErrorWebhook
 from dotenv import load_dotenv
 from os import environ
 from textwrap import dedent
@@ -130,6 +131,13 @@ ErrorHandler(app)
 async def setup_app(app: Sanic):
     app.ctx.session = ClientSession()
 
+    webhook_url = environ.get("ERROR_WEBHOOK_URL")
+    if webhook_url:
+        app.ctx.error_webhook = ErrorWebhook(app.ctx.session, webhook_url, app.ctx.logs)
+        app.ctx.error_webhook_task = app.add_task(
+            app.ctx.error_webhook.run_background_flush(), name="error_webhook_flush"
+        )
+
     # Chargement de la base de données
     try:
         app.ctx.pool = await create_pool(
@@ -164,6 +172,12 @@ async def setup_app(app: Sanic):
 
 @app.listener("after_server_stop")
 async def close_app(app: Sanic):
+    if hasattr(app.ctx, "error_webhook"):
+        task = getattr(app.ctx, "error_webhook_task", None)
+        if task and not task.done():
+            task.cancel()
+        await app.ctx.error_webhook.flush()
+
     await app.ctx.pool.close()
     await app.ctx.session.close()
 

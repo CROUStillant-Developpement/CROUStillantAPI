@@ -41,12 +41,13 @@ class Ratelimiter:
         self.cache_buckets = {}
         self.cache_refresh = 300
 
-    async def check_ratelimit(self, key: str, bucket: Bucket) -> dict:
+    async def check_ratelimit(self, key: str, bucket: Bucket, error: bool = False) -> dict:
         """
         Vérifie si une requête est autorisée
 
         :param key: Clé de la requête
         :param bucket: Bucket de rate limiting
+        :param error: Indique si une erreur est survenue lors de la récupération du bucket (ex: DB indisponible)
         :return: Headers de la requête
         """
         await self.cleanup()
@@ -82,6 +83,10 @@ class Ratelimiter:
             "X-RateLimit-Bucket": bucket.ident,
             "X-RateLimit-Used": bucket.limit - bucket_data["remaining"],
         }
+
+        if error:
+            headers["X-RateLimit-Error"] = "true"
+            headers["X-RateLimit-Error-Message"] = "Ratelimit bucket check failed, default bucket applied."
 
         if bucket_data["remaining"] < 0:
             headers.update({"Retry-After": bucket_data["reset"] - current_time})
@@ -211,17 +216,27 @@ def ratelimit(default_bucket: Bucket = Ratelimiter.DEFAULT) -> callable:
 
             ratelimiter: Ratelimiter = request.app.ctx.ratelimiter
 
-            pool: Pool = request.app.ctx.pool
-            if pool:
-                bucket: Bucket = await ratelimiter.getBucket(pool, key)
+            pool: Pool = getattr(request.app.ctx, "pool", None)
+            error = False
 
-                # Dans certains cas comme pour les images CDN, on veut appliquer la limite la moins restrictive
-                if bucket.limit < default_bucket.limit:
+            try:
+                if pool:
+                    bucket: Bucket = await ratelimiter.getBucket(pool, key)
+
+                    # Dans certains cas comme pour les images CDN, on veut appliquer la limite la moins restrictive
+                    if bucket.limit < default_bucket.limit:
+                        bucket = default_bucket
+                else:
                     bucket = default_bucket
-            else:
+            except ForbiddenException:
+                raise
+            except Exception:
+                # Si la récupération du bucket échoue (ex: DB indisponible), on replie sur le bucket par défaut
+                # afin que les headers X-RateLimit soient toujours présents dans la réponse
                 bucket = default_bucket
+                error = True
 
-            headers = await ratelimiter.check_ratelimit(key, bucket)
+            headers = await ratelimiter.check_ratelimit(key, bucket, error=error)
 
             resp: HTTPResponse = await func(request, *args, **kwargs)
             resp.headers.update(headers)

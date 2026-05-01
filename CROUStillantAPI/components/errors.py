@@ -5,6 +5,7 @@ from ..exceptions.forbidden import ForbiddenException
 from sanic import Sanic
 from sanic.exceptions import NotFound, SanicException
 from asyncpg.exceptions import ConnectionDoesNotExistError
+import traceback
 
 
 class ErrorHandler:
@@ -63,7 +64,13 @@ class ErrorHandler:
         @app.exception(Exception, SanicException)
         @ratelimit()
         async def handle_exception(request, exception):
-            self.app.ctx.logs.error(f"Erreur: {exception}")
+            tb = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+            self.app.ctx.logs.error(
+                f"Erreur 500 [{type(exception).__name__}] {request.method} {request.path}\n{tb}"
+            )
+
+            if hasattr(self.app.ctx, "error_webhook"):
+                await self.app.ctx.error_webhook.collect(request, exception)
 
             return JSON(
                 request=request,
