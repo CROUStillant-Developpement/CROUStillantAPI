@@ -228,11 +228,12 @@ def ratelimit(default_bucket: Bucket = Ratelimiter.DEFAULT) -> callable:
                         bucket = default_bucket
                 else:
                     bucket = default_bucket
+            except ForbiddenException:
+                raise
             except Exception:
                 # Si la récupération du bucket échoue (ex: DB indisponible), on replie sur le bucket par défaut
                 # afin que les headers X-RateLimit soient toujours présents dans la réponse
                 bucket = default_bucket
-                
                 error = True
 
             headers = await ratelimiter.check_ratelimit(key, bucket, error=error)

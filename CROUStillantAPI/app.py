@@ -133,8 +133,10 @@ async def setup_app(app: Sanic):
 
     webhook_url = environ.get("ERROR_WEBHOOK_URL")
     if webhook_url:
-        app.ctx.error_webhook = ErrorWebhook(app.ctx.session, webhook_url)
-        app.add_task(app.ctx.error_webhook.run_background_flush(), name="error_webhook_flush")
+        app.ctx.error_webhook = ErrorWebhook(app.ctx.session, webhook_url, app.ctx.logs)
+        app.ctx.error_webhook_task = app.add_task(
+            app.ctx.error_webhook.run_background_flush(), name="error_webhook_flush"
+        )
 
     # Chargement de la base de données
     try:
@@ -170,6 +172,12 @@ async def setup_app(app: Sanic):
 
 @app.listener("after_server_stop")
 async def close_app(app: Sanic):
+    if hasattr(app.ctx, "error_webhook"):
+        task = getattr(app.ctx, "error_webhook_task", None)
+        if task and not task.done():
+            task.cancel()
+        await app.ctx.error_webhook.flush()
+
     await app.ctx.pool.close()
     await app.ctx.session.close()
 
