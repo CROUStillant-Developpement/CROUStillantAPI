@@ -28,6 +28,7 @@ from sanic.response import HTTPResponse, JSONResponse, raw
 from sanic import Blueprint, Request
 from sanic.log import logger
 from sanic_ext import openapi
+from json import loads
 from datetime import datetime
 from pytz import timezone
 from asyncio import get_event_loop
@@ -150,15 +151,21 @@ async def getRestaurants(request: Request) -> JSONResponse:
                 "adresse": restaurant.get("adresse"),
                 "latitude": restaurant.get("latitude"),
                 "longitude": restaurant.get("longitude"),
-                "horaires": restaurant.get("horaires"),
+                "horaires": loads(restaurant.get("horaires"))
+                if restaurant.get("horaires", None)
+                else None,
                 "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
                 "image_url": restaurant.get("image_url"),
                 "email": restaurant.get("email"),
                 "telephone": restaurant.get("telephone"),
                 "ispmr": restaurant.get("ispmr"),
                 "zone": restaurant.get("zone"),
-                "paiement": restaurant.get("paiement"),
-                "acces": restaurant.get("acces"),
+                "paiement": loads(restaurant.get("paiement"))
+                if restaurant.get("paiement", None)
+                else None,
+                "acces": loads(restaurant.get("acces"))
+                if restaurant.get("acces", None)
+                else None,
                 "ouvert": restaurant.get("opened"),
                 "actif": restaurant.get("actif"),
             }
@@ -356,15 +363,21 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
             "adresse": restaurant.get("adresse"),
             "latitude": restaurant.get("latitude"),
             "longitude": restaurant.get("longitude"),
-            "horaires": restaurant.get("horaires"),
+            "horaires": loads(restaurant.get("horaires"))
+            if restaurant.get("horaires", None)
+            else None,
             "jours_ouvert": Opening(restaurant.get("jours_ouvert")).get(),
             "image_url": restaurant.get("image_url"),
             "email": restaurant.get("email"),
             "telephone": restaurant.get("telephone"),
             "ispmr": restaurant.get("ispmr"),
             "zone": restaurant.get("zone"),
-            "paiement": restaurant.get("paiement"),
-            "acces": restaurant.get("acces"),
+            "paiement": loads(restaurant.get("paiement"))
+            if restaurant.get("paiement", None)
+            else None,
+            "acces": loads(restaurant.get("acces"))
+            if restaurant.get("acces", None)
+            else None,
             "ouvert": restaurant.get("opened"),
             "actif": restaurant.get("actif"),
         },
@@ -448,10 +461,27 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
 
     preview = await request.app.ctx.entities.restaurants.getPreview(code)
 
+    parsed_restaurant = dict(restaurant)
+    if parsed_restaurant.get("horaires"):
+        try:
+            parsed_restaurant["horaires"] = loads(parsed_restaurant.get("horaires"))
+        except Exception:
+            parsed_restaurant["horaires"] = None
+    if parsed_restaurant.get("paiement"):
+        try:
+            parsed_restaurant["paiement"] = loads(parsed_restaurant.get("paiement"))
+        except Exception:
+            parsed_restaurant["paiement"] = None
+    if parsed_restaurant.get("acces"):
+        try:
+            parsed_restaurant["acces"] = loads(parsed_restaurant.get("acces"))
+        except Exception:
+            parsed_restaurant["acces"] = None
+
     template = jinja_env.get_template("iframe_info.html")
     html_content = template.render(
         request=request,
-        restaurant=restaurant,
+        restaurant=parsed_restaurant,
         preview=preview is not None
     )
 
