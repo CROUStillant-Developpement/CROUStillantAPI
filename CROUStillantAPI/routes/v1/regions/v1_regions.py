@@ -32,7 +32,7 @@ bp = Blueprint(name="Regions", url_prefix="/regions", version=1, version_prefix=
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRegions(request: Request) -> JSONResponse:
     """
     Récupère les régions
@@ -103,7 +103,7 @@ async def getRegions(request: Request) -> JSONResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRegion(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'une région.
@@ -180,7 +180,7 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
     """
     Récupère les restaurants

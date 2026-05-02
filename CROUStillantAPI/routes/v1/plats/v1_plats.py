@@ -31,7 +31,7 @@ bp = Blueprint(name="Plats", url_prefix="/plats", version=1, version_prefix="v")
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getPlats(request: Request) -> JSONResponse:
     """
     Récupère les 100 derniers plats ajoutés à la base de données
@@ -101,7 +101,7 @@ async def getPlats(request: Request) -> JSONResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getPlat(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un plat.
@@ -145,7 +145,7 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getPlatTop(request: Request) -> JSONResponse:
     """
     Retourne le top 100 des plats.

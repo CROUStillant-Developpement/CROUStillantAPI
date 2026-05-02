@@ -110,7 +110,7 @@ jinja_env = Environment(
     example="Pau",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les restaurants
@@ -194,7 +194,7 @@ async def getRestaurants(request: Request) -> JSONResponse:
     example=True,
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurantsStatus(request: Request) -> JSONResponse:
     ouvert_param = request.args.get("ouvert", None)
     restaurants = await request.app.ctx.entities.restaurants.getStatus(
@@ -251,7 +251,7 @@ async def getRestaurantsStatus(request: Request) -> JSONResponse:
     example=True,
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurantsStatusMinimal(request: Request) -> JSONResponse:
     ouvert_param = request.args.get("ouvert", None)
     restaurants = await request.app.ctx.entities.restaurants.getStatus(
@@ -321,7 +321,7 @@ async def getRestaurantsStatusMinimal(request: Request) -> JSONResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurant(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'un restaurant.
@@ -508,7 +508,7 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     """
     Retourne le menu d'un restaurant.
@@ -648,7 +648,7 @@ async def getRestaurantTodayMenuIframe(request: Request, code: int) -> HTTPRespo
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     """
     Retourne les dates des prochains menus disponibles
@@ -725,7 +725,7 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse:
     """
     Retourne les dates des menus disponibles
@@ -820,7 +820,7 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getRestaurantMenuFromDate(
     request: Request, code: int, date: datetime
 ) -> JSONResponse:
@@ -1253,7 +1253,7 @@ async def getRestaurantMenuFromDateImage(
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getInformations(request: Request, code: int) -> JSONResponse:
     """
     Retourne les informations d'un restaurant.
@@ -1392,7 +1392,7 @@ async def getRestaurantPreview(request: Request, code: int) -> HTTPResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getTypesRestaurants(request: Request) -> JSONResponse:
     """
     Récupère les types des restaurants

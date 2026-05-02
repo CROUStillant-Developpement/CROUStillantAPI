@@ -57,7 +57,7 @@ async def getStatus(request: Request) -> JSONResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getStats(request: Request) -> JSONResponse:
     """
     Retourne les statistiques de l'API.
