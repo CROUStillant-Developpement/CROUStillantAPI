@@ -145,23 +145,21 @@ class Analytics:
                 self._schedule_flush()
 
         @app.after_server_start
-        async def start_flush_task(app, loop):
+        async def start_flush_task(app):
             """
             Démarre la tâche de flush périodique après le démarrage du serveur
 
             :param app: Instance de l'application Sanic
-            :param loop: Boucle d'événements asyncio
             """
             self._pool = app.ctx.pool
             app.add_task(self._flush_loop(), name="analytics_flush")
 
         @app.before_server_stop
-        async def drain_queue(app, loop):
+        async def drain_queue(app):
             """
             Vide la file d'attente avant l'arrêt du serveur pour éviter toute perte de données
 
             :param app: Instance de l'application Sanic
-            :param loop: Boucle d'événements asyncio
             """
             if self._flush_task is not None and not self._flush_task.done():
                 await self._flush_task

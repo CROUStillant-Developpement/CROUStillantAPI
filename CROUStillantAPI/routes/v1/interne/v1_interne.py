@@ -30,7 +30,7 @@ bp = Blueprint(name="Interne", url_prefix="/interne", version=1, version_prefix=
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getChangelog(request: Request) -> JSONResponse:
     """
     Retourne le changelog des services de CROUStillant.

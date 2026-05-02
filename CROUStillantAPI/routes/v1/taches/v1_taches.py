@@ -40,7 +40,7 @@ bp = Blueprint(name="Taches", url_prefix="/taches", version=1, version_prefix="v
     example=0,
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getTaches(request: Request) -> JSONResponse:
     """
     Récupère les 100 dernières tâches.
@@ -131,7 +131,7 @@ async def getTaches(request: Request) -> JSONResponse:
     )
 )
 @ratelimit()
-@cache()
+@cache(ttl=300)
 async def getTache(request: Request, code: int) -> JSONResponse:
     """
     Retourne les détails d'une tâche.

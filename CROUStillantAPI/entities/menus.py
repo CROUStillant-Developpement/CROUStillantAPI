@@ -89,7 +89,7 @@ class Menus:
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
                     LEFT JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
                     LEFT JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
-                    ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
+                    ORDER BY RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
                 date,
