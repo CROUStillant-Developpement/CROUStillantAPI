@@ -3,7 +3,7 @@ from .response import JSON
 from ..exceptions.ratelimit import RatelimitException
 from ..exceptions.forbidden import ForbiddenException
 from sanic import Sanic
-from sanic.exceptions import NotFound, SanicException
+from sanic.exceptions import NotFound, MethodNotAllowed, SanicException
 from asyncpg.exceptions import ConnectionDoesNotExistError
 import traceback
 
@@ -45,6 +45,16 @@ class ErrorHandler:
                 success=False,
                 message=exception.message,
                 status=exception.status_code,
+            ).generate()
+
+        @app.exception(MethodNotAllowed)
+        @ratelimit()
+        async def handle_method_not_allowed(request, exception):
+            return JSON(
+                request=request,
+                success=False,
+                message=f"La méthode {request.method} n'est pas autorisée pour cette route.",
+                status=405,
             ).generate()
 
         @app.exception(ConnectionDoesNotExistError, ConnectionRefusedError)
