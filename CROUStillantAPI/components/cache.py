@@ -6,6 +6,7 @@ import struct
 from sanic import Sanic, Request
 from sanic.response import HTTPResponse, JSONResponse
 from redis import Redis
+from redis.exceptions import ConnectionError as RedisConnectionError
 from dotenv import load_dotenv
 from os import environ
 
@@ -156,7 +157,10 @@ class Cache:
         else:
             cache_key = await self.get_cache_key(request)
 
-        cached_data = await self.redis.get(cache_key)
+        try:
+            cached_data = await self.redis.get(cache_key)
+        except RedisConnectionError:
+            return None
 
         if cached_data:
             try:
@@ -164,7 +168,10 @@ class Cache:
             except Exception:
                 # Données corrompues ou entrée au format pickle (ancien format) —
                 # supprimer la clé et traiter comme un cache MISS.
-                await self.redis.delete(cache_key)
+                try:
+                    await self.redis.delete(cache_key)
+                except RedisConnectionError:
+                    pass
 
         return None
 
@@ -192,7 +199,10 @@ class Cache:
                 cache_key = await self.get_cache_key(request)
 
             cached_data = _serialize_response(response)
-            await self.redis.setex(cache_key, ttl, cached_data)
+            try:
+                await self.redis.setex(cache_key, ttl, cached_data)
+            except RedisConnectionError:
+                pass
 
 
 def cache(ttl: int = 60, key: str = None):
