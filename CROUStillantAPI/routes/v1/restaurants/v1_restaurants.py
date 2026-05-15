@@ -21,7 +21,7 @@ from ....utils.opening import Opening
 from ....utils.image import saveImageToBuffer
 from ....utils.format import getBoolFromString, getIntFromString
 from ....utils.colors import parse_custom_colours
-from ....utils.iframes import restaurantMenuIframe
+from ....utils.iframes import restaurantMenuIframe, restaurantCustomIframe
 from ....utils.menu import build_menu_structure
 from ....exceptions.error import ServerErrorException
 from sanic.response import HTTPResponse, JSONResponse, raw
@@ -40,8 +40,8 @@ bp = Blueprint(
 )
 
 jinja_env = Environment(
-    loader=FileSystemLoader("CROUStillantAPI/templates"), 
-    autoescape=select_autoescape(["html", "htm", "xml"])
+    loader=FileSystemLoader("CROUStillantAPI/templates"),
+    autoescape=select_autoescape(["html", "htm", "xml"]),
 )
 
 
@@ -480,15 +480,249 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
 
     template = jinja_env.get_template("iframe_info.html")
     html_content = template.render(
-        request=request,
-        restaurant=parsed_restaurant,
-        preview=preview is not None
+        request=request, restaurant=parsed_restaurant, preview=preview is not None
     )
 
-    return raw(
-        body=html_content,
-        content_type="text/html; charset=utf-8",
-        status=200
+    return raw(body=html_content, content_type="text/html; charset=utf-8", status=200)
+
+
+# /restaurants/{code}/iframe/custom
+@bp.route("/<code>/iframe/custom", methods=["GET"])
+@openapi.definition(
+    summary="Widget Iframe personnalisé d'un restaurant",
+    description="Retourne un widget HTML intégrable entièrement personnalisable via la query string (blocs, thème, couleur, police, repas, date, taille).",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"text/html": str},
+    description="Widget Iframe HTML personnalisé",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="Paramètre invalide : ID non entier, thème inconnu, couleur mal formée, police non supportée, langue non supportée, bloc ou repas invalide, hauteur hors plage, date mal formatée.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Le restaurant n'existe pas.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1,
+)
+@openapi.parameter(
+    name="theme",
+    description="Thème (light, dark)",
+    required=False,
+    schema=str,
+    location="query",
+    example="light",
+)
+@openapi.parameter(
+    name="date",
+    description="Date du menu (DD-MM-YYYY, défaut : aujourd'hui)",
+    required=False,
+    schema=str,
+    location="query",
+    example="15-05-2026",
+)
+@openapi.parameter(
+    name="blocks",
+    description="Blocs à afficher, dans l'ordre souhaité (header,header_text,region,status,address,menu,hours,contact,payment,access,link)",
+    required=False,
+    schema=str,
+    location="query",
+    example="header,header_text,status,menu,hours",
+)
+@openapi.parameter(
+    name="meals",
+    description="Repas à afficher dans le bloc menu (matin,midi,soir)",
+    required=False,
+    schema=str,
+    location="query",
+    example="midi,soir",
+)
+@openapi.parameter(
+    name="color",
+    description="Couleur d'accent hexadécimale sans # (ex: ef4444)",
+    required=False,
+    schema=str,
+    location="query",
+    example="ef4444",
+)
+@openapi.parameter(
+    name="font",
+    description="Police (Inter, Roboto, Outfit, Nunito, system)",
+    required=False,
+    schema=str,
+    location="query",
+    example="Inter",
+)
+@openapi.parameter(
+    name="height",
+    description="Hauteur fixe du widget en px (200-1200, défaut: 600)",
+    required=False,
+    schema=int,
+    location="query",
+    example=600,
+)
+@openapi.parameter(
+    name="lang",
+    description="Langue (fr, en)",
+    required=False,
+    schema=str,
+    location="query",
+    example="fr",
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={"code": Rules.integer},
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="theme",
+        description="Thème du widget (light ou dark)",
+        methods={"theme": Rules.iframe_theme},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="date",
+        description="Date du menu (format DD-MM-YYYY)",
+        methods={"date": Rules.date},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="blocks",
+        description="Blocs à afficher séparés par des virgules",
+        methods={"blocks": Rules.iframe_blocks},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="meals",
+        description="Repas à afficher séparés par des virgules",
+        methods={"meals": Rules.iframe_meals},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="color",
+        description="Couleur d'accent hexadécimale sans # (6 caractères)",
+        methods={"color": Rules.hex_color},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="font",
+        description="Police de caractères du widget",
+        methods={"font": Rules.iframe_font},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="height",
+        description="Hauteur du widget en pixels (200-1200)",
+        methods={"height": Rules.iframe_height},
+        call=int,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@inputs(
+    Argument(
+        name="lang",
+        description="Langue du widget (fr ou en)",
+        methods={"lang": Rules.iframe_lang},
+        call=str,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@ratelimit()
+@cache(ttl=60)
+async def getRestaurantCustomIframe(
+    request: Request,
+    code: int,
+    theme: str | None = None,
+    date: str | None = None,
+    blocks: str | None = None,
+    meals: str | None = None,
+    color: str | None = None,
+    font: str | None = None,
+    height: int | None = None,
+    lang: str | None = None,
+) -> HTTPResponse:
+    """
+    Retourne un widget Iframe personnalisé d'un restaurant.
+
+    :param code: ID du restaurant
+    :return: Le widget Iframe HTML personnalisé
+    """
+    return await restaurantCustomIframe(
+        request, code, jinja_env,
+        theme=theme,
+        date=date,
+        blocks=blocks,
+        meals=meals,
+        color=color,
+        font=font,
+        height=height,
+        lang=lang,
     )
 
 
@@ -559,7 +793,9 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
         ).generate()
 
     menu_per_day = build_menu_structure(menu)
-    return JSON(request=request, success=True, data=list(menu_per_day.values()), status=200).generate()
+    return JSON(
+        request=request, success=True, data=list(menu_per_day.values()), status=200
+    ).generate()
 
 
 # /restaurants/{code}/menu/iframe
@@ -955,7 +1191,9 @@ async def getRestaurantMenuFromDate(
 )
 @ratelimit()
 @cache(ttl=60 * 5)
-async def getRestaurantMenuIframe(request: Request, code: int, date: datetime) -> HTTPResponse:
+async def getRestaurantMenuIframe(
+    request: Request, code: int, date: datetime
+) -> HTTPResponse:
     """
     Retourne un widget Iframe du menu d'un restaurant.
 
