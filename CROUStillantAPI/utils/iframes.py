@@ -61,7 +61,7 @@ async def restaurantMenuIframe(
             )
             repas_list = day_menu["repas"]
 
-            if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
+            if not repas_list or row.get("tpr") != repas_list[-1]["type"]:
                 repas_list.append(
                     {"code": row.get("rpid"), "type": row.get("tpr"), "categories": []}
                 )
@@ -71,7 +71,7 @@ async def restaurantMenuIframe(
 
             if (
                 not categories_list
-                or row.get("tpcat") not in categories_list[-1]["libelle"]
+                or row.get("tpcat") != categories_list[-1]["libelle"]
             ):
                 categories_list.append(
                     {
@@ -143,7 +143,9 @@ async def restaurantCustomIframe(
 
     dt_date = (
         datetime.strptime(date, "%d-%m-%Y")
-        if date else datetime.now(tz=timezone("Europe/Paris"))
+        if date else datetime.now(tz=timezone("Europe/Paris")).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
     )
 
     height = height if height is not None else _DEFAULT_HEIGHT
@@ -167,7 +169,10 @@ async def restaurantCustomIframe(
             except Exception:
                 parsed_restaurant[field] = None
 
-    preview = await request.app.ctx.entities.restaurants.getPreview(code)
+    preview = (
+        await request.app.ctx.entities.restaurants.getPreview(code)
+        if "header" in blocks_list else None
+    )
 
     menu_data = None
     if "menu" in blocks_list:
@@ -183,7 +188,7 @@ async def restaurantCustomIframe(
                 )
                 repas_list = day_menu["repas"]
 
-                if not repas_list or row.get("tpr") not in repas_list[-1]["type"]:
+                if not repas_list or row.get("tpr") != repas_list[-1]["type"]:
                     repas_list.append(
                         {
                             "code": row.get("rpid"),
@@ -197,7 +202,7 @@ async def restaurantCustomIframe(
 
                 if (
                     not categories_list
-                    or row.get("tpcat") not in categories_list[-1]["libelle"]
+                    or row.get("tpcat") != categories_list[-1]["libelle"]
                 ):
                     categories_list.append(
                         {

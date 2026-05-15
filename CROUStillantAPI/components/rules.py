@@ -74,14 +74,14 @@ class Rules:
         """
         Le thème doit être 'light' ou 'dark'.
         """
-        return arg.lower() in ("light", "dark")
+        return arg in ("light", "dark")
 
     @staticmethod
     def iframe_lang(arg: str) -> bool:
         """
         La langue doit être 'fr' ou 'en'.
         """
-        return arg.lower() in ("fr", "en")
+        return arg in ("fr", "en")
 
     @staticmethod
     def iframe_font(arg: str) -> bool:

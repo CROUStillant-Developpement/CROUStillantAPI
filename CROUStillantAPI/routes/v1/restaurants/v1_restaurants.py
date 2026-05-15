@@ -539,11 +539,11 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
 )
 @openapi.parameter(
     name="blocks",
-    description="Blocs à afficher, dans l'ordre souhaité (header,status,menu,hours,contact,payment,access)",
+    description="Blocs à afficher, dans l'ordre souhaité (header,header_text,region,status,address,menu,hours,contact,payment,access,link)",
     required=False,
     schema=str,
     location="query",
-    example="header,status,menu,hours",
+    example="header,header_text,status,menu,hours",
 )
 @openapi.parameter(
     name="meals",
@@ -571,7 +571,7 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
 )
 @openapi.parameter(
     name="height",
-    description="Hauteur max du widget en px (200-1200, défaut: 600)",
+    description="Hauteur fixe du widget en px (200-1200, défaut: 600)",
     required=False,
     schema=int,
     location="query",
