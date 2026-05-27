@@ -1,5 +1,4 @@
 import traceback
-import asyncio
 
 from .ratelimit import ratelimit
 from .response import JSON
@@ -73,7 +72,7 @@ class ErrorHandler:
                 status=503,
             ).generate()
 
-        @app.exception(TimeoutError, asyncio.TimeoutError)
+        @app.exception(TimeoutError)
         @ratelimit()
         async def handle_timeout_error(request, exception):
             self.app.ctx.logs.warning(
