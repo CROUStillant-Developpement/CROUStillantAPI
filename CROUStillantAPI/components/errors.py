@@ -1,3 +1,6 @@
+import traceback
+import asyncio
+
 from .ratelimit import ratelimit
 from .response import JSON
 from ..exceptions.ratelimit import RatelimitException
@@ -5,7 +8,6 @@ from ..exceptions.forbidden import ForbiddenException
 from sanic import Sanic
 from sanic.exceptions import NotFound, MethodNotAllowed, SanicException
 from asyncpg.exceptions import ConnectionDoesNotExistError
-import traceback
 
 
 class ErrorHandler:
@@ -68,6 +70,20 @@ class ErrorHandler:
                 request=request,
                 success=False,
                 message="Le service est temporairement indisponible en raison de problèmes de connexion à la base de données. Veuillez réessayer plus tard.",
+                status=503,
+            ).generate()
+
+        @app.exception(TimeoutError, asyncio.TimeoutError)
+        @ratelimit()
+        async def handle_timeout_error(request, exception):
+            self.app.ctx.logs.warning(
+                f"Timeout base de données [{type(exception).__name__}] {request.method} {request.path}"
+            )
+
+            return JSON(
+                request=request,
+                success=False,
+                message="Le service est temporairement indisponible. Veuillez réessayer dans quelques instants.",
                 status=503,
             ).generate()
 

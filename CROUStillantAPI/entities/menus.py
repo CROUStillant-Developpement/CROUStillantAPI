@@ -1,5 +1,35 @@
 from asyncpg import Pool, Connection
 from datetime import datetime
+import asyncio
+
+
+async def _fetch(connection: Connection, query: str, *args, timeout: int, retries: int = 1):
+    """
+    Effectue une requête avec un timeout et des tentatives de retry en cas de timeout.
+    
+    :param connection: La connexion à la base de données
+    :type connection: Connection
+    :param query: La requête SQL à exécuter
+    :type query: str
+    :param args: Les arguments de la requête
+    :type args: list
+    :param timeout: Le temps maximum en secondes pour attendre la réponse de la base de données
+    :type timeout: int
+    :param retries: Le nombre de tentatives de retry en cas de timeout
+    :type retries: int
+    :return: Le résultat de la requête
+    :rtype: list
+    :raises TimeoutError: Si la requête dépasse le temps imparti après les tentatives de retry
+    """
+
+    for attempt in range(retries + 1):
+        try:
+            return await connection.fetch(query, *args, timeout=timeout)
+        except TimeoutError:
+            if attempt < retries:
+                await asyncio.sleep(0.5)
+                continue
+            raise
 
 
 class Menus:
@@ -17,7 +47,8 @@ class Menus:
         async with self.pool.acquire() as connection:
             connection: Connection
 
-            return await connection.fetch(
+            return await _fetch(
+                connection,
                 """
                     WITH LatestMenus AS (
                         SELECT DISTINCT ON (M.DATE)
@@ -50,7 +81,7 @@ class Menus:
                 """,
                 id,
                 date,
-                timeout=10,
+                timeout=8,
             )
 
     async def getFromDate(self, id: int, date: datetime) -> dict:
@@ -64,7 +95,8 @@ class Menus:
         async with self.pool.acquire() as connection:
             connection: Connection
 
-            return await connection.fetch(
+            return await _fetch(
+                connection,
                 """
                     WITH LatestMenu AS (
                         SELECT MAX(MID) AS MID
@@ -93,7 +125,7 @@ class Menus:
                 """,
                 id,
                 date,
-                timeout=10,
+                timeout=8,
             )
 
     async def getDates(self, id: int) -> dict:
@@ -106,7 +138,8 @@ class Menus:
         async with self.pool.acquire() as connection:
             connection: Connection
 
-            return await connection.fetch(
+            return await _fetch(
+                connection,
                 """
                     SELECT DISTINCT ON (M.DATE)
                         M.MID,
@@ -131,7 +164,8 @@ class Menus:
         async with self.pool.acquire() as connection:
             connection: Connection
 
-            return await connection.fetch(
+            return await _fetch(
+                connection,
                 """
                     SELECT DISTINCT ON (M.DATE)
                         M.MID,
