@@ -77,7 +77,7 @@ class ErrorHandler:
         @ratelimit()
         async def handle_timeout_error(request, exception):
             self.app.ctx.logs.warning(
-                f"Timeout base de données [{type(exception).__name__}] {request.method} {request.path}"
+                f"Timeout de traitement [{type(exception).__name__}] {request.method} {request.path}"
             )
 
             return JSON(
