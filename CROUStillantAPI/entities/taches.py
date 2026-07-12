@@ -96,3 +96,34 @@ class Taches:
                 id,
                 timeout=5,
             )
+
+    async def getForRestaurant(self, rid: int, limit: int = 20) -> list:
+        """
+        Récupère les dernières tâches d'ingestion ayant vérifié un restaurant.
+
+        :param rid: ID du restaurant
+        :param limit: Nombre de tâches à récupérer
+        :return: Les tâches (id, début, fin) ayant touché ce restaurant, les plus récentes en premier
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT
+                        T.id,
+                        T.debut,
+                        T.fin
+                    FROM
+                        tache T
+                    JOIN tache_log TL ON TL.idtache = T.id
+                    WHERE
+                        TL.rid = $1
+                    ORDER BY
+                        T.debut DESC
+                    LIMIT $2
+                """,
+                rid,
+                limit,
+                timeout=10,
+            )

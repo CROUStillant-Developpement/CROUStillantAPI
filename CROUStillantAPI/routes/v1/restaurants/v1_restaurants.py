@@ -16,6 +16,7 @@ from ....models.responses import (
     Dates,
     Image,
     RestaurantInsights,
+    RestaurantActivity,
 )
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
@@ -1843,6 +1844,112 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
             if info.get("modifie")
             else None,
             "nb": info.get("taches"),
+        },
+        status=200,
+    ).generate()
+
+
+# /restaurants/{code}/activity
+@bp.route("/<code>/activity", methods=["GET"])
+@openapi.definition(
+    summary="Activité d'un restaurant",
+    description="Historique d'activité d'un restaurant : date d'ajout, dernière mise à jour, nombre de vérifications et dernières tâches d'ingestion l'ayant touché.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": RestaurantActivity},
+    description="Activité d'un restaurant.",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="L'ID du restaurant doit être un nombre.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Le restaurant n'existe pas.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1,
+)
+@openapi.parameter(
+    name="limit",
+    description="Nombre de dernières tâches d'ingestion à retourner (1-100, défaut 20)",
+    required=False,
+    schema=int,
+    location="query",
+    example=20,
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={"code": Rules.integer},
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@ratelimit()
+@cache(ttl=60 * 15)  # 15 minutes
+async def getRestaurantActivity(request: Request, code: int) -> JSONResponse:
+    """
+    Retourne l'activité d'un restaurant (ajout, dernière mise à jour, historique des vérifications).
+
+    :param code: ID du restaurant
+    :return: L'activité du restaurant
+    """
+    info = await request.app.ctx.entities.restaurants.getInfo(code)
+
+    if info is None:
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
+            status=404,
+        ).generate()
+
+    limit_raw = request.args.get("limit", "20")
+    limit = int(limit_raw) if Rules.integer(limit_raw) else 20
+    limit = max(1, min(limit, 100))
+
+    runs = await request.app.ctx.entities.taches.getForRestaurant(code, limit)
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "ajout": info.get("ajout").strftime("%Y-%m-%d %H:%M:%S"),
+            "modifie": info.get("modifie").strftime("%Y-%m-%d %H:%M:%S")
+            if info.get("modifie")
+            else None,
+            "nb_verifications": info.get("taches"),
+            "dernieres_verifications": [
+                {
+                    "id": run.get("id"),
+                    "debut": run.get("debut").strftime("%Y-%m-%d %H:%M:%S")
+                    if run.get("debut")
+                    else None,
+                    "fin": run.get("fin").strftime("%Y-%m-%d %H:%M:%S")
+                    if run.get("fin")
+                    else None,
+                }
+                for run in runs
+            ],
         },
         status=200,
     ).generate()

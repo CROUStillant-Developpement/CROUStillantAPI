@@ -9,6 +9,7 @@ from .taches import Taches, Tache
 from .changelog import ChangeLog
 from .image import Image
 from .insights import RestaurantInsights
+from .activity import RestaurantActivity
 
 
 __all__ = [
@@ -33,4 +34,5 @@ __all__ = [
     "ChangeLog",
     "Image",
     "RestaurantInsights",
+    "RestaurantActivity",
 ]
