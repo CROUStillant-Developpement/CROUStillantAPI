@@ -15,6 +15,7 @@ from ....models.responses import (
     Menu,
     Dates,
     Image,
+    RestaurantInsights,
 )
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
@@ -29,9 +30,9 @@ from sanic import Blueprint, Request
 from sanic.log import logger
 from sanic_ext import openapi
 from json import loads
-from datetime import datetime
+from datetime import datetime, timedelta, date as date_cls
 from pytz import timezone
-from asyncio import get_event_loop
+from asyncio import get_event_loop, gather
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
@@ -1471,6 +1472,299 @@ async def getRestaurantMenuFromDateImage(
                 "message": f"Une erreur est survenue lors de la génération de l'image (/restaurants/{code}/menu/{date.strftime('%d-%m-%Y')}/image?repas={repas}?theme={theme})"
             },
         )
+
+
+# /restaurants/{code}/insights
+@bp.route("/<code>/insights", methods=["GET"])
+@openapi.definition(
+    summary="Insights d'un restaurant",
+    description="Statistiques d'un restaurant sur l'année scolaire en cours : couverture des menus (jours avec/sans menu) et plats les plus fréquents.",
+    tag="Restaurants",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": RestaurantInsights},
+    description="Insights d'un restaurant.",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="L'ID du restaurant doit être un nombre.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Le restaurant n'existe pas.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="code",
+    description="ID du restaurant",
+    required=True,
+    schema=int,
+    location="path",
+    example=1,
+)
+@openapi.parameter(
+    name="limit",
+    description="Nombre de plats les plus fréquents à retourner (1-50, défaut 10)",
+    required=False,
+    schema=int,
+    location="query",
+    example=10,
+)
+@inputs(
+    Argument(
+        name="code",
+        description="ID du restaurant",
+        methods={"code": Rules.integer},
+        call=int,
+        required=True,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@ratelimit()
+@cache(ttl=60 * 30)  # 30 minutes
+async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
+    """
+    Retourne les insights d'un restaurant (couverture des menus, plats fréquents).
+
+    :param code: ID du restaurant
+    :return: Les insights du restaurant
+    """
+    restaurant = await request.app.ctx.entities.restaurants.getOne(code)
+
+    if not restaurant:
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
+            status=404,
+        ).generate()
+
+    limit_raw = request.args.get("limit", "10")
+    limit = int(limit_raw) if Rules.integer(limit_raw) else 10
+    limit = max(1, min(limit, 50))
+
+    today = datetime.now(tz=timezone("Europe/Paris")).date()
+    school_year_start = date_cls(today.year if today.month >= 9 else today.year - 1, 9, 1)
+    date_to = today - timedelta(days=1)
+
+    first_menu = await request.app.ctx.entities.menus.getFirstDate(code)
+    first_date = first_menu.get("date") if first_menu else None
+    date_from = max(school_year_start, first_date) if first_date else school_year_start
+
+    if date_from > date_to:
+        return JSON(
+            request=request,
+            success=True,
+            data={
+                "periode": {
+                    "debut": date_from.strftime("%d-%m-%Y"),
+                    "fin": date_to.strftime("%d-%m-%Y"),
+                },
+                "couverture": {
+                    "jours_ouvres": 0,
+                    "jours_avec_menu": 0,
+                    "jours_sans_menu": 0,
+                    "taux_couverture": 0.0,
+                },
+                "repartition_repas": {"matin": 0, "midi": 0, "soir": 0},
+                "plats_frequents": [],
+                "couverture_par_jour": [],
+                "series": {
+                    "meilleure_serie_avec_menu": 0,
+                    "plus_longue_serie_sans_menu": 0,
+                    "serie_actuelle": {"avec_menu": False, "jours": 0},
+                },
+                "variete": {
+                    "plats_uniques": 0,
+                    "plats_total": 0,
+                    "taux_variete": 0.0,
+                },
+                "richesse": {
+                    "moyenne_categories_par_repas": 0.0,
+                    "moyenne_plats_par_repas": 0.0,
+                },
+                "delai_publication": {"moyenne_jours": None},
+                "comparaison_regionale": {
+                    "jours_avec_menu_restaurant": 0,
+                    "moyenne_jours_avec_menu_region": None,
+                    "nb_restaurants_compares": 0,
+                },
+            },
+            status=200,
+        ).generate()
+
+    menu_dates_rows = await request.app.ctx.entities.menus.getDatesInRange(
+        code, date_from, date_to
+    )
+    menu_dates = {row.get("date") for row in menu_dates_rows}
+
+    opening = Opening(restaurant.get("jours_ouvert")).get()
+    open_weekdays = {
+        i for i, jour in enumerate(opening) if any(jour["ouverture"].values())
+    }
+
+    jours_semaine = [
+        "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche",
+    ]
+    par_jour = {i: {"jours_ouvres": 0, "jours_avec_menu": 0} for i in open_weekdays}
+
+    jours_ouvres = 0
+    jours_avec_menu = 0
+
+    meilleure_serie_avec_menu = 0
+    plus_longue_serie_sans_menu = 0
+    courante_avec = 0
+    courante_sans = 0
+    serie_actuelle_avec_menu = False
+    longueur_serie_actuelle = 0
+
+    current = date_from
+    while current <= date_to:
+        weekday = current.weekday()
+        if weekday in open_weekdays:
+            jours_ouvres += 1
+            a_menu = current in menu_dates
+            par_jour[weekday]["jours_ouvres"] += 1
+
+            if a_menu:
+                jours_avec_menu += 1
+                par_jour[weekday]["jours_avec_menu"] += 1
+
+                courante_avec += 1
+                courante_sans = 0
+                meilleure_serie_avec_menu = max(meilleure_serie_avec_menu, courante_avec)
+                serie_actuelle_avec_menu = True
+                longueur_serie_actuelle = courante_avec
+            else:
+                courante_sans += 1
+                courante_avec = 0
+                plus_longue_serie_sans_menu = max(plus_longue_serie_sans_menu, courante_sans)
+                serie_actuelle_avec_menu = False
+                longueur_serie_actuelle = courante_sans
+
+        current += timedelta(days=1)
+
+    jours_sans_menu = jours_ouvres - jours_avec_menu
+    taux_couverture = (
+        round(jours_avec_menu / jours_ouvres * 100, 1) if jours_ouvres else 0.0
+    )
+
+    couverture_par_jour = []
+    for i, nom in enumerate(jours_semaine):
+        if i not in par_jour:
+            continue
+        jo = par_jour[i]["jours_ouvres"]
+        jam = par_jour[i]["jours_avec_menu"]
+        couverture_par_jour.append(
+            {
+                "jour": nom,
+                "jours_ouvres": jo,
+                "jours_avec_menu": jam,
+                "taux_couverture": round(jam / jo * 100, 1) if jo else 0.0,
+            }
+        )
+
+    (
+        repas_rows,
+        plats,
+        variety_row,
+        richness_row,
+        lag_row,
+        region_row,
+    ) = await gather(
+        request.app.ctx.entities.menus.getRepasBreakdown(code, date_from, date_to),
+        request.app.ctx.entities.plats.getTopForRestaurant(code, date_from, date_to, limit),
+        request.app.ctx.entities.plats.getVariety(code, date_from, date_to),
+        request.app.ctx.entities.menus.getRichness(code, date_from, date_to),
+        request.app.ctx.entities.menus.getPublishLag(code, date_from, date_to),
+        request.app.ctx.entities.menus.getRegionAverageMenuDays(
+            restaurant.get("idreg"), code, date_from, date_to
+        ),
+    )
+
+    repartition_repas = {"matin": 0, "midi": 0, "soir": 0}
+    for row in repas_rows:
+        tpr = row.get("tpr")
+        if tpr in repartition_repas:
+            repartition_repas[tpr] = row.get("nb")
+
+    plats_uniques = variety_row.get("plats_uniques") or 0
+    plats_total = variety_row.get("plats_total") or 0
+    taux_variete = round(plats_uniques / plats_total * 100, 1) if plats_total else 0.0
+
+    nb_repas = richness_row.get("nb_repas") or 0
+    nb_categories = richness_row.get("nb_categories") or 0
+    nb_plats_richesse = richness_row.get("nb_plats") or 0
+    moyenne_categories_par_repas = (
+        round(nb_categories / nb_repas, 1) if nb_repas else 0.0
+    )
+    moyenne_plats_par_repas = round(nb_plats_richesse / nb_repas, 1) if nb_repas else 0.0
+
+    lag_moyenne = lag_row.get("moyenne_jours") if lag_row else None
+    region_moyenne = region_row.get("moyenne") if region_row else None
+    region_nb = (region_row.get("nb_restaurants") if region_row else 0) or 0
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "periode": {
+                "debut": date_from.strftime("%d-%m-%Y"),
+                "fin": date_to.strftime("%d-%m-%Y"),
+            },
+            "couverture": {
+                "jours_ouvres": jours_ouvres,
+                "jours_avec_menu": jours_avec_menu,
+                "jours_sans_menu": jours_sans_menu,
+                "taux_couverture": taux_couverture,
+            },
+            "repartition_repas": repartition_repas,
+            "plats_frequents": [
+                {
+                    "code": plat.get("platid"),
+                    "libelle": plat.get("libelle"),
+                    "total": plat.get("nb"),
+                }
+                for plat in plats
+            ],
+            "couverture_par_jour": couverture_par_jour,
+            "series": {
+                "meilleure_serie_avec_menu": meilleure_serie_avec_menu,
+                "plus_longue_serie_sans_menu": plus_longue_serie_sans_menu,
+                "serie_actuelle": {
+                    "avec_menu": serie_actuelle_avec_menu,
+                    "jours": longueur_serie_actuelle,
+                },
+            },
+            "variete": {
+                "plats_uniques": plats_uniques,
+                "plats_total": plats_total,
+                "taux_variete": taux_variete,
+            },
+            "richesse": {
+                "moyenne_categories_par_repas": moyenne_categories_par_repas,
+                "moyenne_plats_par_repas": moyenne_plats_par_repas,
+            },
+            "delai_publication": {
+                "moyenne_jours": round(float(lag_moyenne), 1) if lag_moyenne is not None else None,
+            },
+            "comparaison_regionale": {
+                "jours_avec_menu_restaurant": jours_avec_menu,
+                "moyenne_jours_avec_menu_region": round(float(region_moyenne), 1) if region_moyenne is not None else None,
+                "nb_restaurants_compares": region_nb,
+            },
+        },
+        status=200,
+    ).generate()
 
 
 # /restaurants/{code}/info

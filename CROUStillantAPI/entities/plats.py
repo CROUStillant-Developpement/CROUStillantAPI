@@ -1,4 +1,5 @@
 from asyncpg import Pool, Connection
+from datetime import datetime
 
 
 class Plats:
@@ -106,5 +107,81 @@ class Plats:
                 """,
                 limit,
                 type_restaurant,
+                timeout=15,
+            )
+
+    async def getTopForRestaurant(
+        self, id: int, date_from: datetime, date_to: datetime, limit: int = 10
+    ) -> list:
+        """
+        Récupère les plats les plus fréquents d'un restaurant sur une période donnée.
+
+        :param id: ID du restaurant
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :param limit: Nombre de plats à récupérer
+        :return: Les plats
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT
+                        P.platid,
+                        P.libelle,
+                        COUNT(*) AS nb
+                    FROM
+                        plat P
+                    JOIN composition CO ON P.platid = CO.platid
+                    JOIN categorie C ON CO.catid = C.catid
+                    JOIN repas RP ON C.rpid = RP.rpid
+                    JOIN menu M ON RP.mid = M.mid
+                    WHERE
+                        M.rid = $1
+                        AND M.date BETWEEN $2 AND $3
+                    GROUP BY
+                        P.platid, P.libelle
+                    ORDER BY
+                        nb DESC
+                    LIMIT $4
+                """,
+                id,
+                date_from,
+                date_to,
+                limit,
+                timeout=15,
+            )
+
+    async def getVariety(self, id: int, date_from: datetime, date_to: datetime) -> dict:
+        """
+        Récupère la variété des plats d'un restaurant sur une période donnée (plats uniques vs total des plats servis).
+
+        :param id: ID du restaurant
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :return: Le nombre de plats uniques et le nombre total de plats servis
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT
+                        COUNT(DISTINCT P.platid) AS plats_uniques,
+                        COUNT(*) AS plats_total
+                    FROM
+                        plat P
+                    JOIN composition CO ON P.platid = CO.platid
+                    JOIN categorie C ON CO.catid = C.catid
+                    JOIN repas RP ON C.rpid = RP.rpid
+                    JOIN menu M ON RP.mid = M.mid
+                    WHERE
+                        M.rid = $1
+                        AND M.date BETWEEN $2 AND $3
+                """,
+                id,
+                date_from,
+                date_to,
                 timeout=15,
             )

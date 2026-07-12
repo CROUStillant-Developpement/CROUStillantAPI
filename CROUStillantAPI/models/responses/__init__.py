@@ -8,6 +8,7 @@ from .menus import Menus, Menu, Dates
 from .taches import Taches, Tache
 from .changelog import ChangeLog
 from .image import Image
+from .insights import RestaurantInsights
 
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "Tache",
     "ChangeLog",
     "Image",
+    "RestaurantInsights",
 ]

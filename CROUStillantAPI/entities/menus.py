@@ -178,3 +178,171 @@ class Menus:
                 id,
                 timeout=5,
             )
+
+    async def getFirstDate(self, id: int) -> dict:
+        """
+        Récupère la date du premier menu connu d'un restaurant.
+
+        :param id: ID du restaurant
+        :return: La date du premier menu (ou None si aucun menu)
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT MIN(DATE) AS DATE
+                    FROM PUBLIC.MENU
+                    WHERE RID = $1
+                """,
+                id,
+                timeout=5,
+            )
+
+    async def getDatesInRange(self, id: int, date_from: datetime, date_to: datetime) -> list:
+        """
+        Récupère les dates des menus d'un restaurant sur une période donnée.
+
+        :param id: ID du restaurant
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :return: Les dates des menus sur la période
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT DISTINCT M.DATE
+                    FROM PUBLIC.MENU M
+                    WHERE M.RID = $1
+                    AND M.DATE BETWEEN $2 AND $3
+                """,
+                id,
+                date_from,
+                date_to,
+                timeout=10,
+            )
+
+    async def getRepasBreakdown(self, id: int, date_from: datetime, date_to: datetime) -> list:
+        """
+        Récupère la répartition des repas (matin/midi/soir) d'un restaurant sur une période donnée.
+
+        :param id: ID du restaurant
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :return: La répartition des repas
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT RP.TPR, COUNT(*) AS NB
+                    FROM PUBLIC.REPAS RP
+                    JOIN PUBLIC.MENU M ON RP.MID = M.MID
+                    WHERE M.RID = $1
+                    AND M.DATE BETWEEN $2 AND $3
+                    GROUP BY RP.TPR
+                """,
+                id,
+                date_from,
+                date_to,
+                timeout=10,
+            )
+
+    async def getRichness(self, id: int, date_from: datetime, date_to: datetime) -> dict:
+        """
+        Récupère la richesse moyenne des repas (catégories/plats par repas) d'un restaurant sur une période donnée.
+
+        :param id: ID du restaurant
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :return: Le nombre de repas, de catégories distinctes et de plats sur la période
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT
+                        COUNT(DISTINCT RP.RPID) AS NB_REPAS,
+                        COUNT(DISTINCT C.CATID) AS NB_CATEGORIES,
+                        COUNT(CO.PLATID) AS NB_PLATS
+                    FROM PUBLIC.REPAS RP
+                    JOIN PUBLIC.MENU M ON RP.MID = M.MID
+                    JOIN PUBLIC.CATEGORIE C ON C.RPID = RP.RPID
+                    LEFT JOIN PUBLIC.COMPOSITION CO ON CO.CATID = C.CATID
+                    WHERE M.RID = $1
+                    AND M.DATE BETWEEN $2 AND $3
+                """,
+                id,
+                date_from,
+                date_to,
+                timeout=10,
+            )
+
+    async def getPublishLag(self, id: int, date_from: datetime, date_to: datetime) -> dict:
+        """
+        Récupère le délai moyen (en jours) entre l'ingestion d'un menu et la date à laquelle il s'applique.
+
+        Une valeur positive signifie que le menu est en moyenne ingéré avant la date du menu (publication à l'avance).
+
+        :param id: ID du restaurant
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :return: Le délai moyen en jours
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT AVG(M.DATE - M.INGESTION_AT::date) AS MOYENNE_JOURS
+                    FROM PUBLIC.MENU M
+                    WHERE M.RID = $1
+                    AND M.DATE BETWEEN $2 AND $3
+                """,
+                id,
+                date_from,
+                date_to,
+                timeout=10,
+            )
+
+    async def getRegionAverageMenuDays(
+        self, idreg: int, exclude_rid: int, date_from: datetime, date_to: datetime
+    ) -> dict:
+        """
+        Récupère la moyenne du nombre de jours avec un menu publié pour les autres restaurants actifs de la même région, sur une période donnée.
+
+        :param idreg: ID de la région
+        :param exclude_rid: ID du restaurant à exclure de la comparaison
+        :param date_from: Date de début de la période
+        :param date_to: Date de fin de la période
+        :return: La moyenne de jours avec menu et le nombre de restaurants comparés
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetchrow(
+                """
+                    SELECT
+                        AVG(SUB.NB) AS MOYENNE,
+                        COUNT(*) AS NB_RESTAURANTS
+                    FROM (
+                        SELECT M.RID, COUNT(DISTINCT M.DATE) AS NB
+                        FROM PUBLIC.MENU M
+                        JOIN PUBLIC.RESTAURANT R ON M.RID = R.RID
+                        WHERE R.IDREG = $1
+                        AND R.ACTIF = TRUE
+                        AND R.RID != $2
+                        AND M.DATE BETWEEN $3 AND $4
+                        GROUP BY M.RID
+                    ) SUB
+                """,
+                idreg,
+                exclude_rid,
+                date_from,
+                date_to,
+                timeout=15,
+            )
