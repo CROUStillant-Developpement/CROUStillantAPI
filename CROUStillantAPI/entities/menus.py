@@ -251,37 +251,6 @@ class Menus:
                 timeout=10,
             )
 
-    async def getRichness(self, id: int, date_from: datetime, date_to: datetime) -> dict:
-        """
-        Récupère la richesse moyenne des repas (catégories/plats par repas) d'un restaurant sur une période donnée.
-
-        :param id: ID du restaurant
-        :param date_from: Date de début de la période
-        :param date_to: Date de fin de la période
-        :return: Le nombre de repas, de catégories distinctes et de plats sur la période
-        """
-        async with self.pool.acquire() as connection:
-            connection: Connection
-
-            return await connection.fetchrow(
-                """
-                    SELECT
-                        COUNT(DISTINCT RP.RPID) AS NB_REPAS,
-                        COUNT(DISTINCT C.CATID) AS NB_CATEGORIES,
-                        COUNT(CO.PLATID) AS NB_PLATS
-                    FROM PUBLIC.REPAS RP
-                    JOIN PUBLIC.MENU M ON RP.MID = M.MID
-                    JOIN PUBLIC.CATEGORIE C ON C.RPID = RP.RPID
-                    LEFT JOIN PUBLIC.COMPOSITION CO ON CO.CATID = C.CATID
-                    WHERE M.RID = $1
-                    AND M.DATE BETWEEN $2 AND $3
-                """,
-                id,
-                date_from,
-                date_to,
-                timeout=10,
-            )
-
     async def getPublishLag(self, id: int, date_from: datetime, date_to: datetime) -> dict:
         """
         Récupère le délai moyen (en jours) entre l'ingestion d'un menu et la date à laquelle il s'applique.

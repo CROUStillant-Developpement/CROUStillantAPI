@@ -5,6 +5,7 @@ from .types_restaurants import TypesRestaurants
 from .plats import Plats
 from .menus import Menus
 from .taches import Taches
+from .insights import Insights
 from asyncpg import Pool
 
 
@@ -19,3 +20,4 @@ class Entities:
         self.plats = Plats(pool)
         self.menus = Menus(pool)
         self.taches = Taches(pool)
+        self.insights = Insights(pool)

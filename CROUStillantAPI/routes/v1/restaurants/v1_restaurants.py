@@ -1674,18 +1674,20 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
             }
         )
 
+    # Richesse, variété et plats fréquents viennent de `restaurant_insights_summary`,
+    # une vue matérialisée rafraîchie à chaque cycle d'ingestion (voir CROUStillant/__main__.py).
+    # Ces agrégats traversent PLAT->COMPOSITION->CATEGORIE->REPAS->MENU, des tables partitionnées
+    # par HASH sur leur propre clé (pas alignée avec les jointures) : calculés en direct sur toute
+    # une année scolaire, ils prennent plusieurs secondes par restaurant. Précalculés une seule
+    # fois pour tous les restaurants, la lecture ici est un simple lookup indexé par RID.
     (
         repas_rows,
-        plats,
-        variety_row,
-        richness_row,
+        summary,
         lag_row,
         region_row,
     ) = await gather(
         request.app.ctx.entities.menus.getRepasBreakdown(code, date_from, date_to),
-        request.app.ctx.entities.plats.getTopForRestaurant(code, date_from, date_to, limit),
-        request.app.ctx.entities.plats.getVariety(code, date_from, date_to),
-        request.app.ctx.entities.menus.getRichness(code, date_from, date_to),
+        request.app.ctx.entities.insights.getSummary(code),
         request.app.ctx.entities.menus.getPublishLag(code, date_from, date_to),
         request.app.ctx.entities.menus.getRegionAverageMenuDays(
             restaurant.get("idreg"), code, date_from, date_to
@@ -1698,17 +1700,28 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
         if tpr in repartition_repas:
             repartition_repas[tpr] = row.get("nb")
 
-    plats_uniques = variety_row.get("plats_uniques") or 0
-    plats_total = variety_row.get("plats_total") or 0
+    plats_uniques = (summary.get("plats_uniques") or 0) if summary else 0
+    plats_total = (summary.get("nb_plats") or 0) if summary else 0
     taux_variete = round(plats_uniques / plats_total * 100, 1) if plats_total else 0.0
 
-    nb_repas = richness_row.get("nb_repas") or 0
-    nb_categories = richness_row.get("nb_categories") or 0
-    nb_plats_richesse = richness_row.get("nb_plats") or 0
+    nb_repas = (summary.get("nb_repas") or 0) if summary else 0
+    nb_categories = (summary.get("nb_categories") or 0) if summary else 0
     moyenne_categories_par_repas = (
         round(nb_categories / nb_repas, 1) if nb_repas else 0.0
     )
-    moyenne_plats_par_repas = round(nb_plats_richesse / nb_repas, 1) if nb_repas else 0.0
+    moyenne_plats_par_repas = round(plats_total / nb_repas, 1) if nb_repas else 0.0
+
+    plats_frequents_raw = (
+        loads(summary.get("plats_frequents")) if summary and summary.get("plats_frequents") else []
+    )
+    plats_frequents = [
+        {
+            "code": plat.get("code"),
+            "libelle": plat.get("libelle"),
+            "total": plat.get("total"),
+        }
+        for plat in plats_frequents_raw[:limit]
+    ]
 
     lag_moyenne = lag_row.get("moyenne_jours") if lag_row else None
     region_moyenne = region_row.get("moyenne") if region_row else None
@@ -1729,14 +1742,7 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
                 "taux_couverture": taux_couverture,
             },
             "repartition_repas": repartition_repas,
-            "plats_frequents": [
-                {
-                    "code": plat.get("platid"),
-                    "libelle": plat.get("libelle"),
-                    "total": plat.get("nb"),
-                }
-                for plat in plats
-            ],
+            "plats_frequents": plats_frequents,
             "couverture_par_jour": couverture_par_jour,
             "series": {
                 "meilleure_serie_avec_menu": meilleure_serie_avec_menu,
