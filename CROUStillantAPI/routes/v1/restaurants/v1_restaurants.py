@@ -1598,6 +1598,7 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
                     "jours_avec_menu_restaurant": 0,
                     "moyenne_jours_avec_menu_region": None,
                     "nb_restaurants_compares": 0,
+                    "nb_restaurants_actifs_region": 0,
                 },
             },
             status=200,
@@ -1726,6 +1727,7 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
     lag_moyenne = lag_row.get("moyenne_jours") if lag_row else None
     region_moyenne = region_row.get("moyenne") if region_row else None
     region_nb = (region_row.get("nb_restaurants") if region_row else 0) or 0
+    region_nb_actifs = (region_row.get("nb_restaurants_actifs") if region_row else 0) or 0
 
     return JSON(
         request=request,
@@ -1768,6 +1770,7 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
                 "jours_avec_menu_restaurant": jours_avec_menu,
                 "moyenne_jours_avec_menu_region": round(float(region_moyenne), 1) if region_moyenne is not None else None,
                 "nb_restaurants_compares": region_nb,
+                "nb_restaurants_actifs_region": region_nb_actifs,
             },
         },
         status=200,

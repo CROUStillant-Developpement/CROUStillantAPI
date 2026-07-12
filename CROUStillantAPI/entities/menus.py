@@ -297,7 +297,14 @@ class Menus:
                 """
                     SELECT
                         AVG(SUB.NB) AS MOYENNE,
-                        COUNT(*) AS NB_RESTAURANTS
+                        COUNT(*) AS NB_RESTAURANTS,
+                        (
+                            SELECT COUNT(*)
+                            FROM PUBLIC.RESTAURANT R2
+                            WHERE R2.IDREG = $1
+                            AND R2.ACTIF = TRUE
+                            AND R2.RID != $2
+                        ) AS NB_RESTAURANTS_ACTIFS
                     FROM (
                         SELECT M.RID, COUNT(DISTINCT M.DATE) AS NB
                         FROM PUBLIC.MENU M

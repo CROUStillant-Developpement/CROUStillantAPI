@@ -1,4 +1,4 @@
-from .stats import Stats
+from .stats import Stats, StatsByRegion
 from .status import Status
 from .regions import Regions, Region
 from .restaurants import Restaurants, Restaurant, RestaurantsStatus, RestaurantsStatusMinimal, RestaurantInfo
@@ -10,10 +10,12 @@ from .changelog import ChangeLog
 from .image import Image
 from .insights import RestaurantInsights
 from .activity import RestaurantActivity
+from .geojson import GeoJSON
 
 
 __all__ = [
     "Stats",
+    "StatsByRegion",
     "Status",
     "Regions",
     "Region",
@@ -35,4 +37,5 @@ __all__ = [
     "Image",
     "RestaurantInsights",
     "RestaurantActivity",
+    "GeoJSON",
 ]

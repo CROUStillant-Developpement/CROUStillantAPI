@@ -148,8 +148,12 @@ class ComparaisonRegionale:
         nullable=True,
     )
     nb_restaurants_compares = openapi.Integer(
-        description="Nombre de restaurants de la région utilisés pour la comparaison",
+        description="Nombre de restaurants actifs de la région ayant publié un menu sur la période, utilisés pour la comparaison",
         example=12,
+    )
+    nb_restaurants_actifs_region = openapi.Integer(
+        description="Nombre total de restaurants actifs dans la région (avec ou sans menu publié)",
+        example=39,
     )
 
 

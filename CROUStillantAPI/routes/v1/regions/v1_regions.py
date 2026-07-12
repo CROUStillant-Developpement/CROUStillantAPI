@@ -3,10 +3,10 @@ from ....components.cache import cache
 from ....components.response import JSON
 from ....components.argument import Argument, inputs
 from ....components.rules import Rules
-from ....models.responses import Regions, Region, Restaurants
+from ....models.responses import Regions, Region, Restaurants, GeoJSON
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from ....utils.opening import Opening
-from sanic.response import JSONResponse
+from sanic.response import HTTPResponse, JSONResponse, file
 from sanic import Blueprint, Request
 from sanic_ext import openapi
 
@@ -53,6 +53,37 @@ async def getRegions(request: Request) -> JSONResponse:
         ],
         status=200,
     ).generate()
+
+
+# /regions/geojson
+@bp.route("/geojson", methods=["GET"])
+@openapi.definition(
+    summary="Découpage géographique des régions",
+    description="Contours géographiques (GeoJSON) des 26 CROUS, à utiliser comme overlay/filtre sur une carte. Chaque feature correspond à un CROUS et porte les propriétés crous_id/crous_slug/crous_libelle/crous_nom (crous_id et crous_libelle correspondent au code/libelle exposés par /regions) ainsi que la liste des départements rattachés.",
+    tag="Regions",
+)
+@openapi.response(
+    status=200,
+    content={"application/geo+json": GeoJSON},
+    description="Découpage géographique des 26 CROUS au format GeoJSON.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=60 * 60 * 24)  # 1 jour, fichier statique
+async def getRegionsGeoJSON(request: Request) -> HTTPResponse:
+    """
+    Retourne le découpage géographique des régions au format GeoJSON.
+
+    :return: Le GeoJSON des régions
+    """
+    return await file(
+        location="./static/geo/crous_regions.geojson",
+        mime_type="application/geo+json",
+    )
 
 
 # /regions/{code}

@@ -1,7 +1,7 @@
 from ....components.ratelimit import ratelimit
 from ....components.cache import cache
 from ....components.response import JSON
-from ....models.responses import Status, Stats
+from ....models.responses import Status, Stats, StatsByRegion
 from ....models.exceptions import RateLimited
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
@@ -80,5 +80,53 @@ async def getStats(request: Request) -> JSONResponse:
             "plats": stats.get("plats", -1),
             "compositions": stats.get("compositions", -1),
         },
+        status=200,
+    ).generate()
+
+
+# /stats/regions
+@bp.route("/stats/regions", methods=["GET"])
+@openapi.definition(
+    summary="Statistiques par région",
+    description="Retourne les statistiques de l'API agrégées par région (CROUS) : nombre de restaurants, richesse et variété des menus sur l'année scolaire en cours.",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": StatsByRegion},
+    description="Statistiques par région.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=300)
+async def getStatsByRegion(request: Request) -> JSONResponse:
+    """
+    Retourne les statistiques de l'API agrégées par région.
+
+    :return: JSONResponse
+    """
+    regions = await request.app.ctx.entities.stats.getByRegion()
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "code": region.get("idreg"),
+                "libelle": region.get("libelle"),
+                "nb_restaurants": region.get("nb_restaurants"),
+                "nb_restaurants_actifs": region.get("nb_restaurants_actifs"),
+                "nb_restaurants_avec_menu": region.get("nb_restaurants_avec_menu"),
+                "nb_repas": region.get("nb_repas"),
+                "nb_categories": region.get("nb_categories"),
+                "nb_plats": region.get("nb_plats"),
+                "plats_uniques": region.get("plats_uniques"),
+            }
+            for region in regions
+        ],
         status=200,
     ).generate()
