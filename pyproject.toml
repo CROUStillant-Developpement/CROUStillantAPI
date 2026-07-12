@@ -1,6 +1,6 @@
 [project]
 name = "croustillantapi"
-version = "1.2.0"
+version = "1.2.1"
 description = "CROUStillant API"
 authors = ["Paul Bayfield"]
 license = "Apache-2.0"
