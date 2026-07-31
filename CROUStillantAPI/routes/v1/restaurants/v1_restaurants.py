@@ -1848,8 +1848,8 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
         success=True,
         data={
             "code": info.get("rid"),
-            "ajout": info.get("ajout").strftime("%Y-%m-%d %H:%M:%S"),
-            "modifie": info.get("modifie").strftime("%Y-%m-%d %H:%M:%S")
+            "ajout": info.get("ajout").strftime("%d-%m-%Y %H:%M:%S"),
+            "modifie": info.get("modifie").strftime("%d-%m-%Y %H:%M:%S")
             if info.get("modifie")
             else None,
             "nb": info.get("taches"),
@@ -1942,18 +1942,18 @@ async def getRestaurantActivity(request: Request, code: int) -> JSONResponse:
         request=request,
         success=True,
         data={
-            "ajout": info.get("ajout").strftime("%Y-%m-%d %H:%M:%S"),
-            "modifie": info.get("modifie").strftime("%Y-%m-%d %H:%M:%S")
+            "ajout": info.get("ajout").strftime("%d-%m-%Y %H:%M:%S"),
+            "modifie": info.get("modifie").strftime("%d-%m-%Y %H:%M:%S")
             if info.get("modifie")
             else None,
             "nb_verifications": info.get("taches"),
             "dernieres_verifications": [
                 {
                     "id": run.get("id"),
-                    "debut": run.get("debut").strftime("%Y-%m-%d %H:%M:%S")
+                    "debut": run.get("debut").strftime("%d-%m-%Y %H:%M:%S")
                     if run.get("debut")
                     else None,
-                    "fin": run.get("fin").strftime("%Y-%m-%d %H:%M:%S")
+                    "fin": run.get("fin").strftime("%d-%m-%Y %H:%M:%S")
                     if run.get("fin")
                     else None,
                 }

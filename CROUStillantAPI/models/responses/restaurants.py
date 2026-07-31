@@ -27,12 +27,12 @@ class Data:
         example=1502,
     )
     ajout = openapi.String(
-        description="Date d'ajout du restaurant dans la base de données",
-        example="2024-10-19 18:44:31",
+        description="Date d'ajout du restaurant dans la base de données (DD-MM-YYYY HH:MM:SS)",
+        example="19-10-2024 18:44:31",
     )
     modifie = openapi.String(
-        description="Dernière mise à jour du restaurant dans la base de données",
-        example="2024-10-19 19:44:31",
+        description="Dernière mise à jour du restaurant dans la base de données (DD-MM-YYYY HH:MM:SS)",
+        example="19-10-2024 19:44:31",
     )
     nb = openapi.Integer(
         description="Nombre de fois que le restaurant a été mis à jour",

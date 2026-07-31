@@ -7,24 +7,24 @@ class ActivityRun:
         example=12345,
     )
     debut = openapi.String(
-        description="Date et heure de début de la tâche (YYYY-MM-DD HH:MM:SS)",
-        example="2026-07-11 06:00:00",
+        description="Date et heure de début de la tâche (DD-MM-YYYY HH:MM:SS)",
+        example="11-07-2026 06:00:00",
     )
     fin = openapi.String(
-        description="Date et heure de fin de la tâche (YYYY-MM-DD HH:MM:SS)",
-        example="2026-07-11 06:04:12",
+        description="Date et heure de fin de la tâche (DD-MM-YYYY HH:MM:SS)",
+        example="11-07-2026 06:04:12",
         nullable=True,
     )
 
 
 class Data:
     ajout = openapi.String(
-        description="Date d'ajout du restaurant dans la base de données",
-        example="2023-11-13 12:00:00",
+        description="Date d'ajout du restaurant dans la base de données (DD-MM-YYYY HH:MM:SS)",
+        example="13-11-2023 12:00:00",
     )
     modifie = openapi.String(
-        description="Date de dernière mise à jour du restaurant",
-        example="2026-07-11 06:04:12",
+        description="Date de dernière mise à jour du restaurant (DD-MM-YYYY HH:MM:SS)",
+        example="11-07-2026 06:04:12",
         nullable=True,
     )
     nb_verifications = openapi.Integer(
