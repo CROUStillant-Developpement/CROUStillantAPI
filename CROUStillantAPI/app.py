@@ -64,8 +64,20 @@ app.ext.openapi.describe(
             L'API CROUStillant ne nécessite pas d'authentification pour accéder aux données.  
             Cependant **les requêtes sont limitées à 200 par minute par adresse IP**.  
             ⁣  
+            ⁣
             🏫 *Si vous êtes une organisation (université, entreprise, association, etc.), ou un particulier et que vous avez besoin de plus de requêtes, vous pouvez nous contacter à l'adresse suivante : [croustillant@bayfield.dev](mailto:croustillant@bayfield.dev) !*   
+            ⁣
+            # 🪪 • User-Agent
+            Vous **devez obligatoirement** définir un **User-Agent personnalisé** identifiant votre application ou organisation dans vos requêtes, par exemple :  
+            ```
+            User-Agent: MonApplication/1.0 (contact@example.com) (+https://monapplication.com) [Affichage des menus des restaurants universitaires sur mon site web]
+            ```   
             ⁣  
+            Cela nous permet de vous contacter en cas de comportement anormal détecté sur votre trafic (bug, pic de requêtes, abus, etc.) avant d'envisager une limitation ou un bannissement de votre adresse IP.   
+            Si vous voulez ajouter une description de votre application, vous pouvez le faire dans le User-Agent, mais **il est obligatoire d'inclure un moyen de contact** (adresse e-mail ou site web).   
+            ⁣  
+            ⚠️ ***Les requêtes ne comportant pas de User-Agent personnalisé (ou utilisant un User-Agent générique) pourront être limitées ou bloquées.***
+            ⁣
             # ⚙️ • Données
             - Les données sont mises à jour plusieurs fois par jour, en fonction des changements dans les menus des restaurants universitaires.
             - Toutes les dates sont stockées en UTC+0.  
@@ -74,7 +86,8 @@ app.ext.openapi.describe(
             Il y a quelques règles à respecter pour toute utilisation de l'API CROUStillant :
             - Vous ne pouvez pas utiliser l'API à des fins commerciales.
             - Vous ne pouvez pas utiliser l'API pour des activités illégales / malveillantes.
-            - Vous ne devez pas abuser de l'API (limite de 200 requêtes par minute), l'utilisation de plusieurs adresses IP pour contourner cette limite est interdite.  
+            - Vous ne devez pas abuser de l'API (limite de 200 requêtes par minute), l'utilisation de plusieurs adresses IP pour contourner cette limite est interdite.
+            - Vous devez définir un User-Agent personnalisé sur toutes vos requêtes (voir la section "User-Agent" ci-dessus).
             - Vous devez créditer CROUStillant (voir la section "Crédits" ci-dessous).
                
             ⁣  

@@ -124,6 +124,8 @@ REDIS_PORT=6379
 
 La documentation interactive complète est disponible à la racine de l'API (ex : `http://localhost:5000`).
 
+> 🪪 Vous **devez obligatoirement** définir un **User-Agent personnalisé** dans vos requêtes (ex : `MonApplication/1.0 (contact@example.com)`), afin que nous puissions vous contacter en cas de problème détecté sur votre trafic. Les requêtes sans User-Agent personnalisé pourront être limitées ou bloquées.
+
 | Préfixe | Description |
 |---|---|
 | `GET /v1/restaurants` | Liste des restaurants (filtres : région, type, PMR, zone, ouverture) |
