@@ -77,6 +77,7 @@ app.ext.openapi.describe(
             Si vous voulez ajouter une description de votre application, vous pouvez le faire dans le User-Agent, mais **il est obligatoire d'inclure un moyen de contact** (adresse e-mail ou site web).   
             ⁣  
             ⚠️ ***Les requêtes ne comportant pas de User-Agent personnalisé (ou utilisant un User-Agent générique) pourront être limitées ou bloquées.***
+               
             ⁣
             # ⚙️ • Données
             - Les données sont mises à jour plusieurs fois par jour, en fonction des changements dans les menus des restaurants universitaires.
@@ -92,7 +93,8 @@ app.ext.openapi.describe(
                
             ⁣  
             ⚠️ ***Tout abus de l'API entraînera un bannissement temporaire ou définitif.***
-            ⁣  
+               
+            ⁣
             # 📑 • Crédits
             Pour toute utilisation de l'API CROUStillant ou de ses parties, merci de créditer le projet en mentionnant "CROUStillant" et en incluant un lien vers le site officiel du projet : [https://croustillant.menu](https://croustillant.menu).  
             Exemple de crédit à afficher sur un site web, une application, un projet, etc... :   
