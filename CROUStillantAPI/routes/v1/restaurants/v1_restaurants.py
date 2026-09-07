@@ -317,6 +317,7 @@ async def getRestaurantsStatusMinimal(request: Request) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -329,7 +330,6 @@ async def getRestaurantsStatusMinimal(request: Request) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRestaurant(request: Request, code: int) -> JSONResponse:
     """
@@ -430,6 +430,7 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
     location="query",
     example="light",
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -442,7 +443,6 @@ async def getRestaurant(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=60 * 5)
 async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
     """
@@ -587,6 +587,7 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
     location="query",
     example="fr",
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -695,7 +696,6 @@ async def getRestaurantIframe(request: Request, code: int) -> HTTPResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=60)
 async def getRestaurantCustomIframe(
     request: Request,
@@ -761,6 +761,7 @@ async def getRestaurantCustomIframe(
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -773,7 +774,6 @@ async def getRestaurantCustomIframe(
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     """
@@ -843,6 +843,7 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
     location="query",
     example="light",
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -855,7 +856,6 @@ async def getRestaurantMenu(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=60 * 5)
 async def getRestaurantTodayMenuIframe(request: Request, code: int) -> HTTPResponse:
     """
@@ -903,6 +903,7 @@ async def getRestaurantTodayMenuIframe(request: Request, code: int) -> HTTPRespo
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -915,7 +916,6 @@ async def getRestaurantTodayMenuIframe(request: Request, code: int) -> HTTPRespo
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     """
@@ -980,6 +980,7 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -992,7 +993,6 @@ async def getRestaurantMenuDates(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse:
     """
@@ -1063,6 +1063,7 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
     location="path",
     example="21-10-2024",
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -1087,7 +1088,6 @@ async def getRestaurantMenuAllDates(request: Request, code: int) -> JSONResponse
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRestaurantMenuFromDate(
     request: Request, code: int, date: datetime
@@ -1167,6 +1167,7 @@ async def getRestaurantMenuFromDate(
     location="query",
     example="light",
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -1191,7 +1192,6 @@ async def getRestaurantMenuFromDate(
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=60 * 5)
 async def getRestaurantMenuIframe(
     request: Request, code: int, date: datetime
@@ -1297,6 +1297,7 @@ async def getRestaurantMenuIframe(
     location="query",
     example="#4F4F4F",
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -1321,7 +1322,6 @@ async def getRestaurantMenuIframe(
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(
     ttl=60 * 5  # 5 minutes
 )
@@ -1518,6 +1518,7 @@ async def getRestaurantMenuFromDateImage(
     location="query",
     example=10,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -1530,7 +1531,6 @@ async def getRestaurantMenuFromDateImage(
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=60 * 30)  # 30 minutes
 async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
     """
@@ -1812,6 +1812,7 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -1824,7 +1825,6 @@ async def getRestaurantInsights(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getInformations(request: Request, code: int) -> JSONResponse:
     """
@@ -1901,6 +1901,7 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
     location="query",
     example=20,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -1913,7 +1914,6 @@ async def getInformations(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=60 * 15)  # 15 minutes
 async def getRestaurantActivity(request: Request, code: int) -> JSONResponse:
     """
@@ -1997,6 +1997,7 @@ async def getRestaurantActivity(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit(default_bucket=Bucket("media", 400, 60))
 @inputs(
     Argument(
         name="code",
@@ -2009,7 +2010,6 @@ async def getRestaurantActivity(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit(default_bucket=Bucket("media", 400, 60))
 @cache(
     ttl=60 * 60  # 1 heure
 )

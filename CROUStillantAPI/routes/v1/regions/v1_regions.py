@@ -121,6 +121,7 @@ async def getRegionsGeoJSON(request: Request) -> HTTPResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -133,7 +134,6 @@ async def getRegionsGeoJSON(request: Request) -> HTTPResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRegion(request: Request, code: int) -> JSONResponse:
     """
@@ -198,6 +198,7 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -210,7 +211,6 @@ async def getRegion(request: Request, code: int) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
     """
@@ -258,6 +258,8 @@ async def getRegionRestaurants(request: Request, code: int) -> JSONResponse:
                 "paiement": restaurant.get("paiement"),
                 "acces": restaurant.get("acces"),
                 "ouvert": restaurant.get("opened"),
+                "contour": restaurant.get("contour"),
+                "contour_source": restaurant.get("contour_source"),
             }
             for restaurant in restaurants
         ],

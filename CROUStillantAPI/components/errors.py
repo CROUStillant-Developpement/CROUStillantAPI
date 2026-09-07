@@ -32,21 +32,29 @@ class ErrorHandler:
 
         @app.exception(ForbiddenException)
         async def handle_forbidden(request, exception):
-            return JSON(
+            response = JSON(
                 request=request,
                 success=False,
                 message=exception.message,
                 status=exception.status_code,
             ).generate()
 
+            response.headers.update(exception.headers or {})
+
+            return response
+
         @app.exception(RatelimitException)
         async def handle_ratelimit(request, exception):
-            return JSON(
+            response = JSON(
                 request=request,
                 success=False,
                 message=exception.message,
                 status=exception.status_code,
             ).generate()
+
+            response.headers.update(exception.headers or {})
+
+            return response
 
         @app.exception(MethodNotAllowed)
         @ratelimit()

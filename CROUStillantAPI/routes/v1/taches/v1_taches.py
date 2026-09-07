@@ -118,6 +118,7 @@ async def getTaches(request: Request) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -130,7 +131,6 @@ async def getTaches(request: Request) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getTache(request: Request, code: int) -> JSONResponse:
     """

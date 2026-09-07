@@ -88,6 +88,7 @@ async def getPlats(request: Request) -> JSONResponse:
     location="path",
     example=1,
 )
+@ratelimit()
 @inputs(
     Argument(
         name="code",
@@ -100,7 +101,6 @@ async def getPlats(request: Request) -> JSONResponse:
         deprecated=False,
     )
 )
-@ratelimit()
 @cache(ttl=300)
 async def getPlat(request: Request, code: int) -> JSONResponse:
     """
