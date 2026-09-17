@@ -5,6 +5,7 @@ from .plats.v1_plats import bp as RoutePlats
 from .misc.v1_misc import bp as RouteMisc
 from .taches.v1_taches import bp as RouteTaches
 from .interne.v1_interne import bp as RouteInterne
+from .calendar.v1_calendar import bp as RouteCalendar
 
 # Meta données de la version
 __version__ = "1.0.0"
@@ -18,6 +19,7 @@ __routes__ = [
     RouteMisc,
     RouteTaches,
     RouteInterne,
+    RouteCalendar,
 ]
 
 

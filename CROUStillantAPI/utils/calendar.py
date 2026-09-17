@@ -1,11 +1,25 @@
 import re
 import unicodedata
 
+from ..components.ratelimit import Bucket
+from ..components.response import JSON
+from .menu import build_menu_structure
+from sanic import Request
+from sanic.response import raw, HTTPResponse
 from datetime import datetime, date as date_cls, time, timedelta
+from json import loads
 from pytz import timezone, utc
 
 
 PARIS = timezone("Europe/Paris")
+
+# Les applications de calendrier (Google Agenda en tête) interrogent les flux depuis
+# un petit nombre d'adresses IP partagées par tous leurs utilisateurs : la limite
+# par IP par défaut serait atteinte dès quelques centaines d'abonnés.
+CALENDAR_BUCKET = Bucket("calendar", 1000, 60)
+
+# Durée de cache des flux : les réponses en cache ne consomment pas de quota.
+CALENDAR_CACHE_TTL = 60 * 30
 
 WEBSITE_URL = "https://croustillant.menu"
 
@@ -241,3 +255,50 @@ def calendar_start_date(days_back: int = 14) -> datetime:
     """
     today = datetime.now(tz=PARIS).replace(hour=0, minute=0, second=0, microsecond=0)
     return today - timedelta(days=days_back)
+
+
+async def restaurantMenuCalendar(
+    request: Request,
+    code: int,
+    meals: list[str] | None = None,
+    minimal: bool = False,
+) -> HTTPResponse:
+    """
+    Retourne la réponse HTTP contenant le calendrier iCalendar des menus d'un restaurant.
+
+    :param request: La requête
+    :param code: ID du restaurant
+    :param meals: Repas à inclure (matin, midi, soir). Tous par défaut.
+    :param minimal: Utilise des créneaux fixes de 15 minutes
+    :return: Le fichier .ics, ou une erreur 404 si le restaurant n'existe pas
+    """
+    restaurant = await request.app.ctx.entities.restaurants.getOne(code)
+
+    if restaurant is None:
+        return JSON(
+            request=request,
+            success=False,
+            message="Le restaurant n'existe pas.",
+            status=404,
+        ).generate()
+
+    restaurant = dict(restaurant)
+    try:
+        restaurant["horaires"] = (
+            loads(restaurant["horaires"]) if restaurant.get("horaires") else None
+        )
+    except Exception:
+        restaurant["horaires"] = None
+
+    menu = await request.app.ctx.entities.menus.getCurrent(
+        id=code, date=calendar_start_date()
+    )
+    menus = list(build_menu_structure(menu).values()) if menu else []
+
+    content = build_menu_calendar(restaurant, menus, meals=meals, minimal=minimal)
+
+    return raw(
+        body=content.encode("utf-8"),
+        status=200,
+        content_type="text/calendar; charset=utf-8",
+    )
