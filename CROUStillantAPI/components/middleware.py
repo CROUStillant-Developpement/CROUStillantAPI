@@ -56,3 +56,10 @@ class Middleware:
             response.headers["X-API"] = "CROUStillantAPI"
             response.headers["X-API-Version"] = f"v{app.config.API_VERSION}"
             response.headers["Content-Language"] = "fr-FR"
+
+            is_image = response.content_type and response.content_type.startswith(
+                "image/"
+            )
+
+            if request.path.startswith("/v1/") and not is_image:
+                response.headers["X-Robots-Tag"] = "noindex, nofollow"

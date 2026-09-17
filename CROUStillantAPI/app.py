@@ -1,4 +1,4 @@
-from sanic import Sanic
+from sanic import Sanic, Request, HTTPResponse, text
 from .config import AppConfig
 from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
@@ -140,6 +140,30 @@ BlueprintLoader(app).register()
 
 # Enregistrement des erreurs
 ErrorHandler(app)
+
+
+# Complète l'en-tête X-Robots-Tag posé par le middleware : celui-ci sort les
+# endpoints déjà connus de l'index, robots.txt évite qu'ils soient explorés du
+# tout. Les images de prévisualisation restent autorisées, le site s'en sert
+# pour ses balises og:image.
+ROBOTS_TXT = dedent(
+    """\
+    User-agent: *
+    Allow: /v1/restaurants/*/preview
+    Disallow: /v1/
+    """
+)
+
+
+@app.route("/robots.txt", methods=["GET"], name="robots")
+async def robots(request: Request) -> HTTPResponse:
+    """
+    Retourne le fichier robots.txt de l'API.
+
+    :param request: Request
+    :return: Le fichier robots.txt
+    """
+    return text(ROBOTS_TXT, content_type="text/plain; charset=utf-8")
 
 
 @app.listener("before_server_start")
