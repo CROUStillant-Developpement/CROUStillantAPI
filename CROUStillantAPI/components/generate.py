@@ -1,48 +1,73 @@
 from ..utils.date import getCleanDate
-from ..utils.image import addCorners
-from ..utils.text import Text, splitText, shorten_px, split_px
+from ..utils.image import addCorners, loadAsset, loadAssetResized
+from ..utils.text import Text, splitText, shorten_px_cached, split_px_cached
 from ..utils.fonts import make_font
 from ..utils.weights import Weights
 from PIL import Image, ImageDraw
 from textwrap import shorten
 from datetime import datetime
+from functools import lru_cache
 from json import loads
 from io import BytesIO
 
 
-def _build_menu_entries(menu: dict, title_font, dish_font, col_max_px: int) -> list[dict]:
+def _menu_key(menu: dict) -> tuple:
     """
-    Build drawable menu entries with wrapped text lines.
+    Réduit un menu aux seuls libellés qui influencent la mise en page.
+
+    Sert de clé de cache : deux menus de même contenu textuel produisent
+    exactement la même mise en page (voir _select_menu_layout).
 
     :param menu: Menu du restaurant universitaire.
     :type menu: dict
-    :param title_font: Police Pillow pour les titres de catégories.
-    :param dish_font: Police Pillow pour les plats.
+    :return: Les catégories et leurs plats, sous forme de tuples.
+    :rtype: tuple
+    """
+    return tuple(
+        (
+            (category.get("libelle") or "").strip(),
+            tuple(
+                (dish.get("libelle") or "").strip()
+                for dish in category.get("plats", [])
+                if (dish.get("libelle") or "").strip()
+            ),
+        )
+        for category in (menu.get("categories", []) if menu else [])
+    )
+
+
+def _build_menu_entries(menu: tuple, title_font: tuple, dish_font: tuple, col_max_px: int) -> list[dict]:
+    """
+    Build drawable menu entries with wrapped text lines.
+
+    Les polices sont passées sous forme (taille, poids) : les raccourcis et
+    découpages de libellés sont mémoïsés sur ces valeurs (voir
+    shorten_px_cached / split_px_cached), et donc réutilisés d'une requête à
+    l'autre.
+
+    :param menu: Menu réduit à ses libellés (voir _menu_key).
+    :type menu: tuple
+    :param title_font: (taille, poids) de la police des titres de catégories.
+    :param dish_font: (taille, poids) de la police des plats.
     :param col_max_px: Largeur maximale en pixels d'une colonne.
     :type col_max_px: int
     :return: Liste d'entrées de menu formatées pour le dessin.
     :rtype: list[dict]
     """
     entries: list[dict] = []
-    bullet_w = int(dish_font.getlength("• "))
+    bullet_w = int(make_font(*dish_font).getlength("• "))
 
-    categories = menu.get("categories", []) if menu else []
-    for category in categories:
-        category_label = (category.get("libelle") or "").strip()
+    for category_label, dishes in menu:
         if category_label:
             entries.append(
                 {
                     "type": "category",
-                    "text": shorten_px(category_label, title_font, col_max_px),
+                    "text": shorten_px_cached(category_label, *title_font, col_max_px),
                 }
             )
 
-        for dish in category.get("plats", []):
-            dish_label = (dish.get("libelle") or "").strip()
-            if not dish_label:
-                continue
-
-            lines = split_px(dish_label, dish_font, col_max_px - bullet_w)
+        for dish_label in dishes:
+            lines = split_px_cached(dish_label, *dish_font, col_max_px - bullet_w)
             if not lines:
                 continue
 
@@ -97,19 +122,25 @@ def _fits_two_columns(entries: list[dict], top: int, bottom: int, sizes: dict) -
     return True
 
 
-def _make_fonts(title_size: int, dish_size: int):
+def _make_fonts(title_size: int, dish_size: int) -> tuple[tuple, tuple]:
     return (
-        make_font(title_size, Weights.EXTRA_BOLD.value),
-        make_font(dish_size, Weights.MEDIUM.value),
+        (title_size, Weights.EXTRA_BOLD.value),
+        (dish_size, Weights.MEDIUM.value),
     )
 
 
-def _select_menu_layout(menu: dict, top: int, bottom: int, col_max_px: int) -> dict:
+@lru_cache(maxsize=512)
+def _select_menu_layout(menu: tuple, top: int, bottom: int, col_max_px: int) -> dict:
     """
     Pick the biggest readable layout that still fits all categories and dishes.
 
-    :param menu: Menu du restaurant universitaire.
-    :type menu: dict
+    Mémoïsé sur le contenu textuel du menu (voir _menu_key) : c'est l'étape la
+    plus coûteuse (mesures de texte pour chaque taille candidate), et elle est
+    identique pour toutes les requêtes d'un même menu, quels que soient le
+    thème et le restaurant. Le résultat est partagé : ne pas le modifier.
+
+    :param menu: Menu réduit à ses libellés (voir _menu_key).
+    :type menu: tuple
     :param top: Position y du haut de la zone de contenu.
     :type top: int
     :param bottom: Position y du bas de la zone de contenu.
@@ -229,7 +260,9 @@ def generate(
     else:
         colours = default_colours
 
-    image = Image.open(f"./assets/images/themes/{theme}/background.png")
+    # Assets decodes une seule fois par processus (loadAsset) : on dessine sur
+    # une copie du fond, les calques partages ne sont que lus.
+    image = loadAsset(f"./assets/images/themes/{theme}/background.png").copy()
     drawer = ImageDraw.Draw(image)
 
     # Titre
@@ -266,12 +299,14 @@ def generate(
     content_bottom = 1000  # 960
 
     if menu:
-        img = Image.open(f"./assets/images/themes/{theme}/square.png")
+        img = loadAsset(f"./assets/images/themes/{theme}/square.png")
         image.paste(img, (35, 168), img)
         image.paste(img, (658, 168), img)
 
         col_max_px = content_x2 - content_x - 80
-        layout = _select_menu_layout(menu=menu, top=content_top, bottom=content_bottom, col_max_px=col_max_px)
+        layout = _select_menu_layout(
+            menu=_menu_key(menu), top=content_top, bottom=content_bottom, col_max_px=col_max_px
+        )
         sizes = layout["sizes"]
         entries = layout["entries"]
 
@@ -312,7 +347,7 @@ def generate(
 
             content_y += height
     else:
-        img = Image.open(f"./assets/images/themes/{theme}/none.png")
+        img = loadAsset(f"./assets/images/themes/{theme}/none.png")
         image.paste(img, (35, 168), img)
 
         m = "Menu non disponible."
@@ -342,12 +377,10 @@ def generate(
     ## Image
 
     if preview:
-        img = Image.open(BytesIO(preview))
+        img = addCorners(Image.open(BytesIO(preview)).resize((462, 295)), 20)
     else:
-        img = Image.open("./assets/images/default_ru.png")
+        img = loadAssetResized("./assets/images/default_ru.png", (462, 295), radius=20)
 
-    img = img.resize((462, 295))
-    img = addCorners(img, 20)
     image.paste(img, (1366, 51), img)
 
     ## Repas
@@ -360,8 +393,7 @@ def generate(
         elif menu["type"] == "soir":
             rID = 3
 
-        img = Image.open(f"./assets/images/layers/repas-{rID}.png")
-        img = img.resize((100, 100))
+        img = loadAssetResized(f"./assets/images/layers/repas-{rID}.png", (100, 100))
         image.paste(img, (1723, 56), img)
 
     ## Titre

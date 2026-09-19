@@ -1549,7 +1549,7 @@ async def getRestaurantMenuFromDateImage(
                 theme=theme,
                 custom_colours=custom_colours,
             )
-            buffer = saveImageToBuffer(image, compression_level=1)
+            buffer = saveImageToBuffer(image)
             return buffer.getvalue()
 
         if preview:

@@ -1,5 +1,40 @@
+from functools import lru_cache
 from io import BytesIO
 from PIL import Image, ImageDraw
+
+
+@lru_cache(maxsize=None)
+def loadAsset(path: str) -> Image.Image:
+    """
+    Charge et decode une image des assets une seule fois par processus.
+
+    L'image retournee est partagee entre les requetes (et les threads) : elle
+    ne doit jamais etre modifiee. Pour dessiner dessus, travailler sur une
+    copie (``loadAsset(path).copy()``).
+
+    :param path: Chemin de l'image
+    :return: L'image decodee
+    """
+    image = Image.open(path)
+    image.load()
+    return image
+
+
+@lru_cache(maxsize=None)
+def loadAssetResized(path: str, size: tuple[int, int], radius: int = 0) -> Image.Image:
+    """
+    Charge une image des assets deja redimensionnee (et arrondie si besoin),
+    une seule fois par processus. Meme regle que loadAsset : ne pas modifier.
+
+    :param path: Chemin de l'image
+    :param size: Taille (largeur, hauteur)
+    :param radius: Rayon des coins arrondis (0 : aucun)
+    :return: L'image transformee
+    """
+    image = loadAsset(path).resize(size)
+    if radius:
+        image = addCorners(image, radius)
+    return image
 
 
 def addCorners(image: Image, radius: int):
@@ -36,15 +71,19 @@ def addCorners(image: Image, radius: int):
     return image
 
 
-def saveImageToBuffer(image: Image, compression_level: int = 1) -> BytesIO:
+def saveImageToBuffer(image: Image, compression_level: int = 3) -> BytesIO:
     """
     Sauvegarde une image dans un buffer avec un niveau de compression spécifié.
+
+    Niveau 3 par défaut : avec zlib-ng (Pillow 12), il réduit une image de menu
+    d'environ un tiers par rapport au niveau 1 pour quelques millisecondes de
+    plus ; au-delà, le gain de taille est faible et le coût double.
 
     :param image: PIL Image object.
     :param compression_level: Compression level (0-9).
     :return: BytesIO object.
     """
     buffer = BytesIO()
-    image.save(buffer, format="PNG", compression_level=compression_level)
+    image.save(buffer, format="PNG", compress_level=compression_level)
     buffer.seek(0)
     return buffer

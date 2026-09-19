@@ -1,6 +1,7 @@
 from .weights import Weights
 from .fonts import make_font
 from PIL import ImageFont, ImageDraw
+from functools import lru_cache
 
 
 class Text:
@@ -46,16 +47,44 @@ def shorten_px(text: str, font, max_width: int, placeholder: str = "...") -> str
     """
     Truncate *text* so its rendered pixel width fits within *max_width*,
     appending *placeholder* when truncation occurs.
+
+    Le plus long prefixe qui tient est trouve par dichotomie (~log2(n) mesures
+    au lieu d'une mesure par caractere) : la largeur d'un prefixe croit avec
+    sa longueur.
     """
     if font.getlength(text) <= max_width:
         return text
     placeholder_width = font.getlength(placeholder)
-    result = ""
-    for char in text:
-        if font.getlength(result + char) + placeholder_width > max_width:
-            break
-        result += char
-    return result.rstrip() + placeholder
+
+    # Plus grand k tel que text[:k] + placeholder tient (text[:0] tient toujours)
+    lo, hi = 0, len(text) - 1
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if font.getlength(text[:mid]) + placeholder_width > max_width:
+            hi = mid - 1
+        else:
+            lo = mid
+    return text[:lo].rstrip() + placeholder
+
+
+@lru_cache(maxsize=8192)
+def shorten_px_cached(text: str, size: int, weight: str, max_width: int, placeholder: str = "...") -> str:
+    """
+    shorten_px memoise, pour la police Inter (size, weight).
+
+    Le resultat ne depend que de ces parametres : il est reutilise d'une
+    requete a l'autre (les memes libelles reviennent pour chaque theme, repas
+    et jour), sans aucune mesure de texte.
+    """
+    return shorten_px(text, make_font(size, weight), max_width, placeholder)
+
+
+@lru_cache(maxsize=8192)
+def split_px_cached(text: str, size: int, weight: str, max_width: int) -> tuple[str, ...]:
+    """
+    split_px memoise, pour la police Inter (size, weight). Voir shorten_px_cached.
+    """
+    return tuple(split_px(text, make_font(size, weight), max_width))
 
 
 def split_px(text: str, font, max_width: int) -> list[str]:
