@@ -30,3 +30,13 @@ def getIntFromString(i: str | int) -> int:
         return int(i)
     except ValueError:
         return 0
+
+
+def toFloat(value) -> float | None:
+    """
+    Convertit une valeur numérique PostgreSQL (NUMERIC -> Decimal) en float.
+
+    :param value: La valeur à convertir
+    :return: La valeur en float, ou None
+    """
+    return float(value) if value is not None else None

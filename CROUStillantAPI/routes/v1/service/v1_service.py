@@ -1,8 +1,11 @@
 from ....components.ratelimit import ratelimit
 from ....components.cache import cache
 from ....components.response import JSON
-from ....models.responses import Status, Stats, StatsByRegion
-from ....models.exceptions import RateLimited
+from ....components.argument import Argument, inputs
+from ....components.rules import Rules
+from ....models.responses import Status, Stats, StatsByRegion, BotStats, BotStatsHistory
+from ....models.exceptions import RateLimited, BadRequest, NotFound
+from ....utils.format import toFloat
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -127,6 +130,137 @@ async def getStatsByRegion(request: Request) -> JSONResponse:
                 "plats_uniques": region.get("plats_uniques"),
             }
             for region in regions
+        ],
+        status=200,
+    ).generate()
+
+
+# /stats/bot
+@bp.route("/stats/bot", methods=["GET"])
+@openapi.definition(
+    summary="Statistiques du bot Discord",
+    description="Retourne le statut et les statistiques du bot Discord CROUStillant (serveurs, utilisateurs, salons, shards, disponibilité). Relevé toutes les 5 minutes.",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": BotStats},
+    description="Statistiques du bot Discord.",
+)
+@openapi.response(
+    status=404,
+    content={"application/json": NotFound},
+    description="Aucun relevé n'est encore disponible.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=60)
+async def getBotStats(request: Request) -> JSONResponse:
+    """
+    Retourne les statistiques du bot Discord.
+
+    :return: Le dernier relevé du bot
+    """
+    stats = await request.app.ctx.entities.bot.getLatest()
+
+    if stats is None:
+        return JSON(
+            request=request,
+            success=False,
+            message="Aucun relevé du bot n'est encore disponible.",
+            status=404,
+        ).generate()
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "statut": stats.get("statut"),
+            "date": stats.get("date").strftime("%d-%m-%Y %H:%M:%S"),
+            "latence_ms": toFloat(stats.get("latence_ms")),
+            "serveurs": stats.get("serveurs"),
+            "utilisateurs": stats.get("utilisateurs"),
+            "salons": stats.get("salons"),
+            "shards": stats.get("shards"),
+            "disponibilite_24h": toFloat(stats.get("disponibilite_24h")),
+            "disponibilite_30j": toFloat(stats.get("disponibilite_30j")),
+        },
+        status=200,
+    ).generate()
+
+
+# /stats/bot/history
+@bp.route("/stats/bot/history", methods=["GET"])
+@openapi.definition(
+    summary="Évolution des statistiques du bot Discord",
+    description="Retourne l'évolution journalière des statistiques du bot Discord CROUStillant (serveurs, utilisateurs, salons, shards, latence moyenne et disponibilité par jour).",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": BotStatsHistory},
+    description="Évolution journalière des statistiques du bot Discord.",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="Le nombre de jours doit être compris entre 1 et 365.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="jours",
+    description="Nombre de jours d'historique (entre 1 et 365, 30 par défaut)",
+    required=False,
+    schema=int,
+    location="query",
+    example=30,
+)
+@ratelimit()
+@inputs(
+    Argument(
+        name="jours",
+        description="Nombre de jours d'historique",
+        methods={"jours": Rules.history},
+        call=int,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@cache(ttl=600)
+async def getBotStatsHistory(request: Request, jours: int | None) -> JSONResponse:
+    """
+    Retourne l'évolution journalière des statistiques du bot Discord.
+
+    :param jours: Nombre de jours d'historique
+    :return: Une ligne par jour
+    """
+    history = await request.app.ctx.entities.bot.getHistory(jours or 30)
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "jour": day.get("jour").strftime("%d-%m-%Y"),
+                "serveurs": day.get("serveurs"),
+                "utilisateurs": day.get("utilisateurs"),
+                "salons": day.get("salons"),
+                "shards": day.get("shards"),
+                "latence_ms": toFloat(day.get("latence_ms")),
+                "disponibilite": toFloat(day.get("disponibilite")),
+                "releves": day.get("releves"),
+            }
+            for day in history
         ],
         status=200,
     ).generate()

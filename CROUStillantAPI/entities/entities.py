@@ -6,6 +6,7 @@ from .plats import Plats
 from .menus import Menus
 from .taches import Taches
 from .insights import Insights
+from .bot import Bot
 from asyncpg import Pool
 
 
@@ -21,3 +22,4 @@ class Entities:
         self.menus = Menus(pool)
         self.taches = Taches(pool)
         self.insights = Insights(pool)
+        self.bot = Bot(pool)

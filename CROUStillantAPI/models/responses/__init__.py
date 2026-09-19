@@ -11,6 +11,7 @@ from .image import Image
 from .insights import RestaurantInsights
 from .activity import RestaurantActivity
 from .geojson import GeoJSON
+from .bot import BotStats, BotStatsHistory
 
 
 __all__ = [
@@ -38,4 +39,6 @@ __all__ = [
     "RestaurantInsights",
     "RestaurantActivity",
     "GeoJSON",
+    "BotStats",
+    "BotStatsHistory",
 ]
