@@ -7,6 +7,8 @@ from .menus import Menus
 from .taches import Taches
 from .insights import Insights
 from .bot import Bot
+from .usage import Usage
+from .geo import Geo
 from asyncpg import Pool
 
 
@@ -23,3 +25,5 @@ class Entities:
         self.taches = Taches(pool)
         self.insights = Insights(pool)
         self.bot = Bot(pool)
+        self.usage = Usage(pool)
+        self.geo = Geo(pool)

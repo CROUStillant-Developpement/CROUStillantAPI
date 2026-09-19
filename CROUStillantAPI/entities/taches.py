@@ -97,6 +97,95 @@ class Taches:
                 timeout=5,
             )
 
+    async def getSummary(self) -> dict:
+        """
+        Récupère un résumé de la fraîcheur des données : la dernière tâche lancée,
+        la dernière tâche terminée (avec ce qu'elle a ajouté) et l'activité récente.
+
+        :return: Un dictionnaire {derniere, derniere_terminee, recent}
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            derniere = await connection.fetchrow(
+                """
+                    SELECT id, debut, fin
+                    FROM tache
+                    ORDER BY debut DESC NULLS LAST
+                    LIMIT 1
+                """,
+                timeout=5,
+            )
+
+            derniere_terminee = await connection.fetchrow(
+                """
+                    SELECT
+                        id,
+                        debut,
+                        fin,
+                        ROUND(EXTRACT(EPOCH FROM (fin - debut))::numeric, 1) AS duree,
+                        requetes,
+                        fin_menus - debut_menus AS nouveaux_menus,
+                        fin_repas - debut_repas AS nouveaux_repas,
+                        fin_plats - debut_plats AS nouveaux_plats
+                    FROM tache
+                    WHERE debut IS NOT NULL AND fin IS NOT NULL
+                    ORDER BY fin DESC
+                    LIMIT 1
+                """,
+                timeout=5,
+            )
+
+            recent = await connection.fetchrow(
+                """
+                    SELECT
+                        COUNT(*) FILTER (WHERE fin >= LOCALTIMESTAMP - INTERVAL '24 hours') AS taches_24h,
+                        ROUND(AVG(EXTRACT(EPOCH FROM (fin - debut)))::numeric, 1) AS duree_moyenne_7j
+                    FROM tache
+                    WHERE debut IS NOT NULL
+                      AND fin IS NOT NULL
+                      AND fin >= LOCALTIMESTAMP - INTERVAL '7 days'
+                """,
+                timeout=5,
+            )
+
+            return {
+                "derniere": derniere,
+                "derniere_terminee": derniere_terminee,
+                "recent": recent,
+            }
+
+    async def getHistory(self, jours: int) -> list:
+        """
+        Récupère l'évolution journalière des tâches terminées.
+
+        :param jours: Le nombre de jours d'historique
+        :return: Une ligne par jour ayant au moins une tâche terminée, du plus ancien au plus récent
+        """
+        async with self.pool.acquire() as connection:
+            connection: Connection
+
+            return await connection.fetch(
+                """
+                    SELECT
+                        DATE(fin) AS jour,
+                        COUNT(*) AS taches,
+                        ROUND(AVG(EXTRACT(EPOCH FROM (fin - debut)))::numeric, 1) AS duree_moyenne,
+                        SUM(requetes) AS requetes,
+                        SUM(fin_menus - debut_menus) AS nouveaux_menus,
+                        SUM(fin_repas - debut_repas) AS nouveaux_repas,
+                        SUM(fin_plats - debut_plats) AS nouveaux_plats
+                    FROM tache
+                    WHERE debut IS NOT NULL
+                      AND fin IS NOT NULL
+                      AND fin >= CURRENT_DATE - ($1::int - 1)
+                    GROUP BY DATE(fin)
+                    ORDER BY jour
+                """,
+                jours,
+                timeout=10,
+            )
+
     async def getForRestaurant(self, rid: int, limit: int = 20) -> list:
         """
         Récupère les dernières tâches d'ingestion ayant vérifié un restaurant.

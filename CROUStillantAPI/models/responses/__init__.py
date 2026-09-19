@@ -5,13 +5,15 @@ from .restaurants import Restaurants, Restaurant, RestaurantsStatus, Restaurants
 from .types_restaurants import TypesRestaurants
 from .plats import Plats, Plat, PlatsWithTotal
 from .menus import Menus, Menu, Dates
-from .taches import Taches, Tache
+from .taches import Taches, Tache, TachesStats, TachesStatsHistory
 from .changelog import ChangeLog
 from .image import Image
 from .insights import RestaurantInsights
 from .activity import RestaurantActivity
 from .geojson import GeoJSON
 from .bot import BotStats, BotStatsHistory
+from .usage import ApiStats, ApiStatsHistory
+from .geo import GeoStats
 
 
 __all__ = [
@@ -41,4 +43,9 @@ __all__ = [
     "GeoJSON",
     "BotStats",
     "BotStatsHistory",
+    "TachesStats",
+    "TachesStatsHistory",
+    "ApiStats",
+    "ApiStatsHistory",
+    "GeoStats",
 ]

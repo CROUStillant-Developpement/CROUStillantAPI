@@ -40,3 +40,14 @@ def toFloat(value) -> float | None:
     :return: La valeur en float, ou None
     """
     return float(value) if value is not None else None
+
+
+def formatDate(value, fmt: str = "%d-%m-%Y %H:%M:%S") -> str | None:
+    """
+    Formate une date (ou un datetime) PostgreSQL, en conservant None.
+
+    :param value: La date à formater
+    :param fmt: Le format de sortie
+    :return: La date formatée, ou None
+    """
+    return value.strftime(fmt) if value is not None else None

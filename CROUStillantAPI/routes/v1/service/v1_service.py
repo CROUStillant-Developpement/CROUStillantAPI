@@ -3,9 +3,20 @@ from ....components.cache import cache
 from ....components.response import JSON
 from ....components.argument import Argument, inputs
 from ....components.rules import Rules
-from ....models.responses import Status, Stats, StatsByRegion, BotStats, BotStatsHistory
+from ....models.responses import (
+    Status,
+    Stats,
+    StatsByRegion,
+    BotStats,
+    BotStatsHistory,
+    ApiStats,
+    ApiStatsHistory,
+    TachesStats,
+    TachesStatsHistory,
+    GeoStats,
+)
 from ....models.exceptions import RateLimited, BadRequest, NotFound
-from ....utils.format import toFloat
+from ....utils.format import toFloat, formatDate
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -262,5 +273,306 @@ async def getBotStatsHistory(request: Request, jours: int | None) -> JSONRespons
             }
             for day in history
         ],
+        status=200,
+    ).generate()
+
+
+# /stats/api
+@bp.route("/stats/api", methods=["GET"])
+@openapi.definition(
+    summary="Utilisation de l'API",
+    description="Retourne les statistiques d'utilisation de l'API depuis le début du suivi : nombre total de requêtes, de visiteurs uniques et les routes les plus appelées.",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": ApiStats},
+    description="Statistiques d'utilisation de l'API.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=600)
+async def getApiStats(request: Request) -> JSONResponse:
+    """
+    Retourne les statistiques d'utilisation de l'API.
+
+    :return: Les totaux et les routes les plus appelées
+    """
+    summary = await request.app.ctx.entities.usage.getSummary()
+    routes = await request.app.ctx.entities.usage.getTopRoutes(limit=10)
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "requetes": summary.get("requetes"),
+            "visiteurs_uniques": summary.get("visiteurs_uniques"),
+            "depuis": formatDate(summary.get("depuis"), "%d-%m-%Y"),
+            "routes": [
+                {
+                    "route": route.get("route"),
+                    "requetes": route.get("requetes"),
+                    "temps_moyen_ms": toFloat(route.get("temps_moyen_ms")),
+                }
+                for route in routes
+            ],
+        },
+        status=200,
+    ).generate()
+
+
+# /stats/api/history
+@bp.route("/stats/api/history", methods=["GET"])
+@openapi.definition(
+    summary="Évolution de l'utilisation de l'API",
+    description="Retourne l'évolution journalière de l'utilisation de l'API (requêtes, visiteurs uniques, erreurs serveur, temps de réponse). Seuls les jours terminés sont renvoyés.",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": ApiStatsHistory},
+    description="Évolution journalière de l'utilisation de l'API.",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="Le nombre de jours doit être compris entre 1 et 365.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="jours",
+    description="Nombre de jours d'historique (entre 1 et 365, 30 par défaut)",
+    required=False,
+    schema=int,
+    location="query",
+    example=30,
+)
+@ratelimit()
+@inputs(
+    Argument(
+        name="jours",
+        description="Nombre de jours d'historique",
+        methods={"jours": Rules.history},
+        call=int,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@cache(ttl=600)
+async def getApiStatsHistory(request: Request, jours: int | None) -> JSONResponse:
+    """
+    Retourne l'évolution journalière de l'utilisation de l'API.
+
+    :param jours: Nombre de jours d'historique
+    :return: Une ligne par jour
+    """
+    history = await request.app.ctx.entities.usage.getHistory(jours or 30)
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "jour": formatDate(day.get("jour"), "%d-%m-%Y"),
+                "requetes": day.get("requetes"),
+                "visiteurs_uniques": day.get("visiteurs_uniques"),
+                "erreurs_serveur": day.get("erreurs_serveur"),
+                "temps_reponse_p50_ms": toFloat(day.get("temps_reponse_p50_ms")),
+                "temps_reponse_p95_ms": toFloat(day.get("temps_reponse_p95_ms")),
+            }
+            for day in history
+        ],
+        status=200,
+    ).generate()
+
+
+# /stats/taches
+@bp.route("/stats/taches", methods=["GET"])
+@openapi.definition(
+    summary="Fraîcheur des données",
+    description="Retourne la dernière tâche de mise à jour des menus lancée, la dernière terminée (avec les menus, repas et plats ajoutés) et l'activité récente des tâches.",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": TachesStats},
+    description="Fraîcheur des données.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=60)
+async def getTachesStats(request: Request) -> JSONResponse:
+    """
+    Retourne la fraîcheur des données.
+
+    :return: La dernière tâche lancée, la dernière terminée et l'activité récente
+    """
+    summary = await request.app.ctx.entities.taches.getSummary()
+    derniere = summary.get("derniere")
+    terminee = summary.get("derniere_terminee")
+    recent = summary.get("recent")
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "derniere": {
+                "id": derniere.get("id"),
+                "debut": formatDate(derniere.get("debut")),
+                "fin": formatDate(derniere.get("fin")),
+            }
+            if derniere
+            else None,
+            "derniere_terminee": {
+                "id": terminee.get("id"),
+                "debut": formatDate(terminee.get("debut")),
+                "fin": formatDate(terminee.get("fin")),
+                "duree": toFloat(terminee.get("duree")),
+                "requetes": terminee.get("requetes"),
+                "nouveaux_menus": terminee.get("nouveaux_menus"),
+                "nouveaux_repas": terminee.get("nouveaux_repas"),
+                "nouveaux_plats": terminee.get("nouveaux_plats"),
+            }
+            if terminee
+            else None,
+            "taches_24h": recent.get("taches_24h"),
+            "duree_moyenne_7j": toFloat(recent.get("duree_moyenne_7j")),
+        },
+        status=200,
+    ).generate()
+
+
+# /stats/taches/history
+@bp.route("/stats/taches/history", methods=["GET"])
+@openapi.definition(
+    summary="Évolution des tâches de mise à jour",
+    description="Retourne l'évolution journalière des tâches de mise à jour des menus terminées (nombre, durée moyenne, requêtes envoyées, menus, repas et plats ajoutés).",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": TachesStatsHistory},
+    description="Évolution journalière des tâches.",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="Le nombre de jours doit être compris entre 1 et 365.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@openapi.parameter(
+    name="jours",
+    description="Nombre de jours d'historique (entre 1 et 365, 30 par défaut)",
+    required=False,
+    schema=int,
+    location="query",
+    example=30,
+)
+@ratelimit()
+@inputs(
+    Argument(
+        name="jours",
+        description="Nombre de jours d'historique",
+        methods={"jours": Rules.history},
+        call=int,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
+    )
+)
+@cache(ttl=600)
+async def getTachesStatsHistory(request: Request, jours: int | None) -> JSONResponse:
+    """
+    Retourne l'évolution journalière des tâches de mise à jour.
+
+    :param jours: Nombre de jours d'historique
+    :return: Une ligne par jour
+    """
+    history = await request.app.ctx.entities.taches.getHistory(jours or 30)
+
+    return JSON(
+        request=request,
+        success=True,
+        data=[
+            {
+                "jour": formatDate(day.get("jour"), "%d-%m-%Y"),
+                "taches": day.get("taches"),
+                "duree_moyenne": toFloat(day.get("duree_moyenne")),
+                "requetes": day.get("requetes"),
+                "nouveaux_menus": day.get("nouveaux_menus"),
+                "nouveaux_repas": day.get("nouveaux_repas"),
+                "nouveaux_plats": day.get("nouveaux_plats"),
+            }
+            for day in history
+        ],
+        status=200,
+    ).generate()
+
+
+# /stats/geo
+@bp.route("/stats/geo", methods=["GET"])
+@openapi.definition(
+    summary="Répartition géographique des visites",
+    description="Retourne les villes d'où le site CROUStillant est le plus consulté (50 premières, au moins 10 sessions chacune), avec leurs coordonnées.",
+    tag="Service",
+)
+@openapi.response(
+    status=200,
+    content={"application/json": GeoStats},
+    description="Répartition géographique des visites.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=3600)
+async def getGeoStats(request: Request) -> JSONResponse:
+    """
+    Retourne la répartition géographique des visites du site.
+
+    :return: Les totaux et les villes les plus actives
+    """
+    summary = await request.app.ctx.entities.geo.getSummary()
+    cities = await request.app.ctx.entities.geo.getTopCities(limit=50)
+
+    return JSON(
+        request=request,
+        success=True,
+        data={
+            "sessions": summary.get("sessions"),
+            "villes": summary.get("villes"),
+            "top": [
+                {
+                    "ville": city.get("ville"),
+                    "region": city.get("region"),
+                    "pays": city.get("pays"),
+                    "latitude": city.get("latitude"),
+                    "longitude": city.get("longitude"),
+                    "sessions": city.get("sessions"),
+                }
+                for city in cities
+            ],
+        },
         status=200,
     ).generate()
