@@ -4,6 +4,7 @@ from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
 from .components.analytics import Analytics
 from .components.cache import Cache
+from .components.events import EventBroker
 from .components.blueprint import BlueprintLoader
 from .components.errors import ErrorHandler
 from .entities.entities import Entities
@@ -206,7 +207,18 @@ async def setup_app(app: Sanic):
 
     app.ctx.entities = Entities(app.ctx.pool)
 
+    # Diffusion des événements en temps réel (/v1/evenements)
+    app.ctx.events = EventBroker(app)
+    app.ctx.events.start()
+
     app.ctx.logs.info("API démarrée")
+
+
+@app.listener("before_server_stop")
+async def close_streams(app: Sanic):
+    # Termine les flux d'événements en cours pour permettre un arrêt propre du serveur
+    if hasattr(app.ctx, "events"):
+        app.ctx.events.close()
 
 
 @app.listener("after_server_stop")

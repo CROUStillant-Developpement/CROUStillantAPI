@@ -177,6 +177,54 @@ class Ratelimiter:
                     return bucket
 
 
+async def checkRatelimit(
+    request: Request, default_bucket: Bucket = Ratelimiter.DEFAULT
+) -> dict:
+    """
+    Vérifie la limite de requêtes pour une requête et retourne les en-têtes X-RateLimit.
+
+    Utilisée par le décorateur ``@ratelimit``, et directement par les routes qui ne
+    retournent pas de réponse (flux ``text/event-stream``).
+
+    :param request: Requête
+    :type request: Request
+    :param default_bucket: Bucket par défaut
+    :type default_bucket: Bucket
+    :return: Les en-têtes X-RateLimit à ajouter à la réponse
+    :rtype: dict
+    """
+    key = request.headers.get("CF-Connecting-IP", request.client_ip)
+    apikey = request.headers.get(
+        "X-API-Key", None
+    )  # Pour les utilisateurs qui ont une adresse IP dynamique
+    if apikey:
+        key = apikey
+
+    ratelimiter: Ratelimiter = request.app.ctx.ratelimiter
+
+    pool: Pool = getattr(request.app.ctx, "pool", None)
+    error = False
+
+    try:
+        if pool:
+            bucket: Bucket = await ratelimiter.getBucket(pool, key)
+
+            # Dans certains cas comme pour les images CDN, on veut appliquer la limite la moins restrictive
+            if bucket.limit < default_bucket.limit:
+                bucket = default_bucket
+        else:
+            bucket = default_bucket
+    except ForbiddenException:
+        raise
+    except Exception:
+        # Si la récupération du bucket échoue (ex: DB indisponible), on replie sur le bucket par défaut
+        # afin que les headers X-RateLimit soient toujours présents dans la réponse
+        bucket = default_bucket
+        error = True
+
+    return await ratelimiter.check_ratelimit(key, bucket, error=error)
+
+
 def ratelimit(default_bucket: Bucket = Ratelimiter.DEFAULT) -> callable:
     """
     Décorateur permettant de limiter le nombre de requêtes par seconde
@@ -207,36 +255,7 @@ def ratelimit(default_bucket: Bucket = Ratelimiter.DEFAULT) -> callable:
             :param kwargs: Arguments nommés
             :return: Réponse
             """
-            key = request.headers.get("CF-Connecting-IP", request.client_ip)
-            apikey = request.headers.get(
-                "X-API-Key", None
-            )  # Pour les utilisateurs qui ont une adresse IP dynamique
-            if apikey:
-                key = apikey
-
-            ratelimiter: Ratelimiter = request.app.ctx.ratelimiter
-
-            pool: Pool = getattr(request.app.ctx, "pool", None)
-            error = False
-
-            try:
-                if pool:
-                    bucket: Bucket = await ratelimiter.getBucket(pool, key)
-
-                    # Dans certains cas comme pour les images CDN, on veut appliquer la limite la moins restrictive
-                    if bucket.limit < default_bucket.limit:
-                        bucket = default_bucket
-                else:
-                    bucket = default_bucket
-            except ForbiddenException:
-                raise
-            except Exception:
-                # Si la récupération du bucket échoue (ex: DB indisponible), on replie sur le bucket par défaut
-                # afin que les headers X-RateLimit soient toujours présents dans la réponse
-                bucket = default_bucket
-                error = True
-
-            headers = await ratelimiter.check_ratelimit(key, bucket, error=error)
+            headers = await checkRatelimit(request, default_bucket)
 
             resp: HTTPResponse = await func(request, *args, **kwargs)
             resp.headers.update(headers)

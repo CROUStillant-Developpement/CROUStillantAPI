@@ -11,6 +11,13 @@ from dotenv import load_dotenv
 from os import environ
 
 
+# Étiquette des réponses mises en cache pour les listes de restaurants (/v1/restaurants, /status...)
+RESTAURANTS_TAG = "cache:tag:restaurants"
+
+# Durée de vie des étiquettes : supérieure à la durée de cache de toutes les routes étiquetées
+TAG_TTL = 60 * 60 * 24
+
+
 def _serialize_response(response: HTTPResponse) -> bytes:
     """
     Sérialise une réponse HTTP en bytes compacts.
@@ -201,8 +208,65 @@ class Cache:
             cached_data = _serialize_response(response)
             try:
                 await self.redis.setex(cache_key, ttl, cached_data)
+
+                tags = self.get_tags(request)
+                if tags:
+                    pipe = self.redis.pipeline()
+                    for tag in tags:
+                        pipe.sadd(tag, cache_key)
+                        pipe.expire(tag, TAG_TTL)
+                    await pipe.execute()
             except RedisConnectionError:
                 pass
+
+    @staticmethod
+    def restaurantTag(rid: int | str) -> str:
+        """
+        Étiquette des réponses mises en cache pour un restaurant (/v1/restaurants/{code}/...)
+
+        :param rid: ID du restaurant
+        :return: Nom de l'étiquette
+        """
+        return f"cache:tag:restaurant:{rid}"
+
+    @staticmethod
+    def get_tags(request: Request) -> list[str]:
+        """
+        Étiquettes d'une réponse mise en cache, utilisées pour l'invalider lorsqu'un
+        événement concerne le restaurant (voir :meth:`invalidate`).
+
+        :param request: Request
+        :return: Les étiquettes de la réponse
+        """
+        if not request.path.startswith("/v1/restaurants"):
+            return []
+
+        code = request.match_info.get("code")
+        if code is not None:
+            return [Cache.restaurantTag(code)]
+
+        return [RESTAURANTS_TAG]
+
+    async def invalidate(self, *tags: str) -> int:
+        """
+        Supprime toutes les réponses mises en cache associées aux étiquettes données.
+
+        :param tags: Les étiquettes
+        :return: Le nombre de réponses supprimées
+        """
+        if not self.redis or not tags:
+            return 0
+
+        try:
+            keys = set()
+            for tag in tags:
+                keys |= await self.redis.smembers(tag)
+
+            await self.redis.delete(*keys, *tags)
+        except RedisConnectionError:
+            return 0
+
+        return len(keys)
 
 
 def cache(ttl: int = 60, key: str = None):
