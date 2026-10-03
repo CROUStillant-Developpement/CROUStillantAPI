@@ -24,13 +24,12 @@ class Taches:
                 timeout=5,
             )
 
-    async def getLast(self, limit: int, offset: int) -> list:
+    async def getLast(self, jours: int) -> list:
         """
-        Récupère les dernières tâches.
+        Récupère les tâches lancées au cours des derniers jours.
 
-        :param limit: Nombre de tâches à récupérer
-        :param offset: Offset
-        :return: Les tâches
+        :param jours: Le nombre de jours d'historique
+        :return: Les tâches, les plus récentes en premier
         """
         async with self.pool.acquire() as connection:
             connection: Connection
@@ -41,14 +40,13 @@ class Taches:
                         *
                     FROM
                         tache
+                    WHERE
+                        debut >= CURRENT_DATE - ($1::int - 1)
                     ORDER BY
                         id DESC
-                    LIMIT $1
-                    OFFSET $2
                 """,
-                limit,
-                offset,
-                timeout=5,
+                jours,
+                timeout=10,
             )
 
     async def getOne(self, id: int) -> dict:

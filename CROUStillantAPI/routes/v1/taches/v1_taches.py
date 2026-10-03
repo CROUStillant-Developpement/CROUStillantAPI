@@ -5,7 +5,6 @@ from ....components.argument import Argument, inputs
 from ....components.rules import Rules
 from ....models.responses import Taches, Tache
 from ....models.exceptions import RateLimited, BadRequest, NotFound
-from ....utils.format import getIntFromString
 from sanic.response import JSONResponse
 from sanic import Blueprint, Request
 from sanic_ext import openapi
@@ -17,14 +16,19 @@ bp = Blueprint(name="Taches", url_prefix="/taches", version=1, version_prefix="v
 # /taches
 @bp.route("/", methods=["GET"])
 @openapi.definition(
-    summary="Liste des 100 dernières tâches",
-    description="Liste des 100 dernières tâches ajoutées à la base de données.",
+    summary="Liste des dernières tâches",
+    description="Liste des tâches lancées au cours des derniers jours, les plus récentes en premier.",
     tag="Taches",
 )
 @openapi.response(
     status=200,
     content={"application/json": Taches},
-    description="Liste des 100 dernières tâches ajoutées à la base de données.",
+    description="Liste des tâches lancées au cours des derniers jours.",
+)
+@openapi.response(
+    status=400,
+    content={"application/json": BadRequest},
+    description="Le nombre de jours doit être compris entre 1 et 365.",
 )
 @openapi.response(
     status=429,
@@ -32,24 +36,35 @@ bp = Blueprint(name="Taches", url_prefix="/taches", version=1, version_prefix="v
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @openapi.parameter(
-    name="offset",
-    description="Décalage pour la pagination",
+    name="jours",
+    description="Nombre de jours d'historique (entre 1 et 365, 7 par défaut)",
     required=False,
-    schema=bool,
+    schema=int,
     location="query",
-    example=0,
+    example=7,
 )
 @ratelimit()
-@cache(ttl=300)
-async def getTaches(request: Request) -> JSONResponse:
-    """
-    Récupère les 100 dernières tâches.
-
-    :return: Les 100 dernières tâches
-    """
-    taches = await request.app.ctx.entities.taches.getLast(
-        limit=100, offset=getIntFromString(request.args.get("offset", 0))
+@inputs(
+    Argument(
+        name="jours",
+        description="Nombre de jours d'historique",
+        methods={"jours": Rules.history},
+        call=int,
+        required=False,
+        headers=False,
+        allow_multiple=False,
+        deprecated=False,
     )
+)
+@cache(ttl=300)
+async def getTaches(request: Request, jours: int | None) -> JSONResponse:
+    """
+    Récupère les tâches lancées au cours des derniers jours.
+
+    :param jours: Nombre de jours d'historique
+    :return: Les tâches
+    """
+    taches = await request.app.ctx.entities.taches.getLast(jours or 7)
 
     return JSON(
         request=request,
