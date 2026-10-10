@@ -86,6 +86,40 @@ async def getRegionsGeoJSON(request: Request) -> HTTPResponse:
     )
 
 
+# /regions/geojson/optimised
+@bp.route("/geojson/optimised", methods=["GET"])
+@openapi.definition(
+    summary="Découpage géographique des régions (allégé)",
+    description="Même découpage que /regions/geojson (mêmes features, mêmes propriétés), avec des contours simplifiés : environ 80 Ko au lieu de 2,4 Mo. Les frontières communes à deux CROUS restent identiques des deux côtés. À privilégier pour une vue d'ensemble (carte de France, vignette) ; préférez /regions/geojson dès que la carte permet de zoomer à l'échelle d'une ville.",
+    tag="Regions",
+)
+@openapi.response(
+    status=200,
+    content={"application/geo+json": GeoJSON},
+    description="Découpage géographique simplifié des 26 CROUS au format GeoJSON.",
+)
+@openapi.response(
+    status=429,
+    content={"application/json": RateLimited},
+    description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
+)
+@ratelimit()
+@cache(ttl=60 * 60 * 24)  # 1 jour, fichier statique
+async def getRegionsGeoJSONOptimised(request: Request) -> HTTPResponse:
+    """
+    Retourne le découpage géographique simplifié des régions au format GeoJSON.
+
+    Le fichier est généré par scripts/optimise_regions_geojson.mjs à partir de
+    crous_regions.geojson : à relancer si ce dernier change.
+
+    :return: Le GeoJSON simplifié des régions
+    """
+    return await file(
+        location="./static/geo/crous_regions_optimised.geojson",
+        mime_type="application/geo+json",
+    )
+
+
 # /regions/{code}
 @bp.route("/<code>", methods=["GET"])
 @openapi.definition(
