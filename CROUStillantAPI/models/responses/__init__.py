@@ -6,7 +6,6 @@ from .types_restaurants import TypesRestaurants
 from .plats import Plats, Plat, PlatsWithTotal
 from .menus import Menus, Menu, Dates
 from .taches import Taches, Tache, TachesStats, TachesStatsHistory
-from .changelog import ChangeLog
 from .image import Image
 from .insights import RestaurantInsights
 from .activity import RestaurantActivity
@@ -36,7 +35,6 @@ __all__ = [
     "Dates",
     "Taches",
     "Tache",
-    "ChangeLog",
     "Image",
     "RestaurantInsights",
     "RestaurantActivity",

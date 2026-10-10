@@ -8,7 +8,6 @@ from .tache import (
     Tache as TacheComponent,
     TacheWithRestaurants as TacheWithRestaurantsComponent,
 )
-from .changelog import ChangeLog as ChangeLogComponent
 
 
 __all__ = [
@@ -23,5 +22,4 @@ __all__ = [
     "DateComponent",
     "TacheComponent",
     "TacheWithRestaurantsComponent",
-    "ChangeLogComponent",
 ]

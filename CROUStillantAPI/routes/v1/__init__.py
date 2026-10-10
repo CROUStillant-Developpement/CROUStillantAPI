@@ -4,7 +4,6 @@ from .service.v1_service import bp as RouteService
 from .plats.v1_plats import bp as RoutePlats
 from .misc.v1_misc import bp as RouteMisc
 from .taches.v1_taches import bp as RouteTaches
-from .interne.v1_interne import bp as RouteInterne
 from .calendar.v1_calendar import bp as RouteCalendar
 from .evenements.v1_evenements import bp as RouteEvenements
 
@@ -19,7 +18,6 @@ __routes__ = [
     RoutePlats,
     RouteMisc,
     RouteTaches,
-    RouteInterne,
     RouteCalendar,
     RouteEvenements,
 ]
