@@ -1,4 +1,5 @@
 from sanic import Sanic, Request, HTTPResponse, text
+from sanic_ext import openapi
 from .config import AppConfig
 from .components.middleware import Middleware
 from .components.ratelimit import Ratelimiter
@@ -157,6 +158,8 @@ ROBOTS_TXT = dedent(
 
 
 @app.route("/robots.txt", methods=["GET"], name="robots")
+@openapi.no_autodoc
+@openapi.exclude()
 async def robots(request: Request) -> HTTPResponse:
     """
     Retourne le fichier robots.txt de l'API.
