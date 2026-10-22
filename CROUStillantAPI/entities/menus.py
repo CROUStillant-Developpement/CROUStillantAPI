@@ -1,4 +1,5 @@
 from asyncpg import Pool, Connection
+from .plats import PLAT_ANALYSE_COLUMNS, PLAT_ANALYSE_JOINS
 from datetime import datetime
 import asyncio
 
@@ -49,7 +50,7 @@ class Menus:
 
             return await _fetch(
                 connection,
-                """
+                f"""
                     WITH LatestMenus AS (
                         SELECT DISTINCT ON (M.DATE)
                             M.MID,
@@ -70,13 +71,15 @@ class Menus:
                         C.ORDRE AS CAT_ORDRE,
                         P.PLATID,
                         P.LIBELLE AS PLAT,
-                        CO.ORDRE AS PLAT_ORDRE
+                        CO.ORDRE AS PLAT_ORDRE,
+                        {PLAT_ANALYSE_COLUMNS}
                     FROM PUBLIC.MENU M
                     JOIN LatestMenus LM ON M.MID = LM.MID
                     JOIN PUBLIC.REPAS RP ON M.MID = RP.MID
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
                     LEFT JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
                     LEFT JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
+                    {PLAT_ANALYSE_JOINS}
                     ORDER BY M.DATE, RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
@@ -97,7 +100,7 @@ class Menus:
 
             return await _fetch(
                 connection,
-                """
+                f"""
                     WITH LatestMenu AS (
                         SELECT MAX(MID) AS MID
                         FROM PUBLIC.MENU
@@ -114,13 +117,15 @@ class Menus:
                         C.ORDRE AS CAT_ORDRE,
                         P.PLATID,
                         P.LIBELLE AS PLAT,
-                        CO.ORDRE AS PLAT_ORDRE
+                        CO.ORDRE AS PLAT_ORDRE,
+                        {PLAT_ANALYSE_COLUMNS}
                     FROM PUBLIC.MENU M
                     JOIN LatestMenu LM ON M.MID = LM.MID
                     JOIN PUBLIC.REPAS RP ON M.MID = RP.MID
                     JOIN PUBLIC.CATEGORIE C ON RP.RPID = C.RPID
                     LEFT JOIN PUBLIC.COMPOSITION CO ON C.CATID = CO.CATID
                     LEFT JOIN PUBLIC.PLAT P ON CO.PLATID = P.PLATID
+                    {PLAT_ANALYSE_JOINS}
                     ORDER BY RP.RPID, C.ORDRE, CO.ORDRE
                 """,
                 id,
