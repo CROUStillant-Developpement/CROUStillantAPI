@@ -1,3 +1,6 @@
+from .plat import format_analyse
+
+
 def build_menu_structure(rows: list) -> dict[str, dict]:
     """
     Convertit une liste de lignes plates (asyncpg) en une structure imbriquée
@@ -41,6 +44,7 @@ def build_menu_structure(rows: list) -> dict[str, dict]:
                     "code": row.get("platid"),
                     "ordre": row.get("plat_ordre") + 1,
                     "libelle": row.get("plat"),
+                    "analyse": format_analyse(row, row.get("tpcat")),
                 }
             )
 

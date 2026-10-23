@@ -3,7 +3,7 @@ from .status import Status
 from .regions import Regions, Region
 from .restaurants import Restaurants, Restaurant, RestaurantsStatus, RestaurantsStatusMinimal, RestaurantInfo
 from .types_restaurants import TypesRestaurants
-from .plats import Plats, Plat, PlatsWithTotal
+from .plats import Plats, Plat, PlatsWithTotal, PlatCanonique, AnalysePlat
 from .menus import Menus, Menu, Dates
 from .taches import Taches, Tache, TachesStats, TachesStatsHistory
 from .image import Image
@@ -30,6 +30,8 @@ __all__ = [
     "Plats",
     "Plat",
     "PlatsWithTotal",
+    "PlatCanonique",
+    "AnalysePlat",
     "Menus",
     "Menu",
     "Dates",

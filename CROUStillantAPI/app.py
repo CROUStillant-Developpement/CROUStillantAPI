@@ -11,6 +11,7 @@ from .components.errors import ErrorHandler
 from .entities.entities import Entities
 from .utils.logger import Logger
 from .utils.webhook import ErrorWebhook
+from croustillant_classifier import Classifier
 from dotenv import load_dotenv
 from os import environ
 from textwrap import dedent
@@ -209,6 +210,9 @@ async def setup_app(app: Sanic):
     app.ctx.logs.debug(f"Utilisation de {max_workers} workers pour le ThreadPoolExecutor.")
 
     app.ctx.entities = Entities(app.ctx.pool)
+
+    # Classifieur des plats (règles et tables figées, chargé une seule fois) : POST /v1/plats/analyse
+    app.ctx.classifier = Classifier()
 
     # Diffusion des événements en temps réel (/v1/evenements)
     app.ctx.events = EventBroker(app)
