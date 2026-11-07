@@ -141,9 +141,9 @@ La documentation interactive complète est disponible à la racine de l'API (ex 
 | `GET /v1/regions` | Liste des régions |
 | `GET /v1/regions/{code}` | Détails d'une région |
 | `GET /v1/regions/{code}/restaurants` | Restaurants d'une région |
-| `GET /v1/plats` | 100 derniers plats ajoutés |
+| `GET /v1/plats` | 100 derniers plats canoniques ajoutés |
 | `GET /v1/plats/{code}` | Détails d'un plat |
-| `GET /v1/plats/top` | Top 100 des plats les plus populaires |
+| `GET /v1/plats/top` | Top 100 des plats canoniques les plus servis (hors informations : « Fermé »...) |
 | `GET /v1/taches` | Liste des tâches de mise à jour |
 | `GET /v1/taches/{id}` | Détails d'une tâche |
 
