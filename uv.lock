@@ -285,7 +285,7 @@ wheels = [
 [[package]]
 name = "croustillant-classifier"
 version = "2.1.0"
-source = { git = "https://github.com/CROUStillant-Developpement/CROUStillantClassifier.git#345299cd0595969df4a5d9f1d2f8827b2d7ffd34" }
+source = { git = "https://github.com/CROUStillant-Developpement/CROUStillantClassifier.git#e708ab1ee2debbcb67e6df7a8ee8cbad172d012b" }
 
 [[package]]
 name = "croustillantapi"
