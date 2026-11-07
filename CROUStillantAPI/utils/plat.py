@@ -83,3 +83,19 @@ def format_analyse(row, tpcat: str | None = None) -> dict | None:
         "labels": list(row.get("labels") or []),
         "composants": composants,
     }
+
+
+def format_canonique(row) -> dict:
+    """
+    Résumé d'un plat canonique (PLAT_CANONIQUE).
+
+    :param row: Ligne contenant IDPC, LIBELLE, TYPE_PLAT, VEGETARIEN et SOURCE
+    :return: Le plat canonique
+    """
+    return {
+        "code": row.get("idpc"),
+        "libelle": row.get("libelle"),
+        "type": row.get("type_plat"),
+        "vegetarien": row.get("vegetarien"),
+        "verifie": row.get("source") == "humain",
+    }

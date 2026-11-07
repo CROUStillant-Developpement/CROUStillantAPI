@@ -4,7 +4,8 @@ from .restaurant_status import RestaurantStatus as RestaurantStatusComponent, Re
 from .type_restaurant import TypeRestaurant as TypeRestaurantComponent
 from .plat import (
     Plat as PlatComponent,
-    PlatWithTotal as PlatComponentWithTotal,
+    PlatCanoniqueResume as PlatCanoniqueResumeComponent,
+    PlatCanoniqueWithTotal as PlatCanoniqueWithTotalComponent,
     PlatCanonique as PlatCanoniqueComponent,
     AnalyseRequete as AnalyseRequeteComponent,
     AnalyseResultat as AnalyseResultatComponent,
@@ -23,7 +24,8 @@ __all__ = [
     "RestaurantStatusMinimalComponent",
     "TypeRestaurantComponent",
     "PlatComponent",
-    "PlatComponentWithTotal",
+    "PlatCanoniqueResumeComponent",
+    "PlatCanoniqueWithTotalComponent",
     "PlatCanoniqueComponent",
     "AnalyseRequeteComponent",
     "AnalyseResultatComponent",

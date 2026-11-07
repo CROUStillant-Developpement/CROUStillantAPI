@@ -141,18 +141,36 @@ class PlatTrie:
     analyse = Analyse
 
 
-class PlatWithTotal:
-    code = openapi.String(
-        description="Identifiant du plat",
-        example=1,
+@openapi.component
+class PlatCanoniqueResume:
+    code = openapi.Integer(
+        description="Identifiant du plat canonique (voir /plats/canoniques/{code})",
+        example=1689,
     )
     libelle = openapi.String(
-        description="Libellé du plat",
-        example="Dinde provençal",
+        description="Libellé du plat canonique",
+        example="Poulet basquaise",
     )
+    type = openapi.String(
+        description="Type par défaut",
+        enum=TYPES_PLAT,
+        example="PLAT",
+    )
+    vegetarien = openapi.Boolean(
+        description="Plat annoncé végétarien",
+        example=False,
+    )
+    verifie = openapi.Boolean(
+        description="Type vérifié à la main",
+        example=False,
+    )
+
+
+@openapi.component
+class PlatCanoniqueWithTotal(PlatCanoniqueResume):
     total = openapi.Integer(
-        description="Nombre de fois d'apparition du plat",
-        example=10,
+        description="Nombre de fois où le plat a été servi (toutes écritures confondues)",
+        example=24051,
     )
 
 

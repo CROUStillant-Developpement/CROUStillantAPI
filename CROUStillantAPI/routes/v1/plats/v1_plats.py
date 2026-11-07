@@ -5,7 +5,7 @@ from ....components.argument import Argument, inputs
 from ....components.rules import Rules
 from ....models.responses import Plats, Plat, PlatsWithTotal, PlatCanonique, AnalysePlat
 from ....models.components import AnalyseRequeteComponent
-from ....utils.plat import format_analyse, format_allergenes
+from ....utils.plat import format_analyse, format_allergenes, format_canonique
 from croustillant_classifier import VERSION, occurrence_type
 from ....models.exceptions import RateLimited, BadRequest, NotFound
 from sanic.response import JSONResponse
@@ -20,13 +20,14 @@ bp = Blueprint(name="Plats", url_prefix="/plats", version=1, version_prefix="v")
 @bp.route("/", methods=["GET"])
 @openapi.definition(
     summary="Liste des 100 derniers plats",
-    description="Liste des 100 derniers plats ajoutés à la base de données.",
+    description="Liste des 100 derniers plats canoniques (un plat réel, toutes écritures confondues) "
+    "ajoutés à la base de données. Les informations (« Fermé », « Menu non communiqué »...) n'en font pas partie.",
     tag="Plats",
 )
 @openapi.response(
     status=200,
     content={"application/json": Plats},
-    description="Liste des 100 derniers plats ajoutés à la base de données.",
+    description="Liste des 100 derniers plats canoniques ajoutés à la base de données.",
 )
 @openapi.response(
     status=429,
@@ -37,24 +38,16 @@ bp = Blueprint(name="Plats", url_prefix="/plats", version=1, version_prefix="v")
 @cache(ttl=300)
 async def getPlats(request: Request) -> JSONResponse:
     """
-    Récupère les 100 derniers plats ajoutés à la base de données
+    Récupère les 100 derniers plats canoniques ajoutés à la base de données
 
-    :return: Les plats
+    :return: Les plats canoniques
     """
-    # plats = await request.app.ctx.entities.plats.getAll()
     plats = await request.app.ctx.entities.plats.getLast(100)
 
     return JSON(
         request=request,
         success=True,
-        data=[
-            {
-                "code": plat.get("platid"),
-                "libelle": plat.get("libelle"),
-                "analyse": format_analyse(plat),
-            }
-            for plat in plats
-        ],
+        data=[format_canonique(plat) for plat in plats],
         status=200,
     ).generate()
 
@@ -136,13 +129,15 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
 @bp.route("/top", methods=["GET"])
 @openapi.definition(
     summary="Top 100 des plats",
-    description="Top 100 des plats les plus populaires.",
+    description="Top 100 des plats canoniques les plus servis dans les restaurants CROUS, toutes écritures "
+    "confondues (« Yaourt », « Yaourts »...). Un libellé contenant plusieurs plats (« Poisson pané, riz ») "
+    "compte pour chacun d'eux ; les informations (« Fermé », « Menu non communiqué »...) ne sont pas comptées.",
     tag="Plats",
 )
 @openapi.response(
     status=200,
     content={"application/json": PlatsWithTotal},
-    description="Top 100 des plats les plus populaires.",
+    description="Top 100 des plats les plus servis.",
 )
 @openapi.response(
     status=429,
@@ -150,10 +145,10 @@ async def getPlat(request: Request, code: int) -> JSONResponse:
     description="Vous avez envoyé trop de requêtes. Veuillez réessayer plus tard.",
 )
 @ratelimit()
-@cache(ttl=300)
+@cache(ttl=60 * 60)  # 1 heure : agrégat sur toutes les compositions
 async def getPlatTop(request: Request) -> JSONResponse:
     """
-    Retourne le top 100 des plats.
+    Retourne le top 100 des plats canoniques.
 
     :return: Le top 100 des plats
     """
@@ -162,14 +157,7 @@ async def getPlatTop(request: Request) -> JSONResponse:
     return JSON(
         request=request,
         success=True,
-        data=[
-            {
-                "code": plat.get("platid"),
-                "libelle": plat.get("libelle"),
-                "total": plat.get("nb"),
-            }
-            for plat in plats
-        ],
+        data=[{**format_canonique(plat), "total": plat.get("nb")} for plat in plats],
         status=200,
     ).generate()
 

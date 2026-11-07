@@ -60,23 +60,25 @@ class Plats:
 
     async def getLast(self, limit: int) -> list:
         """
-        Récupère les derniers plats, avec leur analyse.
+        Récupère les derniers plats canoniques créés (un plat réel, toutes écritures confondues :
+        les informations comme « Fermé » ou « Menu non communiqué » n'en sont pas).
 
         :param limit: Nombre de plats à récupérer
-        :return: Les plats
+        :return: Les plats canoniques
         """
         async with self.pool.acquire() as connection:
             connection: Connection
 
             return await connection.fetch(
-                f"""
+                """
                     SELECT
-                        P.PLATID,
-                        P.LIBELLE,
-                        {PLAT_ANALYSE_COLUMNS}
-                    FROM PUBLIC.PLAT P
-                    {PLAT_ANALYSE_JOINS}
-                    ORDER BY P.PLATID DESC
+                        PC.IDPC,
+                        PC.LIBELLE,
+                        PC.TYPE_PLAT,
+                        PC.VEGETARIEN,
+                        PC.SOURCE
+                    FROM PUBLIC.PLAT_CANONIQUE PC
+                    ORDER BY PC.IDPC DESC
                     LIMIT $1
                 """,
                 limit,
@@ -109,13 +111,14 @@ class Plats:
 
     async def getTop(self, limit: int = 100, type_restaurant: int = 1) -> list:
         """
-        Récupère les plats les plus populaires, depuis la vue matérialisée `v_plats_top`
-        (précalculée pour type_restaurant = 1 et rafraîchie à chaque cycle d'ingestion,
-        voir `CROUStillant/__main__.py`).
+        Récupère les plats canoniques les plus servis : chaque libellé brut d'un menu compte pour
+        chacun des plats canoniques qu'il contient (« Poisson pané, riz » compte pour le poisson
+        pané et pour le riz). Les informations (« Fermé », « Menu non communiqué »...) n'ont pas
+        de composant et ne sont donc jamais comptées.
 
-        :param limit: Nombre de plats à récupérer (parmi les 100 précalculés)
-        :param type_restaurant: Non utilisé : la vue ne précalcule que le type_restaurant = 1
-        :return: Les plats
+        :param limit: Nombre de plats à récupérer
+        :param type_restaurant: Type de restaurant pris en compte (1 = restaurants CROUS)
+        :return: Les plats canoniques, avec leur nombre d'occurrences (`nb`)
         """
         async with self.pool.acquire() as connection:
             connection: Connection
@@ -123,15 +126,30 @@ class Plats:
             return await connection.fetch(
                 """
                     SELECT
-                        platid,
-                        libelle,
-                        nb
-                    FROM v_plats_top
-                    ORDER BY rang
-                    LIMIT $1
+                        PC.IDPC,
+                        PC.LIBELLE,
+                        PC.TYPE_PLAT,
+                        PC.VEGETARIEN,
+                        PC.SOURCE,
+                        T.NB
+                    FROM (
+                        SELECT PCO.IDPC, COUNT(*) AS NB
+                        FROM PUBLIC.COMPOSITION CO
+                        JOIN PUBLIC.PLAT_COMPOSANT PCO ON PCO.PLATID = CO.PLATID
+                        JOIN PUBLIC.CATEGORIE C ON C.CATID = CO.CATID
+                        JOIN PUBLIC.REPAS RP ON RP.RPID = C.RPID
+                        JOIN PUBLIC.MENU M ON M.MID = RP.MID
+                        JOIN PUBLIC.RESTAURANT R ON R.RID = M.RID AND R.IDTPR = $2
+                        GROUP BY PCO.IDPC
+                        ORDER BY NB DESC
+                        LIMIT $1
+                    ) T
+                    JOIN PUBLIC.PLAT_CANONIQUE PC ON PC.IDPC = T.IDPC
+                    ORDER BY T.NB DESC, PC.IDPC
                 """,
                 limit,
-                timeout=5,
+                type_restaurant,
+                timeout=30,
             )
 
     async def getCanonique(self, id: int, variants: int = 20) -> tuple[dict | None, list]:

@@ -1,7 +1,8 @@
 from sanic_ext import openapi
 from ..components import (
     PlatComponent,
-    PlatComponentWithTotal,
+    PlatCanoniqueResumeComponent,
+    PlatCanoniqueWithTotalComponent,
     PlatCanoniqueComponent,
     AnalyseResultatComponent,
 )
@@ -13,8 +14,8 @@ class Plats:
         example=True,
     )
     data = openapi.Array(
-        items=PlatComponent,
-        description="Liste des plats",
+        items=PlatCanoniqueResumeComponent,
+        description="Liste des plats canoniques",
     )
 
 
@@ -32,8 +33,8 @@ class PlatsWithTotal:
         example=True,
     )
     data = openapi.Array(
-        items=PlatComponentWithTotal,
-        description="Liste des plats",
+        items=PlatCanoniqueWithTotalComponent,
+        description="Liste des plats canoniques, du plus servi au moins servi",
     )
 
 
